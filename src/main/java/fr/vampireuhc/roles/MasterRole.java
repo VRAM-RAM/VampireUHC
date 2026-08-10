@@ -31,7 +31,13 @@ public class MasterRole implements Role {
     // Sa description :
     @Override
     public String getDescription() {
-        return "Le Maître est le chef des vampires. Toutes les X minutes, il peut poser une marque Maitre sur le joueur non-vampire de son choix. Il ne vote pas pour les marques vampires, mais, en cas d'égalité, prend la décision finale. Voici les effets qu'écopperont les joueurs marqués par la marque Maitre : \n 1 marque => Aucun effet, ne fait qu'obscursir l'aura du joueur marqué. \n 2 marques => Lorsque le joueur marqué consomme en pomme d'or, il ne gagne qu'un seul coeur d'absorption. \n 3 marques => Le joueur marqué est infecté : il rejoint le camp des vampires et doit gagner avec ce dernier. \n Attention ! Une fois un joueur infecté, toutes les marques Maitre disparaissent, vous ne pourrez plus en poser et ainsi plus aucun joueur ne sera affecté par la perte d'absorption !";
+        ConfigManager config = VampireUHC.getInstance().getConfigManager();
+        int episodeLength = config.getEpisodeLength();
+        int toInfect = config.getMarksToInfect();
+        return "Le Maître est le chef des vampires. Toutes les " + ChatColor.DARK_PURPLE + episodeLength + ChatColor.GRAY
+            + " minutes, il peut poser une marque Maitre sur le joueur non-vampire de son choix. Il ne vote pas pour les marques vampires, mais, en cas d'égalité, prend la décision finale. Voici les effets qu'écopperont les joueurs marqués par la marque Maitre : \n 1 marque => Aucun effet, ne fait qu'obscursir l'aura du joueur marqué. \n 2 marques => Lorsque le joueur marqué consomme en pomme d'or, il ne gagne qu'un seul coeur d'absorption. \n "
+            + ChatColor.DARK_PURPLE + toInfect + ChatColor.GRAY
+            + " marques => Le joueur marqué est infecté : il rejoint le camp des vampires et doit gagner avec ce dernier. \n Attention ! Une fois un joueur infecté, toutes les marques Maitre disparaissent, vous ne pourrez plus en poser et ainsi plus aucun joueur ne sera affecté par la perte d'absorption !";
     }
     
     // Mais aussi son camp :

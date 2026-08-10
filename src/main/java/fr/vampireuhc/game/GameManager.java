@@ -218,7 +218,7 @@ public class GameManager {
             countdownTask.cancel();
             countdownTask = null;
         }
-        phase = GamePhase.PRE_ROLES;
+        phase = GamePhase.NOT_STARTED;
         gameStarted = false;
         startMillis = 0;
         elapsedMinutes = 0;
@@ -243,7 +243,8 @@ public class GameManager {
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.setGameMode(GameMode.SURVIVAL);
             player.getInventory().clear();
-            player.setHealth(player.getMaxHealth());
+            player.setMaxHealth(20.0);
+            player.setHealth(40.0);
             player.setFoodLevel(20);
             player.setSaturation(20f);
             player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());

@@ -1,4 +1,6 @@
 package fr.vampireuhc.roles;
+import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.markers.Aura;
 import fr.vampireuhc.markers.Marker;
 import fr.vampireuhc.markers.MarkerType;
@@ -9,6 +11,7 @@ import fr.vampireuhc.player.Camp;
 import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -28,7 +31,20 @@ public class ApprenticeSlayer implements Role {
 
     @Override
     public String getDescription() {
-        return "L'Apprentie assassin est un rôle solitaire. Son but : gagner seule en éliminant tous les autres joueurs. À chaque kill, elle récupère les marques (sauf les marques Maître) du joueur tué. En fonction des marques qu'elle possède, ses pouvoirs varient (cumulatifs) : plus de X marqueurs obscurs => force légère la nuit ; plus de X marqueurs lumineux => force légère le jour ; plus de nX marqueurs obscurs => force légère la nuit et régénération la nuit ; plus de nX marqueurs lumineux => force légère le jour et régénération le jour.";
+        ConfigManager config = VampireUHC.getInstance().getConfigManager();
+        int darkThreshold = config.getSlayerDarkThreshold();
+        int lightThreshold = config.getSlayerLightThreshold();
+        int darkHighThreshold = config.getSlayerDarkHighThreshold();
+        int lightHighThreshold = config.getSlayerLightHighThreshold();
+        return "L'Apprentie assassin est un rôle solitaire. Son but : gagner seule en éliminant tous les autres joueurs. À chaque kill, elle récupère les marques (sauf les marques Maître) du joueur tué. En fonction des marques qu'elle possède, ses pouvoirs varient (cumulatifs) : plus de "
+            + ChatColor.DARK_PURPLE + darkThreshold + ChatColor.GRAY
+            + " marqueurs obscurs => force légère la nuit ; plus de "
+            + ChatColor.DARK_PURPLE + lightThreshold + ChatColor.GRAY
+            + " marqueurs lumineux => force légère le jour ; plus de "
+            + ChatColor.DARK_PURPLE + darkHighThreshold + ChatColor.GRAY
+            + " marqueurs obscurs => force légère la nuit et régénération la nuit ; plus de "
+            + ChatColor.DARK_PURPLE + lightHighThreshold + ChatColor.GRAY
+            + " marqueurs lumineux => force légère le jour et régénération le jour.";
     }
     @Override
     public String getName() {

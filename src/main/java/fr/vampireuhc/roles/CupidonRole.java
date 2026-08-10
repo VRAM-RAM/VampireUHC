@@ -36,7 +36,14 @@ public class CupidonRole implements Role {
 
     @Override
     public String getDescription() {
-        return "Le Cupidon est un rôle villageois. Au début de la partie, il place une marque Amour sur deux joueurs (sans le leur dire). Les deux joueurs sont liés : si l'un meurt, l'autre perd temporairement 5 coeurs pendant 10 minutes et connaît l'identité du tueur. Si une marque Amour change de propriétaire (ex : un Gremlin), vous en êtes informé dans un délai aléatoire.";
+        ConfigManager config = VampireUHC.getInstance().getConfigManager();
+        int heartsLost = config.getAmourHeartsLost();
+        int penaltyMinutes = config.getAmourPenaltyDurationSeconds() / 60;
+        return "Le Cupidon est un rôle villageois. Au début de la partie, il place une marque Amour sur deux joueurs (sans le leur dire). Les deux joueurs sont liés : si l'un meurt, l'autre perd temporairement "
+            + ChatColor.DARK_PURPLE + heartsLost + ChatColor.GRAY
+            + " coeurs pendant "
+            + ChatColor.DARK_PURPLE + penaltyMinutes + ChatColor.GRAY
+            + " minutes et connaît l'identité du tueur. Si une marque Amour change de propriétaire (ex : un Gremlin), vous en êtes informé dans un délai aléatoire.";
     }
 
     @Override

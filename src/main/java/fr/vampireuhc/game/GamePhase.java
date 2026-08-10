@@ -2,6 +2,7 @@ package fr.vampireuhc.game;
 
 /* Enum pour les différentes phases de jeu. */
 public enum GamePhase {
+    NOT_STARTED,
     /* Première phase, de 0 à 20 minutes de jeu (préparation du stuff avant l'annonce des rôles).*/
     PRE_ROLES,
 
