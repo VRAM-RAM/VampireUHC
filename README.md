@@ -1,6 +1,9 @@
 # VampireUHC
 
 VampireUHC est un mode de jeu minecraft inspiré de Loup-Garou UHC.
+\
+\
+🔴 **Agent-assisted**
 
 ## Concept
 
@@ -301,12 +304,3 @@ Vous avez marqué <Joueur> !
 ```
 
 Ils ne savent pas si le marquage a fonctionné ou pas (salvateur?) et si les marques changent de propriétaire ou pas.
-
-## Todo :
-
-- ajouter les rôles suivants
-- ajouter les descriptions des rôles
-- ajouter les descriptions des rôles dans `/vuhc role` 
-- ajouter la génération de la map spéciale + scénarios de minage + invincibilité avant 20 minutes de jeu
-- ajouter les messages de mort
-- ...

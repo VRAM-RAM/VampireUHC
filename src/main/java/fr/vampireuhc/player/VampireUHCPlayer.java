@@ -16,6 +16,7 @@ public class VampireUHCPlayer {
     private boolean alive = true;
     private boolean vampireListRevealed = false; //Passe à true, à l'activation du pvp, pour les vampires.
     private boolean canVoteVampireMark = false; // Changé en true pour les vampires à l'annonce des rôles.
+    private boolean infected = false; // true si le joueur a été infecté par les marques du Maître
 
     public VampireUHCPlayer(UUID uuid, String lastKnownName) {
         this.uuid = uuid;
@@ -80,6 +81,12 @@ public class VampireUHCPlayer {
      */
     public void infect() {
         this.camp = Camp.VAMPIRE;
+        this.infected = true;
         this.canVoteVampireMark = false; // Le joueur infecté ne peut pas voter
+    }
+
+    // true si le joueur a rejoint les vampires en cours de partie (via l'infection).
+    public boolean isInfected() {
+        return infected;
     }
 }

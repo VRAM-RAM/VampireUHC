@@ -169,6 +169,16 @@ public class VampireVoteManager {
         return markedPlayerCount;
     }
 
+    // Remet entièrement le système de vote à zéro (nouvelle partie).
+    public void reset() {
+        voteByPlayer.clear();
+        voters.clear();
+        markedPlayers.clear();
+        markedPlayerCount = 0;
+        pendingTie = null;
+        open = false;
+    }
+
     public int getVotesFor(UUID target) {
         return voteByPlayer.getOrDefault(target, 0);
     }

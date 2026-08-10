@@ -105,5 +105,11 @@ public class MasterRole implements Role {
 
         // Infection du joueur cible
         target.infect();
+
+        // Notification au joueur infecté
+        Player bukkitTarget = Bukkit.getPlayer(target.getUuid());
+        if (bukkitTarget != null) {
+            bukkitTarget.sendMessage(ChatColor.RED + "Vous avez été infecté et devez à présent gagner avec les vampires ! /vuhc role pour en savoir plus.");
+        }
     }
 }

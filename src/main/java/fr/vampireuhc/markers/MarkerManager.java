@@ -106,6 +106,11 @@ public class MarkerManager {
         markersByPlayer.remove(target);
     }
 
+    // Vide toutes les marques de tous les joueurs (nouvelle partie).
+    public void clearMarkersOnAll() {
+        markersByPlayer.clear();
+    }
+
     public int computeAuraScore(UUID target) {
         int score = 0;
         for (Marker marker: getMarkers(target)) {

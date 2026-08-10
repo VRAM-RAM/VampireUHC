@@ -10,12 +10,17 @@ import fr.vampireuhc.player.VampireUHCPlayer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
+import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 
 public class GameManager {
@@ -26,8 +31,11 @@ public class GameManager {
 
     private GamePhase phase = GamePhase.PRE_ROLES;
     private BukkitTask tickTask;
+    private BukkitTask countdownTask;
     private long startMillis;
     private int elapsedMinutes = 0;
+    private int countdownRemaining = 0;
+    private boolean gameStarted = false;
 
     public GameManager(VampireUHC plugin, PlayerManager playerManager, MarkerManager markerManager, ConfigManager configManager) {
         this.plugin = plugin;
@@ -39,6 +47,19 @@ public class GameManager {
     public GamePhase getPhase() { return phase; }
     public boolean isPvPActive() { return phase == GamePhase.PVP_ACTIVE; }
     public int getElapsedMinutes() { return elapsedMinutes; }
+    public boolean isGameStarted() { return gameStarted; }
+
+    public int getDefaultCountdownSeconds() {
+        return configManager.getDefaultCountdownSeconds();
+    }
+
+    // Temps écoulé en secondes depuis le début de la partie (0 si pas encore lancée).
+    public long getElapsedSeconds() {
+        if (startMillis == 0) {
+            return 0;
+        }
+        return (System.currentTimeMillis() - startMillis) / 1000L;
+    }
 
     // L'épisode actuel (1 épisode = episodeLength minutes).
     public int getEpisode() {
@@ -46,34 +67,132 @@ public class GameManager {
         return len > 0 ? elapsedMinutes / len : 0;
     }
 
-    // Fonction qui commence la partie
-    public void start() {
-        if (tickTask != null) return;
+    // Lance un compte à rebours puis démarre la partie.
+    public boolean startCountdown(int seconds) {
+        if (countdownTask != null || tickTask != null) {
+            return false;
+        }
 
+        // Une partie précédente existe encore : on réinitialise d'abord.
+        if (plugin.getMapManager().getWorld() != null || !playerManager.getAll().isEmpty()) {
+            resetGame();
+        }
+
+        countdownRemaining = Math.max(0, seconds);
+        if (countdownRemaining <= 0) {
+            beginGame();
+            return true;
+        }
+
+        broadcast("&5La partie commence dans &f" + countdownRemaining + "&5 secondes !");
+        playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+
+        countdownTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            countdownRemaining--;
+            if (countdownRemaining <= 0) {
+                countdownTask.cancel();
+                countdownTask = null;
+                beginGame();
+                return;
+            }
+            if (countdownRemaining <= 10) {
+                broadcast("&5La partie commence dans &f" + countdownRemaining + "&5 secondes !");
+                playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+            }
+        }, 20L, 20L);
+        return true;
+    }
+
+    // Démarre la partie avec le compte à rebours par défaut.
+    public void start() {
+        startCountdown(configManager.getDefaultCountdownSeconds());
+    }
+
+    private void beginGame() {
         phase = GamePhase.PRE_ROLES;
         elapsedMinutes = 0;
         startMillis = System.currentTimeMillis();
+        gameStarted = true;
 
         plugin.getMapManager().prepareWorld();
         plugin.getMapManager().teleportPlayersToSpawn();
 
-        for (Player online: Bukkit.getOnlinePlayers()) {
+        for (Player online : Bukkit.getOnlinePlayers()) {
             playerManager.register(online);
+            online.setGameMode(GameMode.SURVIVAL);
         }
 
+        giveStartingKit();
+
         tickTask = Bukkit.getScheduler().runTaskTimer(plugin, this::onMinuteElapsed, 20 * 60L, 20 * 60L);
-        broadcast("Partie lancee. Phase de préparation. Bonne chance et bonne game !");
-
-    }   
-
+        broadcast("Partie lancée. Phase de préparation. Bonne chance et bonne game !");
+        if (plugin.getSidebarManager() != null) {
+            plugin.getSidebarManager().start();
+        }
+        if (plugin.getSpectatorManager() != null) {
+            plugin.getSpectatorManager().start();
+        }
+    }
 
     // Et fonction qui la termine
     public void stop() {
+        boolean wasStarted = gameStarted || tickTask != null;
         if (tickTask != null) {
             tickTask.cancel();
             tickTask = null;
         }
+        if (countdownTask != null) {
+            countdownTask.cancel();
+            countdownTask = null;
+        }
         phase = GamePhase.ENDED;
+        if (plugin.getSidebarManager() != null) {
+            plugin.getSidebarManager().stop();
+        }
+        if (plugin.getSpectatorManager() != null) {
+            plugin.getSpectatorManager().stop();
+        }
+        if (plugin.getConnectionListener() != null) {
+            plugin.getConnectionListener().cancelAllGraceTasks();
+        }
+        if (wasStarted) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                player.setGameMode(GameMode.SPECTATOR);
+            }
+        }
+    }
+
+    // Réinitialise complètement la partie (joueurs, marqueurs, map) pour une nouvelle partie.
+    public void resetGame() {
+        if (tickTask != null) {
+            tickTask.cancel();
+            tickTask = null;
+        }
+        if (countdownTask != null) {
+            countdownTask.cancel();
+            countdownTask = null;
+        }
+        phase = GamePhase.PRE_ROLES;
+        gameStarted = false;
+        startMillis = 0;
+        elapsedMinutes = 0;
+
+        playerManager.reset();
+        markerManager.clearMarkersOnAll();
+        plugin.getVoteManager().reset();
+
+        if (plugin.getSidebarManager() != null) {
+            plugin.getSidebarManager().stop();
+        }
+        if (plugin.getSpectatorManager() != null) {
+            plugin.getSpectatorManager().stop();
+        }
+        if (plugin.getConnectionListener() != null) {
+            plugin.getConnectionListener().cancelAllGraceTasks();
+        }
+
+        plugin.getMapManager().resetWorld();
+        broadcast("&5La partie a été réinitialisée.");
     }
 
     // Helpers 
@@ -81,25 +200,56 @@ public class GameManager {
     private void onMinuteElapsed() {
         elapsedMinutes++;
 
-        if (elapsedMinutes == configManager.getRoleAssignementAt() && phase == GamePhase.PRE_ROLES) {
-            assignRolesAndCamps();
-            checkInfections();
-            broadcast("Les rôles ont été distribués.");
-            phase = GamePhase.PRE_PVP;
+        int rolesAt = configManager.getRoleAssignementAt();
+        int pvpAt = configManager.getPvpActivationAt();
+
+        if (elapsedMinutes == rolesAt - 5) {
+            broadcast("&eLes rôles seront distribués dans 5 minutes !");
+            playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
+        }
+        if (elapsedMinutes == rolesAt - 1) {
+            broadcast("&eLes rôles seront distribués dans 1 minute !");
+            playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
         }
 
-        if (elapsedMinutes == configManager.getPvpActivationAt() && phase == GamePhase.PRE_PVP) {
+        if (elapsedMinutes == rolesAt && phase == GamePhase.PRE_ROLES) {
+            assignRolesAndCamps();
+            checkInfections();
+            announceRoles();
+            broadcast("Les rôles ont été distribués.");
+            phase = GamePhase.PRE_PVP;
+            playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+        }
+
+        if (elapsedMinutes == pvpAt - 5) {
+            broadcast("&cLe PvP sera activé dans 5 minutes !");
+            playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
+        }
+        if (elapsedMinutes == pvpAt - 1) {
+            broadcast("&cLe PvP sera activé dans 1 minute !");
+            playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
+        }
+
+        if (elapsedMinutes == pvpAt && phase == GamePhase.PRE_PVP) {
             activatePvp();
             plugin.getVoteManager().openVote();
+            playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
         }
 
         int voteEvery = configManager.getVoteEveryMinutes();
         if (phase == GamePhase.PVP_ACTIVE && voteEvery > 0) {
-            int minutesSincePvp = elapsedMinutes - configManager.getPvpActivationAt();
+            int minutesSincePvp = elapsedMinutes - pvpAt;
             if (minutesSincePvp > 0 && minutesSincePvp % voteEvery == 0) {
                 plugin.getVoteManager().closeAndResolve();
                 plugin.getVoteManager().openVote();
             }
+        }
+
+        // Annonce du début de chaque épisode.
+        int episodeLength = configManager.getEpisodeLength();
+        if (episodeLength > 0 && elapsedMinutes > 0 && elapsedMinutes % episodeLength == 0) {
+            broadcast("&5Début de l'épisode &f" + (elapsedMinutes / episodeLength + 1) + "&5 !");
+            playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
         }
 
         if (plugin.getBuffManager() != null) {
@@ -113,19 +263,38 @@ public class GameManager {
         checkVictory();
     }
 
-    // Détecte la fin de partie : il ne reste qu'un camp de joueurs vivants.
+    // Détecte la fin de partie : il ne reste qu'un camp (ou un seul solitaire) en vie.
     private void checkVictory() {
         if (phase == GamePhase.ENDED) {
             return;
         }
-        Set<Camp> camps = new HashSet<>();
+
+        Set<String> factions = new LinkedHashSet<>();
+        UUID soloWinner = null;
         for (VampireUHCPlayer p : playerManager.getAll()) {
-            if (p.isAlive() && p.getCamp() != null) {
-                camps.add(p.getCamp());
+            if (!p.isAlive() || p.getCamp() == null) {
+                continue;
+            }
+            if (p.getCamp() == Camp.SOLO) {
+                factions.add("solo:" + p.getUuid());
+                soloWinner = p.getUuid();
+            } else {
+                factions.add(p.getCamp().name());
             }
         }
-        if (camps.size() == 1 && !camps.isEmpty()) {
-            broadcast("Le camp " + camps.iterator().next() + " remporte la partie !");
+
+        if (factions.size() == 1 && !factions.isEmpty()) {
+            String winner;
+            if (soloWinner != null) {
+                VampireUHCPlayer solo = playerManager.get(soloWinner);
+                winner = "Le Solitaire " + (solo != null ? solo.getLastKnownName() : "?");
+            } else if (factions.contains(Camp.VAMPIRE.name())) {
+                winner = "Les Vampires";
+            } else {
+                winner = "Les Villageois";
+            }
+            broadcast("&5" + winner + " &fremporte la partie !");
+            playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
             stop();
         }
     }
@@ -163,8 +332,7 @@ public class GameManager {
         for (VampireUHCPlayer vp : pool) {
             Player bukkitPlayer = Bukkit.getPlayer(vp.getUuid());
             if (bukkitPlayer != null) {
-                bukkitPlayer.sendMessage(configManager.getPrefix() + 
-                    ChatColor.translateAlternateColorCodes('&', "Votre camp : &e" + vp.getCamp()));
+                bukkitPlayer.sendMessage(configManager.translate("Votre camp : &e" + vp.getCamp().getDisplayName()));
             }
         }
 
@@ -187,29 +355,69 @@ public class GameManager {
         for (VampireUHCPlayer v : vampires) {
             Player bukkitPlayer = Bukkit.getPlayer(v.getUuid());
             if (bukkitPlayer != null) {
-                bukkitPlayer.sendMessage(configManager.getPrefix() + 
-                    ChatColor.translateAlternateColorCodes('&', "&cVos allies vampires : &f" + names));
+                bukkitPlayer.sendMessage(configManager.translate("&cVos alliés vampires : &f" + names));
             }
         }
 
         broadcast("Le PVP est desormais actif !");
     }
 
+    // Annonce à chaque joueur son rôle précis (après l'assignation).
+    private void announceRoles() {
+        for (VampireUHCPlayer vp : playerManager.getAll()) {
+            Player bukkitPlayer = Bukkit.getPlayer(vp.getUuid());
+            if (bukkitPlayer == null) {
+                continue;
+            }
+            if (vp.getRole() != null) {
+                bukkitPlayer.sendMessage(configManager.translate("&eVous êtes : &f" + vp.getRole().getName()));
+                bukkitPlayer.sendMessage(configManager.translateRaw("&7" + vp.getRole().getDescription()));
+            } else {
+                bukkitPlayer.sendMessage(configManager.translate("&eVous êtes : &fVillageois"));
+            }
+        }
+    }
+
+    // Notifie les joueurs infectés en cours de partie (jamais les vampires de naissance).
     private void checkInfections() {
         for (VampireUHCPlayer vp : playerManager.getAll()) {
-            if (!vp.isVampireListRevealed() && vp.getCamp() == Camp.VAMPIRE) {
-                // Notification aux vampires uniquement
+            if (vp.isInfected() && !vp.isVampireListRevealed()) {
                 Player bukkit = Bukkit.getPlayer(vp.getUuid());
                 if (bukkit != null) {
-                    bukkit.sendMessage(configManager.getPrefix() + 
-                        ChatColor.translateAlternateColorCodes('&', "&cUn nouveau joueur a rejoint votre camp ! /vuhc role pour en savoir plus."));
+                    bukkit.sendMessage(configManager.translate("&cUn nouveau joueur a rejoint votre camp ! /vuhc role pour en savoir plus."));
                 }
             }
         }
     }
 
+    // Kit de départ : pioche/hache/épée en pierre + nourriture + bois + torches.
+    private void giveStartingKit() {
+        if (!configManager.isStartingKitEnabled()) {
+            return;
+        }
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.getInventory().clear();
+            player.setHealth(player.getMaxHealth());
+            player.setFoodLevel(20);
+            player.setSaturation(20f);
+            player.getInventory().addItem(
+                    new ItemStack(Material.STONE_PICKAXE),
+                    new ItemStack(Material.STONE_AXE),
+                    new ItemStack(Material.STONE_SWORD),
+                    new ItemStack(Material.COOKED_BEEF, 16),
+                    new ItemStack(Material.OAK_LOG, 8),
+                    new ItemStack(Material.TORCH, 16)
+            );
+        }
+    }
+
+    private void playSoundAll(Sound sound, float volume, float pitch) {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.playSound(player.getLocation(), sound, volume, pitch);
+        }
+    }
+
     private void broadcast(String message) {
-        Bukkit.broadcastMessage(configManager.getPrefix() + 
-            ChatColor.translateAlternateColorCodes('&', message));
+        Bukkit.broadcastMessage(configManager.translate(message));
     }
 }

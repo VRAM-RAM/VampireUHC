@@ -203,6 +203,7 @@ public class RoleManager {
             
             playerObj.addProperty("vampireListRevealed", player.isVampireListRevealed());
             playerObj.addProperty("canVoteVampireMark", player.canVoteVampireMark());
+            playerObj.addProperty("infected", player.isInfected());
             playerObj.addProperty("alive", player.isAlive());
             
             // Marqueurs du joueur

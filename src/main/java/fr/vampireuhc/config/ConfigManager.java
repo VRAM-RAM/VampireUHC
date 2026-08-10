@@ -1,7 +1,10 @@
 package fr.vampireuhc.config;
 
 import fr.vampireuhc.VampireUHC;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
+
+import java.util.List;
 
 /*
  * Wrapper autour du config.yml pour eviter de trimballer des chemins
@@ -89,6 +92,31 @@ public class ConfigManager {
         return cfg().getInt("map.dark-forest-radius", 400);
     }
 
+    public int getSpawnRadius() {
+        // Rayon (en blocs) du disque dans lequel les joueurs sont éparpillés au début de la partie.
+        return cfg().getInt("map.spawn-radius", 350);
+    }
+
+    public int getMinSpawnDistance() {
+        // Distance minimale entre deux joueurs au début de la partie.
+        return cfg().getInt("map.min-spawn-distance", 25);
+    }
+
+    public int getOreIronPerChunk() {
+        // Minerais de fer supplémentaires générés dans les caves (par chunk).
+        return cfg().getInt("map.ores.iron-per-chunk", 6);
+    }
+
+    public int getOreGoldPerChunk() {
+        // Minerais d'or supplémentaires générés dans les caves (par chunk).
+        return cfg().getInt("map.ores.gold-per-chunk", 4);
+    }
+
+    public int getOreDiamondPerChunk() {
+        // Minerais de diamant supplémentaires générés dans les caves (par chunk).
+        return cfg().getInt("map.ores.diamond-per-chunk", 2);
+    }
+
     /* Utilitaires gameplay */
 
     public boolean isAutoSmeltEnabled() {
@@ -105,6 +133,42 @@ public class ConfigManager {
 
     public int getLeatherBonus() {
         return cfg().getInt("gameplay.leather-bonus", 2);
+    }
+
+    /* Utilitaires pour le cycle de vie */
+
+    public List<String> getAdminPlayers() {
+        // Pseudos autorisés à lancer/arrêter/réinitialiser la partie.
+        return cfg().getStringList("admins.players");
+    }
+
+    public int getDisconnectGraceMinutes() {
+        // Temps de grâce avant élimination d'un joueur déconnecté (en minutes).
+        return cfg().getInt("game.disconnect-grace-minutes", 10);
+    }
+
+    public int getDefaultCountdownSeconds() {
+        // Durée par défaut du compte à rebours de /vuhc start (en secondes).
+        return cfg().getInt("game.countdown-seconds", 30);
+    }
+
+    public boolean isStartingKitEnabled() {
+        // Kit de départ (pioche/hache/épée en pierre + nourriture + bois + torches).
+        return cfg().getBoolean("game.starting-kit", true);
+    }
+
+    /* Utilitaires règles UHC */
+
+    public boolean isNoNaturalRegenEnabled() {
+        return cfg().getBoolean("rules.no-natural-regen", true);
+    }
+
+    public boolean areBedsBlocked() {
+        return cfg().getBoolean("rules.beds-blocked", true);
+    }
+
+    public boolean isNetherEndBlocked() {
+        return cfg().getBoolean("rules.nether-end-blocked", true);
     }
 
     /* Utilitaires pour les vampires et le maitre */
@@ -178,6 +242,16 @@ public class ConfigManager {
 
     public String getPrefix() {
         return cfg().getString("messages.prefix", "&5&lVampireUHC &8» &r");
+    }
+
+    // Traduit les codes couleur (&x) d'un message précédé du préfixe du plugin.
+    public String translate(String message) {
+        return ChatColor.translateAlternateColorCodes('&', getPrefix() + message);
+    }
+
+    // Traduit les codes couleur (&x) d'un message, sans préfixe.
+    public String translateRaw(String message) {
+        return ChatColor.translateAlternateColorCodes('&', message);
     }
 
 

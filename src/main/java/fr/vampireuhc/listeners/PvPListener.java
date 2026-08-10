@@ -29,6 +29,21 @@ public class PvPListener implements Listener {
         }
     }
 
+    // Invincibilité explicite à la lave et au feu pendant la phase PRE_ROLES.
+    @EventHandler
+    public void onLavaOrFireDamage(EntityDamageEvent event) {
+        if (gameManager.getPhase() != GamePhase.PRE_ROLES || !(event.getEntity() instanceof Player)) {
+            return;
+        }
+        EntityDamageEvent.DamageCause cause = event.getCause();
+        if (cause == EntityDamageEvent.DamageCause.LAVA
+                || cause == EntityDamageEvent.DamageCause.FIRE
+                || cause == EntityDamageEvent.DamageCause.FIRE_TICK
+                || cause == EntityDamageEvent.DamageCause.HOT_FLOOR) {
+            event.setCancelled(true);
+        }
+    }
+
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (gameManager.isPvPActive()) {

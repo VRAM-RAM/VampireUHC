@@ -1,6 +1,7 @@
 package fr.vampireuhc.commands;
 
 import fr.vampireuhc.game.GameManager;
+import fr.vampireuhc.game.SpectatorManager;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.PlayerManager;
@@ -29,7 +30,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * /vuhc start             -> lance la partie
+ * /vuhc start [sec]       -> lance la partie (avec compte à rebours optionnel)
+ * /vuhc stop              -> arrête la partie
+ * /vuhc reset             -> réinitialise la partie
+ * /vuhc spectate <joueur> -> le spectateur suit un joueur vivant
  * /vuhc status            -> affiche la phase et le temps ecoule
  * /vuhc who               -> (debug) affiche camp de chaque joueur connecte
  * /vuhc aura <joueur>     -> (debug) affiche le score/tier d'aura d'un joueur
@@ -46,15 +50,17 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     private final MarkerManager markerManager;
     private final RoleManager roleManager;
     private final VampireVoteManager voteManager;
+    private final SpectatorManager spectatorManager;
 
-    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "role");
+    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "spectate", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "role");
 
-    public VUHCCommand(GameManager gameManager, PlayerManager playerManager, MarkerManager markerManager, RoleManager roleManager, VampireVoteManager voteManager) {
+    public VUHCCommand(GameManager gameManager, PlayerManager playerManager, MarkerManager markerManager, RoleManager roleManager, VampireVoteManager voteManager, SpectatorManager spectatorManager) {
         this.gameManager = gameManager;
         this.playerManager = playerManager;
         this.markerManager = markerManager;
         this.roleManager = roleManager;
         this.voteManager = voteManager;
+        this.spectatorManager = spectatorManager;
     }
 
     @Override
@@ -66,8 +72,59 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
        
         switch (args[0].toLowerCase()) {
             case "start":
-                gameManager.start();
-                sender.sendMessage(ChatColor.GREEN + "Partie VampireUHC lancee.");
+                if (!hasAdminPermission(sender)) {
+                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
+                    return true;
+                }
+                int seconds = gameManager.getDefaultCountdownSeconds();
+                if (args.length >= 2) {
+                    try {
+                        seconds = Math.max(0, Integer.parseInt(args[1]));
+                    } catch (NumberFormatException e) {
+                        sender.sendMessage(ChatColor.RED + "Durée invalide : " + args[1]);
+                        return true;
+                    }
+                }
+                if (gameManager.startCountdown(seconds)) {
+                    sender.sendMessage(ChatColor.GREEN + "Partie VampireUHC lancée (démarrage dans " + seconds + "s).");
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Une partie est déjà en cours ou en cours de lancement.");
+                }
+                return true;
+
+            case "stop":
+                if (!hasAdminPermission(sender)) {
+                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
+                    return true;
+                }
+                gameManager.stop();
+                sender.sendMessage(ChatColor.GREEN + "Partie arrêtée.");
+                return true;
+
+            case "reset":
+                if (!hasAdminPermission(sender)) {
+                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
+                    return true;
+                }
+                gameManager.resetGame();
+                sender.sendMessage(ChatColor.GREEN + "Partie réinitialisée.");
+                return true;
+
+            case "spectate":
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return true;
+                }
+                if (args.length < 2) {
+                    player.sendMessage(ChatColor.RED + "Usage: /vuhc spectate <joueur>");
+                    return true;
+                }
+                Player targetSpec = Bukkit.getPlayer(args[1]);
+                if (targetSpec == null) {
+                    player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    return true;
+                }
+                spectatorManager.follow(player, targetSpec);
                 return true;
 
             case "status":
@@ -339,8 +396,8 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                // Message d'infection si vampire non-listé
-                if (local.getCamp() == Camp.VAMPIRE && !local.isVampireListRevealed()) {
+                // Message d'infection pour les joueurs infectés en cours de partie uniquement
+                if (local.getCamp() == Camp.VAMPIRE && local.isInfected()) {
                     sender.sendMessage(ChatColor.translateAlternateColorCodes('&', 
                         ChatColor.RED + "Vous avez été infecté et devez à présent gagner avec les vampires !"));
 
@@ -393,7 +450,8 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 2 && (args[0].equalsIgnoreCase("voter")
                 || args[0].equalsIgnoreCase("proteger")
-                || args[0].equalsIgnoreCase("switch"))) {
+                || args[0].equalsIgnoreCase("switch")
+                || args[0].equalsIgnoreCase("spectate"))) {
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)
                     .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
@@ -411,7 +469,19 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     }
 
     // Helpers
+
+    // Autorisation admin : permission vuhc.admin OU pseudo listé dans config.yml (admins.players). La console est toujours autorisée.
+    private boolean hasAdminPermission(CommandSender sender) {
+        if (sender.hasPermission("vuhc.admin")) {
+            return true;
+        }
+        if (sender instanceof Player player) {
+            return fr.vampireuhc.VampireUHC.getInstance().getConfigManager().getAdminPlayers().contains(player.getName());
+        }
+        return true;
+    }
+
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start|status|who|aura|marquer|trancher|proteger|voter|switch|role>");
+        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|role>");
     }
 }

@@ -18,6 +18,12 @@ map:
   size: 1000                    # Taille de la map (carré, centrée sur 0;0)
   seed: 0                       # Seed de génération (0 = seed aléatoire du serveur)
   dark-forest-radius: 400       # Rayon de la forêt sombre garantie autour de 0;0
+  spawn-radius: 350             # Rayon du disque dans lequel les joueurs sont éparpillés au début
+  min-spawn-distance: 25        # Distance minimale entre deux joueurs au début de la partie
+  ores:                         # Minerais supplémentaires générés dans les caves (par chunk)
+    iron-per-chunk: 6           #   Minerai de fer (Y < 64)
+    gold-per-chunk: 4           #   Minerai d'or (Y < 32)
+    diamond-per-chunk: 2        #   Minerai de diamant (Y < 16)
 
 # Gameplay configuration
 gameplay:
@@ -25,6 +31,18 @@ gameplay:
   better-loot: true             # Meilleurs loots (plus d'or, de cuir, de pommes)
   apple-drop-chance: 0.05       # Chance qu'une feuille casse donne une pomme
   leather-bonus: 2              # Nombre de cuirs bonus par vache tuée
+
+# Game lifecycle configuration
+game:
+  countdown-seconds: 30         # Durée du compte à rebours de /vuhc start (secondes)
+  disconnect-grace-minutes: 10  # Temps de grâce avant élimination après une déconnexion
+  starting-kit: true            # Kit de départ (pioche/hache/épée en pierre + nourriture)
+
+# UHC rules configuration
+rules:
+  no-natural-regen: true        # Pas de régénération naturelle de vie
+  beds-blocked: true            # Les lits sont interdits
+  nether-end-blocked: true      # Nether et End désactivés
 
 # Vampire configuration
 vampires:
@@ -47,6 +65,12 @@ markers:
 # Messages configuration
 messages:
   prefix: "&5&lVampireUHC &8» &r"   # Préfixe utilisé dans tous les messages
+
+# Administrateurs autorisés à lancer, arrêter ou réinitialiser la partie
+admins:
+  players:
+    - "Pseudo1"
+    - "Pseudo2"
 
 # Apprentie assassin configuration
 solo:

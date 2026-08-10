@@ -9,15 +9,16 @@ import fr.vampireuhc.roles.PaladinRole;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
 /**
- * Gère les morts : marque le joueur comme mort, envoie un message de mort
- * personnalisé, et déclenche les hooks de rôles (Paladin, Apprentie assassin,
- * Cupidon). Vérifie aussi les conditions de victoire.
+ * Gère les morts : marque le joueur comme mort, le passe en spectateur, envoie
+ * un message de mort personnalisé, et déclenche les hooks de rôles (Paladin,
+ * Apprentie assassin, Cupidon). Vérifie aussi les conditions de victoire.
  */
 public class PlayerDeathListener implements Listener {
     private final VampireUHC plugin;
@@ -34,6 +35,13 @@ public class PlayerDeathListener implements Listener {
             return;
         }
         vp.setDead();
+
+        // Le joueur mort devient spectateur jusqu'à la fin de la partie (pas de respawn).
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            if (victim.isOnline()) {
+                victim.setGameMode(GameMode.SPECTATOR);
+            }
+        });
 
         Player killer = victim.getKiller();
         VampireUHCPlayer killerVp = killer != null ? plugin.getPlayerManager().get(killer.getUniqueId()) : null;
