@@ -336,7 +336,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
 
-                if (!(voter.getRole() instanceof VampireMinion)) {
+                if (!(voter.getRole() instanceof VampireMinion) || !voter.canVoteVampireMark()) {
                     player.sendMessage(ChatColor.RED + "Seuls les sbires vampires peuvent voter.");
                     return true;
                 }

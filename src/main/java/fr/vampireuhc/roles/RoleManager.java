@@ -5,10 +5,12 @@ import com.google.gson.reflect.TypeToken;
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.game.GamePhase;
 import fr.vampireuhc.markers.Marker;
+import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.PlayerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.RoleType;
+import fr.vampireuhc.vampire_vote.VoteResult;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -180,10 +182,15 @@ public class RoleManager {
 
     private JsonObject buildGameStateObject() {
         JsonObject gameState = new JsonObject();
-        
+
         // Métadonnées
         gameState.addProperty("pluginVersion", plugin.getDescription().getVersion());
         gameState.addProperty("timestamp", System.currentTimeMillis());
+
+        // État de la partie (phase, temps écoulé) pour la reprise après redémarrage.
+        gameState.addProperty("phase", plugin.getGameManager().getPhase().name());
+        gameState.addProperty("gameStarted", plugin.getGameManager().isGameStarted());
+        gameState.addProperty("elapsedMinutes", plugin.getGameManager().getElapsedMinutes());
         
         // État des joueurs
         JsonArray playersArray = new JsonArray();
@@ -264,6 +271,130 @@ public class RoleManager {
         plugin.getLogger().info("État du jeu prêt pour sauvegarde JSON");
         
         return gameState;
+    }
+
+    // Résultat d'une restauration : phase et minute à reprendre.
+    public record LoadedGameState(GamePhase phase, int elapsedMinutes) {}
+
+    /**
+     * Relit game-state.json et restaure joueurs, rôles, marqueurs et votes.
+     * Retourne la phase et la minute de jeu à reprendre, ou null si rien à restaurer.
+     */
+    public LoadedGameState loadGameFromJson(String filePath) {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            return null;
+        }
+
+        try (Reader reader = new FileReader(file)) {
+            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+
+            GamePhase phase = GamePhase.valueOf(root.get("phase").getAsString());
+            int elapsedMinutes = root.has("elapsedMinutes") ? root.get("elapsedMinutes").getAsInt() : 0;
+            boolean gameStarted = root.has("gameStarted") && root.get("gameStarted").getAsBoolean();
+
+            if (phase == GamePhase.ENDED || !gameStarted) {
+                plugin.getLogger().info("Partie terminée ou jamais lancée, restauration ignorée.");
+                file.delete();
+                return null;
+            }
+
+            playerManager.reset();
+            plugin.getMarkerManager().clearMarkersOnAll();
+
+            JsonArray playersArray = root.getAsJsonArray("players");
+            for (JsonElement element : playersArray) {
+                JsonObject obj = element.getAsJsonObject();
+                UUID uuid = UUID.fromString(obj.get("uuid").getAsString());
+                String name = obj.get("name").getAsString();
+                VampireUHCPlayer player = new VampireUHCPlayer(uuid, name);
+                playerManager.add(player);
+
+                String campName = obj.has("camp") ? obj.get("camp").getAsString() : "NONE";
+                if (!campName.equals("NONE")) {
+                    player.setCamp(Camp.valueOf(campName));
+                }
+
+                String roleName = obj.has("role") ? obj.get("role").getAsString() : "NONE";
+                if (!roleName.equals("NONE")) {
+                    RoleType type = roleTypeFromName(roleName);
+                    if (type != null) {
+                        Role role = createRoleFromType(type, player);
+                        if (role != null) {
+                            player.setRole(role);
+                            role.onAssign(player);
+                        }
+                    }
+                }
+
+                player.setVampireListRevealed(obj.get("vampireListRevealed").getAsBoolean());
+                if (obj.get("canVoteVampireMark").getAsBoolean()) {
+                    player.setVampireVote();
+                }
+                if (obj.get("infected").getAsBoolean()) {
+                    player.infect();
+                }
+                if (!obj.get("alive").getAsBoolean()) {
+                    player.setDead();
+                }
+
+                JsonArray markersArray = obj.getAsJsonArray("markers");
+                for (JsonElement markerEl : markersArray) {
+                    JsonObject m = markerEl.getAsJsonObject();
+                    MarkerType type = MarkerType.valueOf(m.get("type").getAsString());
+                    UUID source = m.get("source").isJsonNull() ? null : UUID.fromString(m.get("source").getAsString());
+                    long placedAt = m.has("placedAt") ? m.get("placedAt").getAsLong() : System.currentTimeMillis();
+                    plugin.getMarkerManager().addMarker(uuid, type, source, placedAt);
+                }
+            }
+
+            if (root.has("vote")) {
+                JsonObject voteObj = root.getAsJsonObject("vote");
+                boolean open = voteObj.get("open").getAsBoolean();
+                int markedPlayerCount = voteObj.get("markedPlayerCount").getAsInt();
+
+                Map<UUID, Integer> votes = new HashMap<>();
+                JsonObject votesObj = voteObj.getAsJsonObject("votes");
+                for (String id : votesObj.keySet()) {
+                    votes.put(UUID.fromString(id), votesObj.get(id).getAsInt());
+                }
+
+                Set<UUID> marked = new HashSet<>();
+                for (JsonElement idEl : voteObj.getAsJsonArray("markedPlayers")) {
+                    marked.add(UUID.fromString(idEl.getAsString()));
+                }
+
+                VoteResult.Tie pendingTie = null;
+                if (voteObj.has("pendingTie") && !voteObj.get("pendingTie").isJsonNull()) {
+                    List<UUID> tied = new ArrayList<>();
+                    for (JsonElement idEl : voteObj.getAsJsonArray("pendingTie")) {
+                        tied.add(UUID.fromString(idEl.getAsString()));
+                    }
+                    pendingTie = new VoteResult.Tie(tied);
+                }
+
+                plugin.getVoteManager().restore(open, votes, marked, markedPlayerCount, pendingTie);
+            }
+
+            plugin.getLogger().info("Partie restaurée depuis " + filePath + " (phase " + phase + ", minute " + elapsedMinutes + ").");
+            return new LoadedGameState(phase, elapsedMinutes);
+        } catch (Exception e) {
+            plugin.getLogger().severe("Impossible de restaurer la partie : " + e.getMessage());
+            return null;
+        }
+    }
+
+    private RoleType roleTypeFromName(String name) {
+        switch (name) {
+            case "Maître": return RoleType.MASTER;
+            case "Sbire": return RoleType.VAMPIRE_MINION;
+            case "Salvateur": return RoleType.SAVIOR;
+            case "Paladin": return RoleType.PALADIN;
+            case "Cupidon": return RoleType.CUPIDON;
+            case "Apprenti Chasseur": return RoleType.APPRENTICE_SLAYER;
+            case "Gremlin": return RoleType.GREMLIN;
+            default: return null;
+        }
     }
     
 }

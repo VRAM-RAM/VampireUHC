@@ -67,14 +67,24 @@ public class PlayerConnectionListener implements Listener {
             return;
         }
 
+        int graceMinutes = plugin.getConfigManager().getDisconnectGraceMinutes();
+        Bukkit.broadcastMessage(plugin.getConfigManager().translate(
+                "&7" + vp.getLastKnownName() + " &7s'est déconnecté. Il sera éliminé dans &f"
+                        + Math.max(1, graceMinutes) + "&7 min s'il ne revient pas."));
+        startGrace(vp);
+    }
+
+    // Démarre la grâce de déconnexion d'un joueur (utilisé aussi à la restauration).
+    public void startGrace(VampireUHCPlayer vp) {
+        UUID uuid = vp.getUuid();
         int graceMinutes = Math.max(1, plugin.getConfigManager().getDisconnectGraceMinutes());
-        graceTasks.put(player.getUniqueId(), Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            graceTasks.remove(player.getUniqueId());
-            if (!player.isOnline() && vp.isAlive()) {
+        graceTasks.put(uuid, Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            graceTasks.remove(uuid);
+            if (Bukkit.getPlayer(uuid) == null && vp.isAlive()) {
                 vp.setDead();
                 Bukkit.broadcastMessage(plugin.getConfigManager().translate(
                         "&c" + vp.getLastKnownName() + " &4a été éliminé (déconnexion)."));
-                game.checkWinCondition();
+                plugin.getGameManager().checkWinCondition();
             }
         }, 20L * 60L * graceMinutes));
     }

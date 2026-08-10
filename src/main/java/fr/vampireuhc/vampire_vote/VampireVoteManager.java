@@ -179,6 +179,18 @@ public class VampireVoteManager {
         open = false;
     }
 
+    // Restaure l'état des votes après un redémarrage du serveur.
+    public void restore(boolean open, Map<UUID, Integer> votes, Set<UUID> markedPlayers, int markedPlayerCount, VoteResult.Tie pendingTie) {
+        this.open = open;
+        this.voteByPlayer.clear();
+        this.voteByPlayer.putAll(votes);
+        this.voters.clear();
+        this.markedPlayers.clear();
+        this.markedPlayers.addAll(markedPlayers);
+        this.markedPlayerCount = markedPlayerCount;
+        this.pendingTie = pendingTie;
+    }
+
     public int getVotesFor(UUID target) {
         return voteByPlayer.getOrDefault(target, 0);
     }

@@ -14,9 +14,13 @@ public class Marker {
     private final long placedAtMillis;
 
     public Marker(MarkerType type, UUID source) {
+        this(type, source, System.currentTimeMillis());
+    }
+
+    public Marker(MarkerType type, UUID source, long placedAtMillis) {
         this.type = type;
         this.source = source;
-        this.placedAtMillis = System.currentTimeMillis();
+        this.placedAtMillis = placedAtMillis;
     }
 
     public MarkerType getType() {

@@ -7,6 +7,7 @@ import fr.vampireuhc.game.MapManager;
 import fr.vampireuhc.game.RoleBuffManager;
 import fr.vampireuhc.game.SidebarManager;
 import fr.vampireuhc.game.SpectatorManager;
+import fr.vampireuhc.listeners.ChatListener;
 import fr.vampireuhc.listeners.GameplayListener;
 import fr.vampireuhc.listeners.PlayerConnectionListener;
 import fr.vampireuhc.listeners.PlayerDeathListener;
@@ -67,23 +68,31 @@ public class VampireUHC extends JavaPlugin {
         getServer().getPluginManager().registerEvents(spectatorManager, this);
         getServer().getPluginManager().registerEvents(connectionListener, this);
         getServer().getPluginManager().registerEvents(rulesListener, this);
+        getServer().getPluginManager().registerEvents(new ChatListener(this), this);
 
         VUHCCommand command = new VUHCCommand(gameManager, playerManager, markerManager, roleManager, voteManager, spectatorManager);
         getCommand("vuhc").setExecutor(command);
         getCommand("vuhc").setTabCompleter(command);
+
+        // Reprise d'une partie en cours après un redémarrage du serveur.
+        RoleManager.LoadedGameState state = roleManager.loadGameFromJson(
+                getDataFolder().getAbsolutePath() + File.separator + "game-state.json");
+        if (state != null) {
+            gameManager.restoreGame(state.phase(), state.elapsedMinutes());
+        }
 
         getLogger().info("VampireUHC activé !");
     }
 
     @Override
     public void onDisable() {
+        // Sauvegarder l'état du jeu AVANT l'arrêt (sinon la phase serait marquée ENDED).
+        if (roleManager != null && playerManager != null && playerManager.getAll().iterator().hasNext()) {
+            roleManager.saveGameToJson(getDataFolder().getAbsolutePath() + File.separator + "game-state.json");
+        }
+
         if (gameManager != null) {
             gameManager.stop();
-        }
-        
-        // Sauvegarder l'état du jeu avant désactivation
-        if (roleManager != null && playerManager.getAll().iterator().hasNext()) {
-            roleManager.saveGameToJson(getDataFolder().getAbsolutePath() + File.separator + "game-state.json");
         }
         
         getLogger().info("VampireUHC desactivé !");

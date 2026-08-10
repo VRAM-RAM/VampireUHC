@@ -63,6 +63,10 @@ public class VampireUHCPlayer {
         this.vampireListRevealed = true;
     }
 
+    public void setVampireListRevealed(boolean revealed) {
+        this.vampireListRevealed = revealed;
+    }
+
     public boolean isVampireListRevealed() {
         return vampireListRevealed;
     }

@@ -139,6 +139,47 @@ public class GameManager {
         }
     }
 
+    // Reprend une partie sauvegardée après un redémarrage du serveur.
+    public void restoreGame(GamePhase restoredPhase, int restoredElapsedMinutes) {
+        if (tickTask != null) {
+            tickTask.cancel();
+        }
+        if (countdownTask != null) {
+            countdownTask.cancel();
+            countdownTask = null;
+        }
+        phase = restoredPhase;
+        elapsedMinutes = Math.max(0, restoredElapsedMinutes);
+        startMillis = System.currentTimeMillis() - elapsedMinutes * 60_000L;
+        gameStarted = true;
+
+        // Charge la world existante SANS ré-éparpiller les joueurs.
+        plugin.getMapManager().prepareWorld();
+
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            VampireUHCPlayer vp = playerManager.get(online.getUniqueId());
+            online.setGameMode(vp != null && vp.isAlive() ? GameMode.SURVIVAL : GameMode.SPECTATOR);
+        }
+
+        // Grâce de déconnexion pour les vivants hors ligne.
+        for (VampireUHCPlayer vp : playerManager.getAll()) {
+            if (vp.isAlive() && Bukkit.getPlayer(vp.getUuid()) == null) {
+                plugin.getConnectionListener().startGrace(vp);
+            }
+        }
+
+        long delay = (60 - (getElapsedSeconds() % 60)) * 20L;
+        tickTask = Bukkit.getScheduler().runTaskTimer(plugin, this::onMinuteElapsed, delay, 20 * 60L);
+
+        if (plugin.getSidebarManager() != null) {
+            plugin.getSidebarManager().start();
+        }
+        if (plugin.getSpectatorManager() != null) {
+            plugin.getSpectatorManager().start();
+        }
+        broadcast("&5La partie a été restaurée.");
+    }
+
     // Et fonction qui la termine
     public void stop() {
         boolean wasStarted = gameStarted || tickTask != null;
@@ -197,6 +238,16 @@ public class GameManager {
         }
 
         plugin.getMapManager().resetWorld();
+
+        // Remise à zéro des joueurs : mode survie dans le monde principal, inventaire vidé.
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.setGameMode(GameMode.SURVIVAL);
+            player.getInventory().clear();
+            player.setHealth(player.getMaxHealth());
+            player.setFoodLevel(20);
+            player.setSaturation(20f);
+            player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
+        }
         broadcast("&5La partie a été réinitialisée.");
     }
 
@@ -335,6 +386,10 @@ public class GameManager {
         }
 
         for (VampireUHCPlayer vp : pool) {
+            // Les vampires de naissance peuvent voter pour la marque vampire (pas les infectés).
+            if (vp.getCamp() == Camp.VAMPIRE) {
+                vp.setVampireVote();
+            }
             Player bukkitPlayer = Bukkit.getPlayer(vp.getUuid());
             if (bukkitPlayer != null) {
                 bukkitPlayer.sendMessage(configManager.translate("Votre camp : &e" + vp.getCamp().getDisplayName()));

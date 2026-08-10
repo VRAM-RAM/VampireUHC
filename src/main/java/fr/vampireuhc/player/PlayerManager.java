@@ -19,6 +19,11 @@ public class PlayerManager {
             id -> new VampireUHCPlayer(id, player.getName()));
     }
 
+    // Ajoute directement un joueur déjà construit (restauration après redémarrage).
+    public void add(VampireUHCPlayer player) {
+        players.put(player.getUuid(), player);
+    }
+
     public VampireUHCPlayer get(UUID uuid) {
         return players.get(uuid);
     }
