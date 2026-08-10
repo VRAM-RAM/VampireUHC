@@ -11,10 +11,26 @@ compo:
   vampire-max: 8                # Maximum de vampires
   solo-min: 1                   # Minimum de rôles solitaires
   solo-max: 2                   # Maximum de rôles solitaires
+  vote-every-minutes: 10        # Les vampires votent pour une marque toutes les X minutes
+
+# Map configuration
+map:
+  size: 1000                    # Taille de la map (carré, centrée sur 0;0)
+  seed: 0                       # Seed de génération (0 = seed aléatoire du serveur)
+  dark-forest-radius: 400       # Rayon de la forêt sombre garantie autour de 0;0
+
+# Gameplay configuration
+gameplay:
+  auto-smelt: true              # Fonte automatique des minerais (fer, or, débris antiques...)
+  better-loot: true             # Meilleurs loots (plus d'or, de cuir, de pommes)
+  apple-drop-chance: 0.05       # Chance qu'une feuille casse donne une pomme
+  leather-bonus: 2              # Nombre de cuirs bonus par vache tuée
 
 # Vampire configuration
 vampires:
   day-weakness: true            # Faiblesse des vampires le jour (désactivable)
+  marks-to-remove-weakness: 2   # A partir de X joueurs marqués, perte de la faiblesse
+  marks-for-night-strength: 4   # A partir de nX joueurs marqués, force la nuit
   master:
     starting-hearts: 8          # Coeurs initiaux du Maître Vampire
     marks-to-infect: 3          # Nombre de marques nécessaires pour infecter un joueur
@@ -31,3 +47,11 @@ markers:
 # Messages configuration
 messages:
   prefix: "&5&lVampireUHC &8» &r"   # Préfixe utilisé dans tous les messages
+
+# Apprentie assassin configuration
+solo:
+  slayer:
+    dark-threshold: 3          # Plus de X marqueurs obscurs --> force légère la nuit
+    light-threshold: 3         # Plus de X marqueurs lumineux --> force légère le jour
+    dark-high-threshold: 6     # Plus de nX marqueurs obscurs --> force + régénération la nuit
+    light-high-threshold: 6    # Plus de nX marqueurs lumineux --> force + régénération le jour

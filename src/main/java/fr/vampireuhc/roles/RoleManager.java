@@ -203,6 +203,7 @@ public class RoleManager {
             
             playerObj.addProperty("vampireListRevealed", player.isVampireListRevealed());
             playerObj.addProperty("canVoteVampireMark", player.canVoteVampireMark());
+            playerObj.addProperty("alive", player.isAlive());
             
             // Marqueurs du joueur
             JsonArray markersArray = new JsonArray();
@@ -231,6 +232,27 @@ public class RoleManager {
         }
         
         gameState.add("players", playersArray);
+
+        // État des votes vampires (sauvegarde pour reprise en cas de reload)
+        JsonObject voteObj = new JsonObject();
+        var voteManager = fr.vampireuhc.VampireUHC.getInstance().getVoteManager();
+        voteObj.addProperty("open", voteManager.isVoteOpen());
+        voteObj.addProperty("markedPlayerCount", voteManager.getMarkedPlayerCount());
+
+        JsonObject votesObj = new JsonObject();
+        voteManager.getVotesCopy().forEach((id, count) -> votesObj.addProperty(id.toString(), count));
+        voteObj.add("votes", votesObj);
+
+        JsonArray markedPlayersArray = new JsonArray();
+        voteManager.getMarkedPlayersCopy().forEach(id -> markedPlayersArray.add(id.toString()));
+        voteObj.add("markedPlayers", markedPlayersArray);
+
+        if (voteManager.getPendingTie() != null) {
+            JsonArray tieArray = new JsonArray();
+            voteManager.getPendingTie().tiedPlayers().forEach(id -> tieArray.add(id.toString()));
+            voteObj.add("pendingTie", tieArray);
+        }
+        gameState.add("vote", voteObj);
         
         // Écrire dans le fichier
         Gson gson = new GsonBuilder()

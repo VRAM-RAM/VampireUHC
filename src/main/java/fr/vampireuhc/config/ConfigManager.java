@@ -67,6 +67,46 @@ public class ConfigManager {
         return cfg().getInt("compo.solo-max", 2);
     }
 
+    public int getVoteEveryMinutes() {
+        // Les vampires votent pour une marque toutes les X minutes.
+        return cfg().getInt("compo.vote-every-minutes", 10);
+    }
+
+    /* Utilitaires pour la map */
+
+    public int getMapSize() {
+        // Map carrée de X blocs de côté, centrée sur 0;0.
+        return cfg().getInt("map.size", 1000);
+    }
+
+    public long getMapSeed() {
+        // Seed de la map, pour garantir de bonnes caves.
+        return cfg().getLong("map.seed", 0L);
+    }
+
+    public int getDarkForestRadius() {
+        // Rayon (en blocs) de la foret sombre garantie autour de 0;0.
+        return cfg().getInt("map.dark-forest-radius", 400);
+    }
+
+    /* Utilitaires gameplay */
+
+    public boolean isAutoSmeltEnabled() {
+        return cfg().getBoolean("gameplay.auto-smelt", true);
+    }
+
+    public boolean isBetterLootEnabled() {
+        return cfg().getBoolean("gameplay.better-loot", true);
+    }
+
+    public double getAppleDropChance() {
+        return cfg().getDouble("gameplay.apple-drop-chance", 0.05);
+    }
+
+    public int getLeatherBonus() {
+        return cfg().getInt("gameplay.leather-bonus", 2);
+    }
+
     /* Utilitaires pour les vampires et le maitre */
 
     public boolean isDayWeaknessEnabled() {
@@ -82,6 +122,34 @@ public class ConfigManager {
     public int getMarksToInfect() {
         // Par défaut, il faut que le maitre marque trois fois un joueur non-vampire pour l'infecter
         return cfg().getInt("vampires.master.marks-to-infect", 3);
+    }
+
+    public int getMarksToRemoveWeakness() {
+        // A partir de X joueurs marqués, les vampires perdent leur faiblesse de jour.
+        return cfg().getInt("vampires.marks-to-remove-weakness", 2);
+    }
+
+    public int getMarksForNightStrength() {
+        // A partir de nX joueurs marqués, les vampires gagnent de la force la nuit.
+        return cfg().getInt("vampires.marks-for-night-strength", 4);
+    }
+
+    /* Utilitaires pour l'apprentie assassin */
+
+    public int getSlayerDarkThreshold() {
+        return cfg().getInt("solo.slayer.dark-threshold", 3);
+    }
+
+    public int getSlayerLightThreshold() {
+        return cfg().getInt("solo.slayer.light-threshold", 3);
+    }
+
+    public int getSlayerDarkHighThreshold() {
+        return cfg().getInt("solo.slayer.dark-high-threshold", 6);
+    }
+
+    public int getSlayerLightHighThreshold() {
+        return cfg().getInt("solo.slayer.light-high-threshold", 6);
     }
 
     /* Utilitaires pour marqueurs divers */

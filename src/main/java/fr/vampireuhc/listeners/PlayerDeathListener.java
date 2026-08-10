@@ -1,0 +1,70 @@
+package fr.vampireuhc.listeners;
+
+import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.roles.ApprenticeSlayer;
+import fr.vampireuhc.roles.CupidonRole;
+import fr.vampireuhc.roles.PaladinRole;
+
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
+
+/**
+ * Gère les morts : marque le joueur comme mort, envoie un message de mort
+ * personnalisé, et déclenche les hooks de rôles (Paladin, Apprentie assassin,
+ * Cupidon). Vérifie aussi les conditions de victoire.
+ */
+public class PlayerDeathListener implements Listener {
+    private final VampireUHC plugin;
+
+    public PlayerDeathListener(VampireUHC plugin) {
+        this.plugin = plugin;
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player victim = event.getEntity();
+        VampireUHCPlayer vp = plugin.getPlayerManager().get(victim.getUniqueId());
+        if (vp == null) {
+            return;
+        }
+        vp.setDead();
+
+        Player killer = victim.getKiller();
+        VampireUHCPlayer killerVp = killer != null ? plugin.getPlayerManager().get(killer.getUniqueId()) : null;
+
+        Component message = Component.text(victim.getName(), NamedTextColor.RED)
+                .append(Component.text(" est mort", NamedTextColor.GRAY));
+        if (killer != null) {
+            message = message.append(Component.text(", tué par ", NamedTextColor.GRAY))
+                    .append(Component.text(killer.getName(), NamedTextColor.GOLD));
+        }
+        event.deathMessage(message);
+
+        if (killerVp != null) {
+            // Le Paladin gagne une marque lumineuse en tuant un vampire.
+            if (killerVp.getRole() instanceof PaladinRole paladin) {
+                paladin.gainLuminousMarkerOnKill(plugin.getMarkerManager(), vp);
+            }
+
+            // L'Apprentie assassin récupère les marques (sauf Maître) du tué.
+            if (killerVp.getRole() instanceof ApprenticeSlayer slayer) {
+                slayer.CopyMarkersOnKill(plugin.getMarkerManager(), vp);
+            }
+        }
+
+        // Le Cupidon est notifié si l'un des amoureux meurt (penalty + identité du tueur).
+        for (VampireUHCPlayer p : plugin.getPlayerManager().getAll()) {
+            if (p.getRole() instanceof CupidonRole cupidon) {
+                cupidon.onLoverDeath(plugin.getMarkerManager(), vp, killer);
+            }
+        }
+
+        plugin.getGameManager().checkWinCondition();
+    }
+}

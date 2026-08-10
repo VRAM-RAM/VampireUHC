@@ -302,7 +302,6 @@ Vous avez marqué <Joueur> !
 
 Ils ne savent pas si le marquage a fonctionné ou pas (salvateur?) et si les marques changent de propriétaire ou pas.
 
-
 ## Todo :
 
 - ajouter les rôles suivants

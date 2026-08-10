@@ -13,6 +13,7 @@ public class VampireUHCPlayer {
    
     private Camp camp;
     private Role role;
+    private boolean alive = true;
     private boolean vampireListRevealed = false; //Passe à true, à l'activation du pvp, pour les vampires.
     private boolean canVoteVampireMark = false; // Changé en true pour les vampires à l'annonce des rôles.
 
@@ -39,6 +40,14 @@ public class VampireUHCPlayer {
 
     public void setCamp(Camp camp) {
         this.camp = camp;
+    }
+
+    public boolean isAlive() {
+        return alive;
+    }
+
+    public void setDead() {
+        this.alive = false;
     }
 
     public void setRole(Role role) {

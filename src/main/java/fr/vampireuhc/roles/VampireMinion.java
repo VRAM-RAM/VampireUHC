@@ -22,7 +22,7 @@ public class VampireMinion implements Role {
 
     @Override
     public String getDescription() {
-        return "todo!";
+        return "Vous êtes un Sbire vampire. En début de partie, vous subissez une faiblesse pendant le jour. À 45 minutes, vous découvrez la liste de vos alliés et pouvez voter pour attribuer des marques vampires (/vuhc voter <joueur>). Vos pouvoirs augmentent avec le nombre de joueurs marqués : à partir de X joueurs marqués vous perdez votre faiblesse, et à partir de nX joueurs marqués vous gagnez de la force la nuit. En cas d'égalité lors du vote, c'est le Maître qui tranche.";
     }
 
     @Override

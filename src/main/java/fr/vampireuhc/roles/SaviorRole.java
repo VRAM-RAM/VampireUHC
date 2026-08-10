@@ -27,7 +27,7 @@ public class SaviorRole implements Role {
 
     @Override
     public String getDescription() {
-        return "todo!";
+        return "Le Salvateur est un rôle villageois. À chaque épisode, il place une marque Salvation sur un joueur. Cette marque possède une aura lumineuse. Si le joueur ciblé par un vampire ou le Maître possède la Salvation, la marque n'est pas appliquée et la marque Salvation disparaît, mais les vampires pensent quand même que leur action a fonctionné. Vous créez donc de fausses informations, tout en protégeant ceux que vous pensez être safe. Vous ne pouvez pas protéger le même joueur deux épisodes consécutifs.";
     }
 
     @Override
@@ -55,11 +55,16 @@ public class SaviorRole implements Role {
         if (episode == current_episode || applied_this_episode == true) {
             return false;
         }
+
+        // On ne peut pas protéger le même joueur deux épisodes consécutifs
+        if (last_applied_Uuid != null && last_applied_Uuid.equals(target.getUuid())) {
+            return false;
+        }
+
         this.episode = current_episode;
 
         // On clear l'ancien marqueur salvation
         manager.clearMarkersOfType(last_applied_Uuid, MarkerType.SALVATION);
-
 
         manager.addMarker(target.getUuid(), MarkerType.SALVATION, salva.getUuid());
         

@@ -9,7 +9,9 @@ import fr.vampireuhc.player.VampireUHCPlayer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -38,6 +40,12 @@ public class GameManager {
     public boolean isPvPActive() { return phase == GamePhase.PVP_ACTIVE; }
     public int getElapsedMinutes() { return elapsedMinutes; }
 
+    // L'épisode actuel (1 épisode = episodeLength minutes).
+    public int getEpisode() {
+        int len = configManager.getEpisodeLength();
+        return len > 0 ? elapsedMinutes / len : 0;
+    }
+
     // Fonction qui commence la partie
     public void start() {
         if (tickTask != null) return;
@@ -45,6 +53,9 @@ public class GameManager {
         phase = GamePhase.PRE_ROLES;
         elapsedMinutes = 0;
         startMillis = System.currentTimeMillis();
+
+        plugin.getMapManager().prepareWorld();
+        plugin.getMapManager().teleportPlayersToSpawn();
 
         for (Player online: Bukkit.getOnlinePlayers()) {
             playerManager.register(online);
@@ -79,6 +90,43 @@ public class GameManager {
 
         if (elapsedMinutes == configManager.getPvpActivationAt() && phase == GamePhase.PRE_PVP) {
             activatePvp();
+            plugin.getVoteManager().openVote();
+        }
+
+        int voteEvery = configManager.getVoteEveryMinutes();
+        if (phase == GamePhase.PVP_ACTIVE && voteEvery > 0) {
+            int minutesSincePvp = elapsedMinutes - configManager.getPvpActivationAt();
+            if (minutesSincePvp > 0 && minutesSincePvp % voteEvery == 0) {
+                plugin.getVoteManager().closeAndResolve();
+                plugin.getVoteManager().openVote();
+            }
+        }
+
+        if (plugin.getBuffManager() != null) {
+            plugin.getBuffManager().applyBuffs();
+        }
+
+        checkVictory();
+    }
+
+    public void checkWinCondition() {
+        checkVictory();
+    }
+
+    // Détecte la fin de partie : il ne reste qu'un camp de joueurs vivants.
+    private void checkVictory() {
+        if (phase == GamePhase.ENDED) {
+            return;
+        }
+        Set<Camp> camps = new HashSet<>();
+        for (VampireUHCPlayer p : playerManager.getAll()) {
+            if (p.isAlive() && p.getCamp() != null) {
+                camps.add(p.getCamp());
+            }
+        }
+        if (camps.size() == 1 && !camps.isEmpty()) {
+            broadcast("Le camp " + camps.iterator().next() + " remporte la partie !");
+            stop();
         }
     }
 

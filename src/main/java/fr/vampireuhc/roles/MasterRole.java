@@ -1,5 +1,7 @@
 package fr.vampireuhc.roles;
 
+import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
@@ -8,10 +10,12 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
 
 // On définit le rôle "Maitre". 
 public class MasterRole implements Role {
     private VampireUHCPlayer master;
+    private int lastMarkedEpisode = -1;
 
     @Override
     public boolean isVampire() {
@@ -40,29 +44,47 @@ public class MasterRole implements Role {
     @Override
     public void onAssign(VampireUHCPlayer player) {
         this.master = player;
+
+        // Le Maitre est volontairement fragile : ~8 coeurs au lieu de 10.
+        Player bukkitMaster = Bukkit.getPlayer(player.getUuid());
+        if (bukkitMaster != null) {
+            int hearts = VampireUHC.getInstance().getConfigManager().getMasterStartingHearts();
+            bukkitMaster.setMaxHealth(hearts * 2);
+            bukkitMaster.setHealth(bukkitMaster.getMaxHealth());
+        }
     }
 
     // Maintenant, les pouvoirs spécifiques au maitre :
 
     // Marquer un joueur
-    public void markPlayer(MarkerManager markerManager, VampireUHCPlayer target) {
+    public boolean markPlayer(MarkerManager markerManager, VampireUHCPlayer target, int currentEpisode) {
         if (master == null) {
-            return;
+            return false;
         }
-        if (target.getCamp() != Camp.VAMPIRE)  {
-            markerManager.addMarker(target.getUuid(), MarkerType.MARQUE_MAITRE, master.getUuid());
+        if (target.getCamp() == Camp.VAMPIRE) {
+            return false;
+        }
+        if (lastMarkedEpisode == currentEpisode) {
+            return false;
+        }
+        this.lastMarkedEpisode = currentEpisode;
 
-            // Si il y a 3 marqueurs sur un joueur, il est infecté
-            if (markerManager.countMarkers(target.getUuid(), MarkerType.MARQUE_MAITRE) >= 3) {
-                infect(markerManager, target);
-            } else {
-                // Sinon, renvoie juste un message de succès au Maitre
-                var bukkitMaster = Bukkit.getPlayer(master.getUuid());
-                if (bukkitMaster != null) {
-                    bukkitMaster.sendMessage(ChatColor.DARK_PURPLE + "Vous avez posé votre marque maitre sur " + ChatColor.GOLD +  target.getLastKnownName() + ChatColor.DARK_PURPLE + ".");
-                }
-            }
+        // La protection Salvation bloque la marque (elle est consommée),
+        // mais le Maitre pense quand même que son action a fonctionné.
+        boolean applied = markerManager.tryApplyMark(target.getUuid(), MarkerType.MARQUE_MAITRE, master.getUuid());
+
+        ConfigManager config = VampireUHC.getInstance().getConfigManager();
+
+        var bukkitMaster = Bukkit.getPlayer(master.getUuid());
+        if (bukkitMaster != null) {
+            bukkitMaster.sendMessage(ChatColor.DARK_PURPLE + "Vous avez posé votre marque maitre sur " + ChatColor.GOLD +  target.getLastKnownName() + ChatColor.DARK_PURPLE + ".");
         }
+
+        // Si il y a assez de marqueurs sur un joueur, il est infecté
+        if (applied && markerManager.countMarkers(target.getUuid(), MarkerType.MARQUE_MAITRE) >= config.getMarksToInfect()) {
+            infect(markerManager, target);
+        }
+        return true;
     }
 
     // Helper pour infecter un joueur

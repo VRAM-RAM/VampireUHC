@@ -8,4 +8,4 @@ author: Olruix (VRAM-RAM on github)
 commands:
   vuhc:
     description: Main command for VampireUHC plugin
-    usage: /vuhc <start|status|who|aura|marquer|role>
+    usage: /vuhc <start|status|who|aura|marquer|trancher|proteger|voter|switch|role>

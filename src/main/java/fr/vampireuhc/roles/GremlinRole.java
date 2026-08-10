@@ -21,8 +21,7 @@ public class GremlinRole implements Role {
 
     @Override
     public String getDescription() {
-        // TODO
-        return "";
+        return "Le Gremlin est un rôle solitaire. Une fois par épisode, il peut échanger l'ensemble des marques de deux joueurs via /vuhc switch <joueur1> <joueur2> (il peut s'auto-switch). Pratique pour semer la zizanie, handicaper des rôles villageois ou retarder l'infection du Maître. Attention : le Cupidon est notifié si une marque Amour change de propriétaire.";
     }
 
     @Override

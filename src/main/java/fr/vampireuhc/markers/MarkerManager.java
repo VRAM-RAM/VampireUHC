@@ -19,6 +19,26 @@ public class MarkerManager {
         return marker;
     }
 
+    public boolean hasMarker(UUID target, MarkerType type) {
+        return getMarkers(target, type).size() > 0;
+    }
+
+    /**
+     * Tente d'appliquer une marque en respectant la protection Salvation.
+     * Si la cible porte une marque SALVATION et que le type est une marque
+     * vampire ou maitre, la marque Salvation est consommée et la marque n'est
+     * PAS appliquée (l'appelant peut tout de même annoncer un succès).
+     */
+    public boolean tryApplyMark(UUID target, MarkerType type, UUID source) {
+        boolean hostile = type == MarkerType.MARQUE_VAMPIRE || type == MarkerType.MARQUE_MAITRE;
+        if (hostile && hasMarker(target, MarkerType.SALVATION)) {
+            clearMarkersOfType(target, MarkerType.SALVATION);
+            return false;
+        }
+        addMarker(target, type, source);
+        return true;
+    }
+
     public void addMarkers(UUID target, List<Marker> markers) {
         markersByPlayer.computeIfAbsent(target, k -> new ArrayList<>()).addAll(markers);
     }

@@ -3,6 +3,10 @@ package fr.vampireuhc;
 import fr.vampireuhc.commands.VUHCCommand;
 import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.game.GameManager;
+import fr.vampireuhc.game.MapManager;
+import fr.vampireuhc.game.RoleBuffManager;
+import fr.vampireuhc.listeners.GameplayListener;
+import fr.vampireuhc.listeners.PlayerDeathListener;
 import fr.vampireuhc.listeners.PvPListener;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.PlayerManager;
@@ -22,6 +26,8 @@ public class VampireUHC extends JavaPlugin {
     private GameManager gameManager;
     private RoleManager roleManager;
     private VampireVoteManager voteManager;
+    private MapManager mapManager;
+    private RoleBuffManager buffManager;
 
     @Override
     public void onEnable() {
@@ -39,8 +45,13 @@ public class VampireUHC extends JavaPlugin {
         this.roleManager = new RoleManager(this, playerManager);
 
         this.voteManager = new VampireVoteManager(this);
+        this.mapManager = new MapManager(this);
+        this.buffManager = new RoleBuffManager(this);
 
         getServer().getPluginManager().registerEvents(new PvPListener(gameManager), this);
+        getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
+        getServer().getPluginManager().registerEvents(new GameplayListener(this), this);
+        getServer().getPluginManager().registerEvents(mapManager, this);
 
         VUHCCommand command = new VUHCCommand(gameManager, playerManager, markerManager, roleManager, voteManager);
         getCommand("vuhc").setExecutor(command);
@@ -89,5 +100,13 @@ public class VampireUHC extends JavaPlugin {
 
     public VampireVoteManager getVoteManager() {
         return voteManager;
+    }
+
+    public MapManager getMapManager() {
+        return mapManager;
+    }
+
+    public RoleBuffManager getBuffManager() {
+        return buffManager;
     }
 }
