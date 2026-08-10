@@ -1,0 +1,33 @@
+# Timeline configuration
+timeline:
+  role-assignment-at: 20        # Rôles distribués à 20 minutes
+  pvp-activation-at: 45         # PVP activé à 45 minutes
+  episode-length: 20            # Durée d'un épisode (20 min)
+
+# Composition configuration
+compo:
+  reference-player-count: 28    # Nombre de joueurs de référence pour le calcul des camps
+  vampire-min: 6                # Minimum de vampires
+  vampire-max: 8                # Maximum de vampires
+  solo-min: 1                   # Minimum de rôles solitaires
+  solo-max: 2                   # Maximum de rôles solitaires
+
+# Vampire configuration
+vampires:
+  day-weakness: true            # Faiblesse des vampires le jour (désactivable)
+  master:
+    starting-hearts: 8          # Coeurs initiaux du Maître Vampire
+    marks-to-infect: 3          # Nombre de marques nécessaires pour infecter un joueur
+
+# Marker configuration
+markers:
+  cupidon:
+    notify-delay-min-seconds: 0      # Délai minimum avant notification Cupidon (secondes)
+    notify-delay-max-seconds: 600    # Délai maximum avant notification Cupidon (secondes)
+  amour-death:
+    hearts-lost: 5                   # Coeurs perdus quand l'amour meurt
+    duration-seconds: 600            # Durée du penalty (secondes)
+
+# Messages configuration
+messages:
+  prefix: "&5&lVampireUHC &8» &r"   # Préfixe utilisé dans tous les messages
