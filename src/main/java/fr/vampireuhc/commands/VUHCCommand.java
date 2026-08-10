@@ -3,7 +3,6 @@ package fr.vampireuhc.commands;
 import fr.vampireuhc.game.GameManager;
 import fr.vampireuhc.game.SpectatorManager;
 import fr.vampireuhc.markers.MarkerManager;
-import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.PlayerManager;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
@@ -26,7 +25,6 @@ import fr.vampireuhc.roles.VampireMinion;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +41,7 @@ import java.util.stream.Collectors;
  * /vuhc voter <nom>       -> Sbire vampire vote pour la marque vampire
  * /vuhc switch <j1> <j2>  -> Gremlin échange les marques de deux joueurs
  * /vuhc role              -> Affiche son rôle ou la liste des vampires si infecté
+ * /vuhc setTime <Time>    -> Change le timer au temps désigné (pour admin et debug seulement, en game classique, si on l'execute, ça casse pas mal de choses)
  */
 public class VUHCCommand implements CommandExecutor, TabCompleter {
     private final GameManager gameManager;
@@ -52,7 +51,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     private final VampireVoteManager voteManager;
     private final SpectatorManager spectatorManager;
 
-    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "spectate", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "role");
+    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "spectate", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "role", "setTime");
 
     public VUHCCommand(GameManager gameManager, PlayerManager playerManager, MarkerManager markerManager, RoleManager roleManager, VampireVoteManager voteManager, SpectatorManager spectatorManager) {
         this.gameManager = gameManager;
@@ -92,6 +91,20 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
                 return true;
 
+            case "settime":
+                if (!hasAdminPermission(sender)) {
+                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
+                    return true;
+                }
+                if (args.length >= 2) {
+                    int time = Integer.parseInt(args[1]);
+                    gameManager.setElapsedMinutes(time);
+                    sender.sendMessage(ChatColor.GREEN + "Vous avez changé le temps à " + time + " minutes.");
+                    return true;
+                }
+                sender.sendMessage(ChatColor.RED + "Usage: /vuhc setTime <TIME_MINUTE>");
+                return true;
+
             case "stop":
                 if (!hasAdminPermission(sender)) {
                     sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
@@ -128,16 +141,28 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 return true;
 
             case "status":
+                if (!hasAdminPermission(sender)) {
+                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
+                    return true;
+                }
                 sender.sendMessage(ChatColor.YELLOW + "Phase: " + gameManager.getPhase() + " | Minute: " + gameManager.getElapsedMinutes());
                 return true;
 
             case "who":
+                if (!hasAdminPermission(sender)) {
+                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
+                    return true;
+                }
                 for (VampireUHCPlayer p : playerManager.getAll()) {
                     sender.sendMessage(p.getLastKnownName() + " -> " + p.getCamp());
                 }
                 return true;
 
             case "aura":
+                if (!hasAdminPermission(sender)) {
+                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
+                    return true;
+                }
                 if (args.length < 2) {
                     sender.sendMessage(ChatColor.RED + "Usage: /vuhc aura <joueur>");
                     return true;
@@ -482,6 +507,6 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|role>");
+        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|role|setTime>");
     }
 }

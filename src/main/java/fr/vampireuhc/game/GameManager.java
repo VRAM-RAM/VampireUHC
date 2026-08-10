@@ -9,7 +9,6 @@ import fr.vampireuhc.player.VampireUHCPlayer;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -59,6 +58,12 @@ public class GameManager {
             return 0;
         }
         return (System.currentTimeMillis() - startMillis) / 1000L;
+    }
+
+    public void setElapsedMinutes(int time) {
+        this.elapsedMinutes = time;
+        var virtualStartMillis = System.currentTimeMillis() - (time * 60000);
+        this.startMillis = virtualStartMillis;
     }
 
     // L'épisode actuel (1 épisode = episodeLength minutes).
