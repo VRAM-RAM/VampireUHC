@@ -51,11 +51,7 @@ public class RoleBuffManager {
             slayer.applyMarkerEffects(p, night,
                     slayer.countDarkMarkers(markers),
                     slayer.countLightMarkers(markers));
-        } else if (vp.getRole() instanceof GremlinRole gremlin) {
-            gremlin.applyDrainEffect(p);
         }
-
-
     }
 
     private void applyVampireBuffs(Player p, VampireUHCPlayer vp) {

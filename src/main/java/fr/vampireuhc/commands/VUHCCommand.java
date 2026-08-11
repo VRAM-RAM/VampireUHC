@@ -7,6 +7,7 @@ import fr.vampireuhc.player.PlayerManager;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.RoleManager;
+import fr.vampireuhc.roles.RoleType;
 import fr.vampireuhc.vampire_vote.VampireVoteManager;
 import fr.vampireuhc.vampire_vote.VoteResult;
 import org.bukkit.Bukkit;
@@ -42,6 +43,8 @@ import java.util.stream.Collectors;
  * /vuhc switch <j1> <j2>  -> Gremlin échange les marques de deux joueurs
  * /vuhc role              -> Affiche son rôle ou la liste des vampires si infecté
  * /vuhc setTime <Time>    -> Change le timer au temps désigné (pour admin et debug seulement, en game classique, si on l'execute, ça casse pas mal de choses)
+ * /vuhc setRole <RoleType>-> Applique le role au joueur, fait l'annonce des rôles. Pour le debug et devtest uniquement (si on le fait à plusieurs, les rôles sont cassés). 
+ * /vuhc drain             -> pouvoir secondaire du gremlin
  */
 public class VUHCCommand implements CommandExecutor, TabCompleter {
     private final GameManager gameManager;
@@ -51,7 +54,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     private final VampireVoteManager voteManager;
     private final SpectatorManager spectatorManager;
 
-    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "spectate", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "role", "setTime");
+    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "spectate", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "role", "setTime", "setRole", "drain");
 
     public VUHCCommand(GameManager gameManager, PlayerManager playerManager, MarkerManager markerManager, RoleManager roleManager, VampireVoteManager voteManager, SpectatorManager spectatorManager) {
         this.gameManager = gameManager;
@@ -91,6 +94,24 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
                 return true;
 
+            case "setrole":
+                if (!hasAdminPermission(sender)) {
+                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
+                    return true;
+                }
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return true;
+                }
+                if (args.length >= 2) {
+                    var type = RoleType.fromString(args[1]);
+                    gameManager.setRole(player, type);;
+                    return true;
+                }
+                sender.sendMessage(ChatColor.RED + "Usage: /vuhc setRole <RoleType>");
+                return true;
+
+
             case "settime":
                 if (!hasAdminPermission(sender)) {
                     sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
@@ -112,7 +133,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
                 gameManager.stop();
                 sender.sendMessage(ChatColor.GREEN + "Partie arrêtée.");
-                return true;
+                return true;                
 
             case "reset":
                 if (!hasAdminPermission(sender)) {
@@ -176,8 +197,29 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 AuraTier tier = markerManager.computeAuraTier(target.getUniqueId());
                 sender.sendMessage(target.getName() + " -> score=" + score + " tier=" + tier);
                 return true;
+            
+            case "drain": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return true;
+                }
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
 
-            case "marquer":
+                if (localPlayer == null) {
+                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
+                    return true;
+                }
+
+                if (!(localPlayer.getRole() instanceof GremlinRole gremlinRole)) {
+                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas le gremlin.");
+                    return true;
+                }
+
+                gremlinRole.activateDrain();
+                return true;
+            }
+
+            case "marquer": {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
                     return true;
@@ -216,6 +258,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 masterRole.markPlayer(markerManager, targetPlayer, gameManager.getEpisode());
                 return true;
+            }
 
             case "trancher":
                 if (!(sender instanceof Player player)) {
@@ -507,6 +550,6 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|role|setTime>");
+        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|role|setTime|setRole>");
     }
 }

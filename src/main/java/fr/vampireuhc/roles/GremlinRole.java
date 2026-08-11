@@ -73,18 +73,20 @@ public class GremlinRole implements Role {
     // Pouvoir de drain (/vuhc drain) :
 
     // Active le drain (ou pas)
-    public void activateDrain(Player gremlin) {
+    public void activateDrain() {
     if (drainActive) return; // déjà actif, on ignore la nouvelle demande
     var plugin = fr.vampireuhc.VampireUHC.getInstance();
 
-    drainActive = true;
-    drainTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
-        drainActive = false;
-        if (gremlin.isOnline() && gremlin.isValid()) {
-            gremlin.sendActionBar(ChatColor.DARK_RED + "Votre pouvoir de " + ChatColor.DARK_PURPLE + "drain" + ChatColor.RED + " est épuisé ! Vous ressentez une" + ChatColor.GREEN + " faiblesse" + ChatColor.RED + ".");
-            gremlin.addPotionEffect(poisonEffect(0));
+    var player = Bukkit.getPlayer(gremlin.getUuid());
+
+    this.drainActive = true;
+    this.drainTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        this.drainActive = false;
+        if (player.isOnline() && player.isValid()) {
+            player.sendActionBar(ChatColor.DARK_RED + "Votre pouvoir de " + ChatColor.DARK_PURPLE + "drain" + ChatColor.RED + " est épuisé ! Vous ressentez une" + ChatColor.GREEN + " faiblesse" + ChatColor.RED + ".");
+            player.addPotionEffect(poisonEffect(1));
         }
-    }, 20L * 60 * 5);
+        }, 20L * 60 * 5);
     }
 
 

@@ -7,5 +7,9 @@ public enum RoleType {
     PALADIN, // Le paladin
     CUPIDON, // Cupidon
     APPRENTICE_SLAYER, // Apprentie chasseur
-    GREMLIN, //Le Gremlin
+    GREMLIN; //Le Gremlin
+    
+    public static RoleType fromString(String value) {
+        return valueOf(value.toUpperCase());
+    }
 }

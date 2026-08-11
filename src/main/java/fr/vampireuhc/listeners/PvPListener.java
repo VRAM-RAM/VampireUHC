@@ -2,6 +2,8 @@ package fr.vampireuhc.listeners;
 
 import fr.vampireuhc.game.GameManager;
 import fr.vampireuhc.game.GamePhase;
+import fr.vampireuhc.roles.GremlinRole;
+
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,6 +14,7 @@ import org.bukkit.entity.Arrow;
 /**
  * Invincibilité totale avant l'annonce des rôles (phase PRE_ROLES) et blocage
  * de tout dégât joueur -> joueur tant que le pvp n'est pas actif.
+ * Intercept les degats joueur --> joueur pour le gremlin (drain)
  */
 public class PvPListener implements Listener {
 
@@ -23,7 +26,7 @@ public class PvPListener implements Listener {
 
     // Invincibilité avant les 20 premières minutes : aucun dégât.
     @EventHandler
-    public void onEntityDamage(EntityDamageEvent event) {
+    public void onEntityDamage(EntityDamageEvent event) { 
         if (gameManager.getPhase() == GamePhase.PRE_ROLES && event.getEntity() instanceof Player) {
             event.setCancelled(true);
         }
@@ -47,7 +50,14 @@ public class PvPListener implements Listener {
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (gameManager.isPvPActive()) {
-            // Le pvp est actif, pas besoin de vérifier
+            // Le pvp est actif, donc on regarder le drain du gremlin
+            if (event.getEntity() instanceof Player && event.getDamager() instanceof Player player) {
+                var roleManager = fr.vampireuhc.VampireUHC.getInstance().getRoleManager();
+                // Si l'attaquant est bien le gremlin... on passe la gestion du drain au code interne au gremlin
+                if (roleManager.getPlayerRole(player.getUniqueId()) instanceof GremlinRole gremlin) {
+                    gremlin.applyDrainEffect(player);
+                }
+            }
             return;
         }
         // On vérifie que l'entité visée est bien un joueur.

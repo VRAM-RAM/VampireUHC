@@ -6,6 +6,7 @@ import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.PlayerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.roles.RoleType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +22,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
+import org.checkerframework.checker.units.qual.t;
 
 public class GameManager {
     private final VampireUHC plugin;
@@ -244,7 +246,7 @@ public class GameManager {
             player.setGameMode(GameMode.SURVIVAL);
             player.getInventory().clear();
             player.setMaxHealth(20.0);
-            player.setHealth(40.0);
+            player.setHealth(20.0);
             player.setFoodLevel(20);
             player.setSaturation(20f);
             player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
@@ -355,6 +357,19 @@ public class GameManager {
             stop();
         }
     }
+
+    // Pour debug et OP seulement
+    public void setRole(Player player, RoleType type) {
+        fr.vampireuhc.roles.RoleManager manager = plugin.getRoleManager();
+        var id = player.getUniqueId();
+        var vampirePlayer = playerManager.get(id);
+        manager.setRoleFromType(vampirePlayer, type);
+        announceRoles();
+        broadcast("Votre rôle a été distribué. Si vous n'êtes pas en partie de devtest, alors il y a un probleme...");
+        playSoundAll(Sound.ENTITY_WITHER_DEATH, 1f, 1f);
+    }
+
+    
 
     private void assignRolesAndCamps() {
         List<VampireUHCPlayer> pool = new ArrayList<>(playerManager.getAll());

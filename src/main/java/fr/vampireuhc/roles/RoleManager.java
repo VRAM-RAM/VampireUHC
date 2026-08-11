@@ -62,6 +62,16 @@ public class RoleManager {
         }
     }
 
+    // pour le debug seulement :
+
+    public void setRoleFromType(VampireUHCPlayer player, RoleType type) {
+        Role role = createRoleFromType(type, player);
+        player.setRole(role);
+        if (role != null) {
+            role.onAssign(player);
+        }
+    }
+
     // Récupère et retourne le rôle d'un joueur
     public Role getPlayerRole(UUID id) {
         VampireUHCPlayer player = playerManager.get(id);
@@ -71,9 +81,7 @@ public class RoleManager {
     /**
      * Attribue un rôle précis à chaque joueur après que les camps ont été répartis.
      */
-    public void assignRolesToPlayers() {
-        List<VampireUHCPlayer> allPlayers = new ArrayList<>(playerManager.getAll());
-        
+    public void assignRolesToPlayers() {        
         // Séparer par camp
         List<VampireUHCPlayer> vampires = playerManager.getByCamp(Camp.VAMPIRE);
         List<VampireUHCPlayer> villagers = playerManager.getByCamp(Camp.VILLAGEOIS);
@@ -132,7 +140,7 @@ public class RoleManager {
 
     // Crée une instance d'un rôle à partir d'un type de Rôle :
 
-    private Role createRoleFromType(RoleType type, VampireUHCPlayer player) {
+    public Role createRoleFromType(RoleType type, VampireUHCPlayer player) {
         switch (type) {
             case RoleType.MASTER:
                 return new MasterRole();
