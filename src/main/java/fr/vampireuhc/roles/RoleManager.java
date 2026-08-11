@@ -29,7 +29,8 @@ public class RoleManager {
     private List<RoleType> villagerRoles = Arrays.asList(
         RoleType.PALADIN,
         RoleType.CUPIDON,
-        RoleType.SAVIOR
+        RoleType.SAVIOR,
+        RoleType.SOUL_WEIGHTER
     );
 
     private List<RoleType> soloroles = Arrays.asList(
@@ -144,6 +145,9 @@ public class RoleManager {
         switch (type) {
             case RoleType.MASTER:
                 return new MasterRole();
+
+            case RoleType.SOUL_WEIGHTER:
+                return new SoulweigherRole();
 
             case RoleType.VAMPIRE_MINION:
                 return new VampireMinion(player);
@@ -401,6 +405,7 @@ public class RoleManager {
             case "Cupidon": return RoleType.CUPIDON;
             case "Apprenti Chasseur": return RoleType.APPRENTICE_SLAYER;
             case "Gremlin": return RoleType.GREMLIN;
+            case "Peseuse d'âmes": return RoleType.SOUL_WEIGHTER;
             default: return null;
         }
     }

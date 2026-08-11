@@ -10,6 +10,19 @@ VampireUHC est un mode de jeu minecraft inspiré de Loup-Garou UHC.
 >
 > Ce petit projet - entièrement en français - est mon premier projet Java, qui me permet d'apprendre le langage (pour cette raison, il n'est ni efficace ni idiomatique). J'ai utilisé de l'agentique (OpenCode : Big Pickle) pour faire de la 'plomberie' (la `serialization`, par exemple). Cependant, toutes les idées viennent de moi, ainsi que tout le code lié à MineCraft (les rôles, les events...).
 
+## Sommaire
+
+* [Concept](#concept)
+* [Déroulement du mode de jeu](#déroulement-du-mode-de-jeu)
+* [Les marqueurs](#les-marqueurs)
+* [Les auras](#les-auras)
+* [Composition](#compo)
+  * [Les vampires](#vampires)
+  * [Les marques vampires](#les-marques-vampires)
+* [Objectif de gameplay](#objectif-de-gameplay)
+* [Rôles](./doc/ROLES.md)
+
+
 ## Concept
 
 Les joueurs, à 20 minutes de jeu, reçoivent un rôle qui determine leur but dans la suite de la partie, et leur pouvoirs.
@@ -72,6 +85,8 @@ Composition envisagée pour environ 24 joueurs :
 - 15 à 16 villageois.
 - 2 à 3 solitaires. (dont le traire vampire qui apparait comme étant vampire)
 
+### Vampires
+
 Les vampires sont très minoritaires.
 
 Avant 45 minutes :
@@ -93,7 +108,7 @@ Grâce aux marques vampires :
 Les seuils dépendent du nombre de joueurs dans la partie.
 Ils votent séparément pour la marque, mais les votes sont mis en commun. En cas d'égalité, le Maitre tranche.
 
-## Les marques vampires
+### Les marques vampires
 
 Les vampires votent pour attribuer des marqueurs vampires à des joueurs non-vampires.
 
@@ -133,183 +148,3 @@ Le but est de comprendre ce qui s'est passé à partir des conséquences :
 - protections,
 - comportements.
 
-## Roles (incomplet)
-
-Les rôles ne doivent pas simplement révéler des informations directes.
-
-Le but est l'interprétation.
-
-Les catégories principales :
-
-Village :
-- Information pure.
-- Mix information/pouvoir (catégorie principale).
-
-Vampires :
-- Sbires vampires. 
-- Maître.
-- Vampire spécial. (pour grosse compo)
-- Traître vampire (type Loup-Garou Blanc mais vampire).
-
-Solitaires :
-- Pas de marqueurs spécifiques.
-- Mécaniques uniques.
-
-### MAÎTRE VAMPIRE
-
-Le Maître est le chef vampire.
-
-Il possède des marqueurs spécifiques : les marqueurs Maître.
-
-Les marqueurs Maître ont une aura obscure.
-
-À chaque épisode, le Maître peut placer un marqueur Maître sur un joueur non-vampire. (peut etre plus frequemment, on verra pour l'équilibrage).
-
-Effets :
-- 1 marqueur Maître :
-  Rien, mais le joueur porte une influence cachée.
-
-- 2 marqueurs Maître :
-  Le joueur reçoit moins d'efficacité avec les pommes d'or (un coeur d'absorption en moins lorsqu'il en mange une).
-
-- 3 marqueurs Maître :
-  Le joueur devient vampire (infecté).
-
-Lorsqu'un joueur est infecté :
-- Son infection est permanente.
-- Les marqueurs Maitre de tous les joueurs disparaissent.
-- Il rejoint le camp vampire, et gagne les pouvoirs des vampires.
-- Il ne peut pas voter pour les futures marques vampires.
-
-Le Maître est volontairement fragile :
-- Environ 8 coeurs au lieu de 10.
-
-### SALVATEUR
-
-Le Salvateur est un rôle villageois.
-
-À chaque épisode, il place un marqueur Salvation sur un joueur.
-
-Ce marqueur possède une aura lumineuse.
-
-Si le joueur ciblé par un vampire ou le Maître possède Salvation :
-- La marque n'est pas appliquée.
-- Les vampires ou le Maître pensent néanmoins que l'action a fonctionné.
-- la marque Salvation disparaît
-
-Le Salvateur crée donc de fausses informations, tout en protégeant ceux qu'il pense être safe.
-
-### CUPIDON
-
-
-Cupidon place au début de la partie un marqueur Amour sur deux joueurs.
-
-Les joueurs ne le savent pas.
-
-Effet :
-- Les deux joueurs sont liés.
-- Si l'un meurt, l'autre perd temporairement 5 coeurs permanents pendant 10 minutes.
-- Il connaît l'identité du tueur.
-
-Le marqueur Amour :
-- possède une aura neutre.
-- ne doit pas être supprimable facilement.
-
-Cupidon gagne avec le village. Si jamais un/ les deux marqueur(s) amour changent de personne, le cupidon en est informé : dans un moment aléatoire entre 0 et 10 minutes après le changement, il reçoit une notification lui indiquant le(s) nouvel/(aux) amoureux.
-
-### PALADIN
-
-Le Paladin est rôle villageois dépendant de l'aura.
-
-Effets :
-
-Aura très obscure :
-- perte d'un coeur.
-- faiblesse légère.
-
-Aura obscure :
-- faiblesse légère (pas d'effet apparent, mais elle se ressent en combat : il suffit de masquer l'effet au joueur).
-
-Aura neutre :
-- aucun effet.
-
-Aura lumineuse :
-- force visible en combat (pas d'effet apparent).
-
-Aura très lumineuse :
-- force + deux coeurs supplémentaires. (peut etre 1, on verra pour l'équilibrage)
-
-Le Paladin gagne une marque lumineuse lorsqu'il tue un vampire.
-
-Cela permet des déductions :
-- Il tue quelqu'un.
-- Son pouvoir change.
-- Il peut comprendre que la cible était probablement vampire.
-
-Ou alors :
-- Il perd un coeur -> il en déduit qu'il est tres obscur, donc qu'il a été ciblé. Il peut alors croiser ses infos avec celles d'autres rôles.
-
-### Apprentie assassin
-
-L'apprentie assassin est l'un des rôles solitaire. Son but ? Gagner seule, en éliminant l'ensemble des autres joueurs. Pour ce faire, elle possède deux pouvoirs :
-
-1. À chaque kill qu'elle prend, l'apprentie assassin récupère les marques (sauf les marqueurs maîtres, pour éviter une infection obligatoire) du joueur tué. 
-2. En fonction des marques qu'elle possède, ses pouvoirs varient (et sont cumulatifs) :
-    - Plus de X marqueurs obscurs --> Force légère la nuit
-    - Plus de X marqueurs lumineux --> Force légère le jour
-    - Plus de nX marqueurs obscurs --> Force légère la nuit & Régénération naturelle d'un demi-coeur par minute la nuit.
-    - Plus de nX marqueurs lumineux --> Force légère le jour & Régénération naturelle d'un demi-coeur par minute le jour.
-    
-Donc en fin de game, potentiellement T4 + Force perma + regen lente.
-
-En revanche, l'assassin est vulnérable aux marqueurs maître qu'elle reçoit du maître : perte d'absorption partielle voire infection. Aussi, son aura varie énormément à chaque kill, donc peut être cramée / suspectée par les rôles à info.
-
-### Gremlin
-
-Le Gremlin est un autre rôle solitaire. Il a pour pouvoir de manipuler les marques et de voler la vie des ses adversaires.
-
-Son premier pouvoir est donc, à chaque épisode, de pouvoir `switch` (échanger) l'ensemble des marques de deux joueurs, via la commande :
-```mc
-/vuhc switch <joueur1> <joueur2>
-```
-
-Cela peut être intéressant pour semer la zizanie, handicaper des rôles villageois voire retarder l'infection du maître. Le Gremlin peut s'auto-switch.
-En revanche, le cupidon est notifié si une marque d'amour change de propriétaire, et les rôles à info pourront avoir des suspicions (changement d'aura...).
-
-Son second pouvoir est de voler, en plein combat, la vie du joueur qu'il frappe : à chaque coup porté, X % de chance qu'il gagne un demi-coeur. 
-Ce pouvoir est activable pendant 5 minutes à chaque épisode, à l'aide de la commande :
-```mc
-/vuhc drain
-```
-
-À la fin des 5 minutes, il subit un malus temporaire léger (poison léger et court).
-
-### Sbire Vampire
-
-Les sbires vampires constituent le reste du camp vampire. En début de game, ils reçoivent l'effet faiblesse de jour. À 45 minutes de jeu, ils reçoivent la liste de leurs alliés, et peuvent commencer à voter pour attribuer des marques vampires (une toute les X minutes).
-
-Ils votent pour une marque à l'aide de :
-```mc
-/vuhc voter <Joueur>
-```
-
-Leurs pouvoirs augmentent par nombre de personne marquées :
-
-- X personnes --> perte de la faiblesse
-- nX personnes --> gain de force la nuit
-
-Ils peuvent attribuer leur marque plusieurs fois à la même personne, mais cela ne compte pas comme plusieurs joueurs marqués.
-En cas d'égalité lors du vote, le Maître tranche.
-En cas de `switch` des marques ou de mort d'une personne, le nombre de joueurs marqués ne change pas.
-
-Par exemple :
-Bob & Alice reçoivent une marque vampire chacun --> 2 personnes marquées.
-Alice switch avec Majory (qui n'en avait aucune) --> toujours 2 personnes marquées.
-Bob meurt --> toujours 2 personnes marquées.
-
-Les vampires ne reçoivent que le résultat de leur vote :
-```text
-Vous avez marqué <Joueur> !
-```
-
-Ils ne savent pas si le marquage a fonctionné ou pas (salvateur?) et si les marques changent de propriétaire ou pas.

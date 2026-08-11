@@ -245,6 +245,8 @@ public class GameManager {
             player.setGameMode(GameMode.SURVIVAL);
             player.getInventory().clear();
             player.setMaxHealth(20.0);
+            player.setTotalExperience(0);
+            player.getActivePotionEffects().clear();
             player.setHealth(20.0);
             player.setFoodLevel(20);
             player.setSaturation(20f);

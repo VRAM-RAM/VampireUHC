@@ -1,0 +1,204 @@
+# Roles (incomplet)
+
+Les rôles ne doivent pas simplement révéler des informations directes.
+
+Le but est l'interprétation.
+
+## Sommaire
+
+* [Vampires](#vampires)
+  * [Maître Vampire](#maître-vampire)
+  * [Sbire Vampire](#sbire-vampire)
+
+* [Villageois](#villageois)
+  * [Salvateur](#salvateur)
+  * [Cupidon](#cupidon)
+  * [Paladin](#paladin)
+  * [La Peseuse d'Âmes](#la-peseuse-dâmes)
+
+* [Solitaires](#solitaires)
+  * [Apprentie assassin](#apprentie-assassin)
+  * [Gremlin](#gremlin)
+
+
+
+## Vampires
+
+Les vampires constituent le camp minoritaire. Ils affaiblissent le village tout en gagnant de la force, et en évitant de se faire démasquer. Pour gagner, ils doivent éliminer tous les non-vampires.
+
+### MAÎTRE VAMPIRE
+
+Le Maître est le chef vampire.
+
+Il possède des marqueurs spécifiques : les marqueurs Maître.
+
+Les marqueurs Maître ont une aura obscure.
+
+À chaque épisode, le Maître peut placer un marqueur Maître sur un joueur non-vampire. (peut etre plus frequemment, on verra pour l'équilibrage).
+
+Effets :
+- 1 marqueur Maître :
+  Rien, mais le joueur porte une influence cachée.
+
+- 2 marqueurs Maître :
+  Le joueur reçoit moins d'efficacité avec les pommes d'or (un coeur d'absorption en moins lorsqu'il en mange une).
+
+- 3 marqueurs Maître :
+  Le joueur devient vampire (infecté).
+
+Lorsqu'un joueur est infecté :
+- Son infection est permanente.
+- Les marqueurs Maitre de tous les joueurs disparaissent.
+- Il rejoint le camp vampire, et gagne les pouvoirs des vampires.
+- Il ne peut pas voter pour les futures marques vampires.
+
+Le Maître est volontairement fragile :
+- Environ 8 coeurs au lieu de 10.
+
+### Sbire Vampire
+
+Les sbires vampires constituent le reste du camp vampire. En début de game, ils reçoivent l'effet faiblesse de jour. À 45 minutes de jeu, ils reçoivent la liste de leurs alliés, et peuvent commencer à voter pour attribuer des marques vampires (une toute les X minutes).
+
+Ils votent pour une marque à l'aide de :
+```mc
+/vuhc voter <Joueur>
+```
+
+Leurs pouvoirs augmentent par nombre de personne marquées :
+
+- X personnes --> perte de la faiblesse
+- nX personnes --> gain de force la nuit
+
+Ils peuvent attribuer leur marque plusieurs fois à la même personne, mais cela ne compte pas comme plusieurs joueurs marqués.
+En cas d'égalité lors du vote, le Maître tranche.
+En cas de `switch` des marques ou de mort d'une personne, le nombre de joueurs marqués ne change pas.
+
+Par exemple :
+Bob & Alice reçoivent une marque vampire chacun --> 2 personnes marquées.
+Alice switch avec Majory (qui n'en avait aucune) --> toujours 2 personnes marquées.
+Bob meurt --> toujours 2 personnes marquées.
+
+Les vampires ne reçoivent que le résultat de leur vote :
+```text
+Vous avez marqué <Joueur> !
+```
+
+Ils ne savent pas si le marquage a fonctionné ou pas (salvateur?) et si les marques changent de propriétaire ou pas.
+
+## Villageois
+
+Les villageois sont majoritaire dans la partie. Leur but ? Démasquer tous les traîtres et les éliminer.
+
+### SALVATEUR
+
+Le Salvateur est un rôle villageois.
+
+À chaque épisode, il place un marqueur Salvation sur un joueur.
+
+Ce marqueur possède une aura lumineuse.
+
+Si le joueur ciblé par un vampire ou le Maître possède Salvation :
+- La marque n'est pas appliquée.
+- Les vampires ou le Maître pensent néanmoins que l'action a fonctionné.
+- la marque Salvation disparaît
+
+Le Salvateur crée donc de fausses informations, tout en protégeant ceux qu'il pense être safe.
+
+### CUPIDON
+
+Cupidon place au début de la partie un marqueur Amour sur deux joueurs.
+
+Les joueurs ne le savent pas.
+
+Effet :
+- Les deux joueurs sont liés.
+- Si l'un meurt, l'autre perd temporairement 5 coeurs permanents pendant 10 minutes.
+- Il connaît l'identité du tueur.
+
+Le marqueur Amour :
+- possède une aura neutre.
+- ne doit pas être supprimable facilement.
+
+Cupidon gagne avec le village. Si jamais un/ les deux marqueur(s) amour changent de personne, le cupidon en est informé : dans un moment aléatoire entre 0 et 10 minutes après le changement, il reçoit une notification lui indiquant le(s) nouvel/(aux) amoureux.
+
+### PALADIN
+
+Le Paladin est rôle villageois dépendant de l'aura.
+
+Effets :
+
+Aura très obscure :
+- perte d'un coeur.
+- faiblesse légère.
+
+Aura obscure :
+- faiblesse légère (pas d'effet apparent, mais elle se ressent en combat : il suffit de masquer l'effet au joueur).
+
+Aura neutre :
+- aucun effet.
+
+Aura lumineuse :
+- force visible en combat (pas d'effet apparent).
+
+Aura très lumineuse :
+- force + deux coeurs supplémentaires. (peut etre 1, on verra pour l'équilibrage)
+
+Le Paladin gagne une marque lumineuse lorsqu'il tue un vampire.
+
+Cela permet des déductions :
+- Il tue quelqu'un.
+- Son pouvoir change.
+- Il peut comprendre que la cible était probablement vampire.
+
+Ou alors :
+- Il perd un coeur -> il en déduit qu'il est tres obscur, donc qu'il a été ciblé. Il peut alors croiser ses infos avec celles d'autres rôles.
+
+### La Peseuse d'Âmes
+
+La peseuse d'âmes est un rôle à info mineur.
+À chaque épisode, à l'aide de la commande `/vuhc peser <Joueur1> <Joueur2>`, elle peut *peser* l'aura de deux joueurs.
+S'offrent alors trois possibilités de résultats :
+
+- `La balance s'équilibre...` => les deux joueurs ont exactement la même aura (très obscure, obscure, neutre...).
+- `La balance penche légèrement...` => les deux joueurs ont une aura de la même catégorie (obscure, neutre ou lumineuse).
+- `La balance penche...` => les deux joueurs ont une aura de catégorie différente
+
+## Solitaires
+
+Les rôles solitaires gagnent tout seuls. Ils doivent éliminer l'intégralité de la partie.
+
+### Apprentie assassin
+
+L'apprentie assassin est l'un des rôles solitaire. Son but ? Gagner seule, en éliminant l'ensemble des autres joueurs. Pour ce faire, elle possède deux pouvoirs :
+
+1. À chaque kill qu'elle prend, l'apprentie assassin récupère les marques (sauf les marqueurs maîtres, pour éviter une infection obligatoire) du joueur tué. 
+2. En fonction des marques qu'elle possède, ses pouvoirs varient (et sont cumulatifs) :
+    - Plus de X marqueurs obscurs --> Force légère la nuit
+    - Plus de X marqueurs lumineux --> Force légère le jour
+    - Plus de nX marqueurs obscurs --> Force légère la nuit & Régénération naturelle d'un demi-coeur par minute la nuit.
+    - Plus de nX marqueurs lumineux --> Force légère le jour & Régénération naturelle d'un demi-coeur par minute le jour.
+    
+Donc en fin de game, potentiellement T4 + Force perma + regen lente.
+
+En revanche, l'assassin est vulnérable aux marqueurs maître qu'elle reçoit du maître : perte d'absorption partielle voire infection. Aussi, son aura varie énormément à chaque kill, donc peut être cramée / suspectée par les rôles à info.
+
+### Gremlin
+
+Le Gremlin est un autre rôle solitaire. Il a pour pouvoir de manipuler les marques et de voler la vie des ses adversaires.
+
+Son premier pouvoir est donc, à chaque épisode, de pouvoir `switch` (échanger) l'ensemble des marques de deux joueurs, via la commande :
+```mc
+/vuhc switch <joueur1> <joueur2>
+```
+
+Cela peut être intéressant pour semer la zizanie, handicaper des rôles villageois voire retarder l'infection du maître. Le Gremlin peut s'auto-switch.
+En revanche, le cupidon est notifié si une marque d'amour change de propriétaire, et les rôles à info pourront avoir des suspicions (changement d'aura...).
+
+Son second pouvoir est de voler, en plein combat, la vie du joueur qu'il frappe : à chaque coup porté, X % de chance qu'il gagne un demi-coeur. 
+Ce pouvoir est activable pendant 5 minutes à chaque épisode, à l'aide de la commande :
+```mc
+/vuhc drain
+```
+
+À la fin des 5 minutes, il subit un malus temporaire léger (poison léger et court).
+

@@ -22,6 +22,7 @@ import fr.vampireuhc.roles.CupidonRole;
 import fr.vampireuhc.roles.GremlinRole;
 import fr.vampireuhc.roles.MasterRole;
 import fr.vampireuhc.roles.SaviorRole;
+import fr.vampireuhc.roles.SoulweigherRole;
 import fr.vampireuhc.roles.VampireMinion;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
  * /vuhc setTime <Time>    -> Change le timer au temps désigné (pour admin et debug seulement, en game classique, si on l'execute, ça casse pas mal de choses)
  * /vuhc setRole <RoleType>-> Applique le role au joueur, fait l'annonce des rôles. Pour le debug et devtest uniquement (si on le fait à plusieurs, les rôles sont cassés). 
  * /vuhc drain             -> pouvoir secondaire du gremlin
+ * /vuhc peser <J2> <J2>   -> pouvoir de la peseuse d'âme.
  */
 public class VUHCCommand implements CommandExecutor, TabCompleter {
     private final GameManager gameManager;
@@ -54,7 +56,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     private final VampireVoteManager voteManager;
     private final SpectatorManager spectatorManager;
 
-    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "spectate", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "drain", "lier", "role", "setTime", "setRole");
+    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "spectate", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "drain", "lier", "role", "setTime", "setRole", "peser");
 
     public VUHCCommand(GameManager gameManager, PlayerManager playerManager, MarkerManager markerManager, RoleManager roleManager, VampireVoteManager voteManager, SpectatorManager spectatorManager) {
         this.gameManager = gameManager;
@@ -114,6 +116,46 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
                 sender.sendMessage(ChatColor.RED + "Usage: /vuhc setRole <RoleType>");
                 return true;
+
+            case "peser": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return true;
+                }
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+
+                if (localPlayer == null) {
+                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
+                    return true;
+                }
+
+                if (!(localPlayer.getRole() instanceof SoulweigherRole soulweigherRole)) {
+                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas la peseuse d'âme.");
+                    return true;
+                }
+                
+                Player target1 = Bukkit.getPlayer(args[1]);
+                Player target2 = Bukkit.getPlayer(args[2]);
+                if (target1 == null || target2 == null) {
+                    player.sendMessage(ChatColor.RED + "Un des joueurs est introuvable ou hors ligne.");
+                    return true;
+                }
+
+                VampireUHCPlayer t1 = playerManager.get(target1.getUniqueId());
+                VampireUHCPlayer t2 = playerManager.get(target2.getUniqueId());
+                if (t1 == null || t2 == null) {
+                    player.sendMessage(ChatColor.RED + "Un des joueurs n'est pas en partie.");
+                    return true;
+                }
+                if (t1.getUuid().equals(t2.getUuid())) {
+                    player.sendMessage(ChatColor.RED + "Les deux joueurs doivent être différents.");
+                    return true;
+                }
+                if (!soulweigherRole.weightAura(markerManager, t1, t2)) {
+                    player.sendActionBar(ChatColor.RED + "Erreur interne.");
+                }
+                return true;
+            }
 
 
             case "settime":
@@ -609,6 +651,6 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|drain|lier <j1> <j2>|role|setTime|setRole>");
+        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|drain|lier <j1> <j2>|role|setTime|setRole|peser>");
     }
 }
