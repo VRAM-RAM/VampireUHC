@@ -261,7 +261,7 @@ En revanche, l'assassin est vulnérable aux marqueurs maître qu'elle reçoit du
 
 ### Gremlin
 
-Le Gremlin est un autre rôle solitaire. Il a pour pouvoir de manipuler les marques et `<je n'ai pas encore décidé>`.
+Le Gremlin est un autre rôle solitaire. Il a pour pouvoir de manipuler les marques et de voler la vie des ses adversaires.
 
 Son premier pouvoir est donc, à chaque épisode, de pouvoir `switch` (échanger) l'ensemble des marques de deux joueurs, via la commande :
 ```mc
@@ -271,9 +271,13 @@ Son premier pouvoir est donc, à chaque épisode, de pouvoir `switch` (échanger
 Cela peut être intéressant pour semer la zizanie, handicaper des rôles villageois voire retarder l'infection du maître. Le Gremlin peut s'auto-switch.
 En revanche, le cupidon est notifié si une marque d'amour change de propriétaire, et les rôles à info pourront avoir des suspicions (changement d'aura...).
 
-Second pouvoir :
+Son second pouvoir est de voler, en plein combat, la vie du joueur qu'il frappe : à chaque coup porté, X % de chance qu'il gagne un demi-coeur. 
+Ce pouvoir est activable pendant 5 minutes à chaque épisode, à l'aide de la commande :
+```mc
+/vuhc drain
+```
 
-todo!
+À la fin des 5 minutes, il subit un malus temporaire léger (poison léger et court).
 
 ### Sbire Vampire
 

@@ -1,14 +1,26 @@
 package fr.vampireuhc.roles;
 
 import fr.vampireuhc.player.VampireUHCPlayer;
+
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import java.util.Random;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
-
+import org.bukkit.attribute.Attribute;;
 
 public class GremlinRole implements Role {
     private VampireUHCPlayer gremlin;
     private boolean applied_this_episode;
     private int episode;
+
+    private BukkitTask drainTask;
+    private boolean drain_applied_this_episode;
+    private boolean drainActive;
 
     public GremlinRole(VampireUHCPlayer player) {
         this.gremlin = player;
@@ -58,5 +70,45 @@ public class GremlinRole implements Role {
         return true;
     }
 
-    // Todo ajouter un pouvoir pour le pvp
+    // Pouvoir de drain (/vuhc drain) :
+
+    // Active le drain (ou pas)
+    public void activateDrain(Player gremlin) {
+    if (drainActive) return; // déjà actif, on ignore la nouvelle demande
+    var plugin = fr.vampireuhc.VampireUHC.getInstance();
+
+    drainActive = true;
+    drainTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+        drainActive = false;
+        if (gremlin.isOnline() && gremlin.isValid()) {
+            gremlin.sendActionBar(ChatColor.DARK_RED + "Votre pouvoir de " + ChatColor.DARK_PURPLE + "drain" + ChatColor.RED + " est épuisé ! Vous ressentez une" + ChatColor.GREEN + " faiblesse" + ChatColor.RED + ".");
+            gremlin.addPotionEffect(poisonEffect(0));
+        }
+    }, 20L * 60 * 5);
+    }
+
+
+    public void applyDrainEffect(Player player) {
+        if (!drainActive) {
+            return;
+        }
+
+        Random randomNumbers = new Random();
+        var random = randomNumbers.nextInt(101);
+
+        if (random > 30) {
+            return;
+        }
+
+        // On regen le joueur d'un demi coeur, SAUF si il est full vie
+        double newHealth = Math.min(player.getHealth() + 1.0, player.getAttribute(Attribute.MAX_HEALTH).getValue());
+        player.setHealth(newHealth);
+    }
+
+
+    // Helper pour les effets :
+    private PotionEffect poisonEffect(int amplifier) {
+        // 10 secondes d'effet
+        return new PotionEffect(PotionEffectType.POISON, 20 * 10, amplifier, true, false, false);
+    }
 }
