@@ -34,8 +34,11 @@ public class SoulweigherRole implements Role {
 
     @Override
     public String getDescription() {
-        // TODO
-        return null;
+        return "La Peseuse d'Âmes est un rôle à info mineur. À chaque épisode, avec /vuhc peser <Joueur1> <Joueur2>, elle pèse l'aura de deux joueurs. Trois résultats possibles : "
+            + ChatColor.DARK_PURPLE + "« La balance s'équilibre... »" + ChatColor.GRAY + " : les deux joueurs ont exactement la même aura (très obscure, obscure, neutre...). "
+            + ChatColor.DARK_PURPLE + "« La balance penche légèrement... »" + ChatColor.GRAY + " : ils ont une aura de la même catégorie (obscure, neutre ou lumineuse). "
+            + ChatColor.DARK_PURPLE + "« La balance penche... »" + ChatColor.GRAY + " : ils ont une aura de catégories différentes. "
+            + "Croisez ces informations avec les autres rôles pour démasquer les vampires !";
     }
 
     // Pouvoir actif spécifique à la peseuse d'âme
