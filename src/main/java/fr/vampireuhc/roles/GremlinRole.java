@@ -11,7 +11,7 @@ import org.bukkit.entity.Player;
 import java.util.Random;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
-import org.bukkit.attribute.Attribute;;
+import org.bukkit.attribute.Attribute;
 
 public class GremlinRole implements Role {
     private VampireUHCPlayer gremlin;
@@ -20,7 +20,9 @@ public class GremlinRole implements Role {
 
     private BukkitTask drainTask;
     private boolean drain_applied_this_episode;
+    private int drainEpisode = -1;
     private boolean drainActive;
+    private final Random random = new Random();
 
     public GremlinRole(VampireUHCPlayer player) {
         this.gremlin = player;
@@ -33,7 +35,7 @@ public class GremlinRole implements Role {
 
     @Override
     public String getDescription() {
-        return "Le Gremlin est un rôle solitaire. Une fois par épisode, il peut échanger l'ensemble des marques de deux joueurs via /vuhc switch <joueur1> <joueur2> (il peut s'auto-switch). Pratique pour semer la zizanie, handicaper des rôles villageois ou retarder l'infection du Maître. Attention : le Cupidon est notifié si une marque Amour change de propriétaire.";
+        return "Le Gremlin est un rôle solitaire. Une fois par épisode, il peut échanger l'ensemble des marques de deux joueurs via /vuhc switch <joueur1> <joueur2> (il peut s'auto-switch). Pratique pour semer la zizanie, handicaper des rôles villageois ou retarder l'infection du Maître. Attention : le Cupidon est notifié si une marque Amour change de propriétaire. Son second pouvoir (/vuhc drain), utilisable une fois par épisode, lui permet de voler la vie de ses adversaires en combat : pendant 5 minutes, à chaque coup porté, il a 30 % de chance de regagner un demi-coeur. À la fin des 5 minutes, il subit un poison léger et court.";
     }
 
     @Override
@@ -73,20 +75,31 @@ public class GremlinRole implements Role {
     // Pouvoir de drain (/vuhc drain) :
 
     // Active le drain (ou pas)
-    public void activateDrain() {
-    if (drainActive) return; // déjà actif, on ignore la nouvelle demande
-    var plugin = fr.vampireuhc.VampireUHC.getInstance();
-
-    var player = Bukkit.getPlayer(gremlin.getUuid());
-
-    this.drainActive = true;
-    this.drainTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
-        this.drainActive = false;
-        if (player.isOnline() && player.isValid()) {
-            player.sendActionBar(ChatColor.DARK_RED + "Votre pouvoir de " + ChatColor.DARK_PURPLE + "drain" + ChatColor.RED + " est épuisé ! Vous ressentez une" + ChatColor.GREEN + " faiblesse" + ChatColor.RED + ".");
-            player.addPotionEffect(poisonEffect(1));
+    public boolean activateDrain(int current_episode) {
+        if (gremlin == null) {
+            return false;
         }
+        if (drainActive) return false; // déjà actif, on ignore la nouvelle demande
+        // En gros, s'il a déjà appliqué son drain cet épisode, ça ne marche pas.
+        if (drain_applied_this_episode && drainEpisode == current_episode) {
+                return false;
+        }
+        this.drainEpisode = current_episode; // On met à jour l'épisode.
+        this.drain_applied_this_episode = true;
+
+        var plugin = fr.vampireuhc.VampireUHC.getInstance();
+
+        var player = Bukkit.getPlayer(gremlin.getUuid());
+
+        this.drainActive = true;
+        this.drainTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            this.drainActive = false;
+            if (player != null && player.isOnline() && player.isValid()) {
+                player.sendActionBar(ChatColor.DARK_RED + "Votre pouvoir de " + ChatColor.DARK_PURPLE + "drain" + ChatColor.RED + " est épuisé ! Vous ressentez une" + ChatColor.GREEN + " faiblesse" + ChatColor.RED + ".");
+                player.addPotionEffect(poisonEffect(1));
+            }
         }, 20L * 60 * 5);
+        return true;    
     }
 
 
@@ -95,10 +108,9 @@ public class GremlinRole implements Role {
             return;
         }
 
-        Random randomNumbers = new Random();
-        var random = randomNumbers.nextInt(101);
+        int chance = random.nextInt(101);
 
-        if (random > 30) {
+        if (chance > 30) {
             return;
         }
 

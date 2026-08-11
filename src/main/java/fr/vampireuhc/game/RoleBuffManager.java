@@ -6,7 +6,6 @@ import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.ApprenticeSlayer;
-import fr.vampireuhc.roles.GremlinRole;
 import fr.vampireuhc.roles.PaladinRole;
 
 import org.bukkit.entity.Player;

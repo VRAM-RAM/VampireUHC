@@ -48,7 +48,7 @@ public class ApprenticeSlayer implements Role {
     }
     @Override
     public String getName() {
-        return "Apprenti Chasseur";
+        return "Apprenti Assassin";
     }
 
     @Override

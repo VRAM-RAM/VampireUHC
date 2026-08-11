@@ -54,7 +54,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     private final VampireVoteManager voteManager;
     private final SpectatorManager spectatorManager;
 
-    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "spectate", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "role", "setTime", "setRole", "drain");
+    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "spectate", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "drain", "lier", "role", "setTime", "setRole");
 
     public VUHCCommand(GameManager gameManager, PlayerManager playerManager, MarkerManager markerManager, RoleManager roleManager, VampireVoteManager voteManager, SpectatorManager spectatorManager) {
         this.gameManager = gameManager;
@@ -104,8 +104,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     return true;
                 }
                 if (args.length >= 2) {
-                    var type = RoleType.fromString(args[1]);
-                    gameManager.setRole(player, type);;
+                    try {
+                        var type = RoleType.fromString(args[1]);
+                        gameManager.setRole(player, type);
+                    } catch (IllegalArgumentException e) {
+                        player.sendMessage(ChatColor.RED + "Type de rôle invalide.");
+                    }
                     return true;
                 }
                 sender.sendMessage(ChatColor.RED + "Usage: /vuhc setRole <RoleType>");
@@ -214,8 +218,61 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(ChatColor.RED + "Vous n'êtes pas le gremlin.");
                     return true;
                 }
+                if (gremlinRole.activateDrain(gameManager.getEpisode())) {
+                    player.sendActionBar(ChatColor.DARK_PURPLE + "Vous avez activé le " + ChatColor.DARK_GREEN + "drain" + ChatColor.DARK_PURPLE + " !");
+                } else {
+                    player.sendMessage(ChatColor.RED + "Vous ne pouvez pas activer votre drain pour l'instant.");
+                }
+                return true;
+            }
 
-                gremlinRole.activateDrain();
+            case "lier": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return true;
+                }
+                if (args.length < 3) {
+                    player.sendMessage(ChatColor.RED + "Usage: /vuhc lier <Joueur1> <Joueur2>");
+                    return true;
+                }
+
+                VampireUHCPlayer cupidon = playerManager.get(player.getUniqueId());
+                if (cupidon == null) {
+                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
+                    return true;
+                }
+                if (!(cupidon.getRole() instanceof CupidonRole cupidonRole)) {
+                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas le Cupidon.");
+                    return true;
+                }
+
+                Player target1 = Bukkit.getPlayer(args[1]);
+                Player target2 = Bukkit.getPlayer(args[2]);
+                if (target1 == null || target2 == null) {
+                    player.sendMessage(ChatColor.RED + "Un des joueurs est introuvable ou hors ligne.");
+                    return true;
+                }
+
+                VampireUHCPlayer t1 = playerManager.get(target1.getUniqueId());
+                VampireUHCPlayer t2 = playerManager.get(target2.getUniqueId());
+                if (t1 == null || t2 == null) {
+                    player.sendMessage(ChatColor.RED + "Un des joueurs n'est pas en partie.");
+                    return true;
+                }
+                if (t1.getUuid().equals(t2.getUuid())) {
+                    player.sendMessage(ChatColor.RED + "Les deux joueurs doivent être différents.");
+                    return true;
+                }
+                if (t1.getUuid().equals(player.getUniqueId()) || t2.getUuid().equals(player.getUniqueId())) {
+                    player.sendMessage(ChatColor.RED + "Vous ne pouvez pas vous lier vous-même.");
+                    return true;
+                }
+
+                if (cupidonRole.MarkLovers(markerManager, t1, t2)) {
+                    player.sendMessage(ChatColor.GREEN + "Vous avez lié " + ChatColor.GOLD + t1.getLastKnownName() + ChatColor.GREEN + " et " + ChatColor.GOLD + t2.getLastKnownName() + ChatColor.GREEN + ".");
+                } else {
+                    player.sendMessage(ChatColor.RED + "Vous avez déjà choisi vos amoureux.");
+                }
                 return true;
             }
 
@@ -519,6 +576,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         if (args.length == 2 && (args[0].equalsIgnoreCase("voter")
                 || args[0].equalsIgnoreCase("proteger")
                 || args[0].equalsIgnoreCase("switch")
+                || args[0].equalsIgnoreCase("lier")
                 || args[0].equalsIgnoreCase("spectate"))) {
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)
@@ -526,7 +584,8 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     .collect(Collectors.toList());
         }
 
-        if (args.length == 3 && args[0].equalsIgnoreCase("switch")) {
+        if (args.length == 3 && (args[0].equalsIgnoreCase("switch")
+                || args[0].equalsIgnoreCase("lier"))) {
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)
                     .filter(name -> name.toLowerCase().startsWith(args[2].toLowerCase()))
@@ -550,6 +609,6 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|role|setTime|setRole>");
+        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|drain|lier <j1> <j2>|role|setTime|setRole>");
     }
 }

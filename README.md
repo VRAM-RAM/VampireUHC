@@ -5,6 +5,11 @@ VampireUHC est un mode de jeu minecraft inspiré de Loup-Garou UHC.
 \
 🔴 **Agent-assisted**
 
+> [!NOTE]
+> This small project is entirely in french. You can contribute it if you don't speak french anyway. Also, this is my first Java project (I learn Java by coding it) so it may not be really efficient nor idiomatic. I used agentic (Opencode : Big Pickle) to complete some 'plumbing' (such as `serialization`). Anyway, all ideas and the `minecraft-ish` code are from me.  
+>
+> Ce petit projet - entièrement en français - est mon premier projet Java, qui me permet d'apprendre le langage (pour cette raison, il n'est ni efficace ni idiomatique). J'ai utilisé de l'agentique (OpenCode : Big Pickle) pour faire de la 'plomberie' (la `serialization`, par exemple). Cependant, toutes les idées viennent de moi, ainsi que tout le code lié à MineCraft (les rôles, les events...).
+
 ## Concept
 
 Les joueurs, à 20 minutes de jeu, reçoivent un rôle qui determine leur but dans la suite de la partie, et leur pouvoirs.

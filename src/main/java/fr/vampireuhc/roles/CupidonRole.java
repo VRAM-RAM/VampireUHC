@@ -2,6 +2,7 @@ package fr.vampireuhc.roles;
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.markers.Marker;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 
@@ -9,10 +10,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import fr.vampireuhc.player.Camp;
-import fr.vampireuhc.player.PlayerManager;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,6 +26,7 @@ public class CupidonRole implements Role {
     private boolean marked;
     private final Set<UUID> loverUuids = new HashSet<>();
     private Set<UUID> lastKnownAmourHolders;
+    private BukkitTask linkFallbackTask;
 
     public CupidonRole(VampireUHCPlayer player) {
         this.cupidon = player;
@@ -39,11 +42,11 @@ public class CupidonRole implements Role {
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int heartsLost = config.getAmourHeartsLost();
         int penaltyMinutes = config.getAmourPenaltyDurationSeconds() / 60;
-        return "Le Cupidon est un rôle villageois. Au début de la partie, il place une marque Amour sur deux joueurs (sans le leur dire). Les deux joueurs sont liés : si l'un meurt, l'autre perd temporairement "
+        return "Le Cupidon est un rôle villageois. Au début de la partie, vous choisissez deux joueurs que vous liez avec /vuhc lier <Joueur1> <Joueur2> (sinon deux joueurs sont choisis au hasard après une minute). Les joueurs liés ne le savent pas. Si l'un meurt, l'autre perd temporairement "
             + ChatColor.DARK_PURPLE + heartsLost + ChatColor.GRAY
             + " coeurs pendant "
             + ChatColor.DARK_PURPLE + penaltyMinutes + ChatColor.GRAY
-            + " minutes et connaît l'identité du tueur. Si une marque Amour change de propriétaire (ex : un Gremlin), vous en êtes informé dans un délai aléatoire.";
+            + " minutes et connaît l'identité du tueur. Si une marque Amour change de propriétaire (ex : un Gremlin), vous apprenez, dans un délai aléatoire, qui la détient désormais — mais pas qui l'a perdue.";
     }
 
     @Override
@@ -60,11 +63,49 @@ public class CupidonRole implements Role {
     public void onAssign(VampireUHCPlayer vampireUHCPlayer) {
         this.cupidon = vampireUHCPlayer;
 
-        // Le Cupidon place ses marques Amour au début de la partie.
-        PlayerManager playerManager = VampireUHC.getInstance().getPlayerManager();
         MarkerManager markerManager = VampireUHC.getInstance().getMarkerManager();
 
-        List<VampireUHCPlayer> candidates = playerManager.getAll().stream()
+        // Cas restauration : le cupidon a déjà posé ses marques Amour, on re-dérive son état.
+        Set<UUID> existing = holdersOfAmourFrom(markerManager);
+        if (!existing.isEmpty()) {
+            this.marked = true;
+            this.loverUuids.addAll(existing);
+            this.lastKnownAmourHolders = new HashSet<>(existing);
+            return;
+        }
+
+        // Partie neuve : le cupidon choisit lui-même les amoureux.
+        Player bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
+        if (bukkitCupidon != null) {
+            bukkitCupidon.sendMessage(ChatColor.DARK_PURPLE + "Choisissez vos deux amoureux : /vuhc lier <Joueur1> <Joueur2>");
+        }
+
+        // Fallback : auto-lien aléatoire après une minute s'il n'a pas choisi.
+        linkFallbackTask = Bukkit.getScheduler().runTaskLater(VampireUHC.getInstance(), () -> {
+            if (marked) {
+                return;
+            }
+            autoLinkRandom(markerManager);
+        }, 20L * 60);
+    }
+
+    // Joueurs portant une marque Amour posée par le cupidon.
+    private Set<UUID> holdersOfAmourFrom(MarkerManager manager) {
+        Set<UUID> holders = new HashSet<>();
+        for (UUID id : manager.getAllPlayers()) {
+            if (manager.hasMarker(id, MarkerType.AMOUR)) {
+                List<Marker> markers = manager.getMarkers(id, MarkerType.AMOUR);
+                if (!markers.isEmpty() && markers.get(0).getSource().equals(cupidon.getUuid())) {
+                    holders.add(id);
+                }
+            }
+        }
+        return holders;
+    }
+
+    // Auto-lien aléatoire si le cupidon n'a pas choisi à temps.
+    private void autoLinkRandom(MarkerManager manager) {
+        List<VampireUHCPlayer> candidates = VampireUHC.getInstance().getPlayerManager().getAll().stream()
                 .filter(p -> !p.getUuid().equals(cupidon.getUuid()))
                 .toList();
 
@@ -79,17 +120,27 @@ public class CupidonRole implements Role {
                 .orElseThrow()
                 .getUuid();
 
-        markerManager.addMarker(first, MarkerType.AMOUR, cupidon.getUuid());
-        markerManager.addMarker(second, MarkerType.AMOUR, cupidon.getUuid());
+        applyLoveMarks(manager, first, second);
+
+        Player bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
+        if (bukkitCupidon != null) {
+            bukkitCupidon.sendMessage(ChatColor.DARK_PURPLE + "Vous n'avez pas choisi vos amoureux : " + ChatColor.GOLD +
+                displayName(first) + ChatColor.DARK_PURPLE + " et " + ChatColor.GOLD + displayName(second) +
+                ChatColor.DARK_PURPLE + " ont été liés au hasard.");
+        }
+    }
+
+    // Pose les marques Amour et mémorise l'état (partagé par /vuhc lier et l'auto-lien).
+    private void applyLoveMarks(MarkerManager manager, UUID first, UUID second) {
+        manager.addMarker(first, MarkerType.AMOUR, cupidon.getUuid());
+        manager.addMarker(second, MarkerType.AMOUR, cupidon.getUuid());
         this.marked = true;
         this.loverUuids.add(first);
         this.loverUuids.add(second);
         this.lastKnownAmourHolders = new HashSet<>(loverUuids);
-
-        Player bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
-        if (bukkitCupidon != null) {
-            bukkitCupidon.sendMessage(ChatColor.DARK_PURPLE + "Vous avez marqué les joueurs " + ChatColor.GOLD +
-                displayName(first) + ChatColor.DARK_PURPLE + " et " + ChatColor.GOLD + displayName(second));
+        if (linkFallbackTask != null) {
+            linkFallbackTask.cancel();
+            linkFallbackTask = null;
         }
     }
 
@@ -102,20 +153,14 @@ public class CupidonRole implements Role {
         return vp != null ? vp.getLastKnownName() : uuid.toString();
     }
 
-    // Marquer deux joueurs en début de partie (fallback si onAssign n'a pas pu).
+    // Marquer deux joueurs en début de partie (via /vuhc lier).
     public boolean MarkLovers(MarkerManager manager, VampireUHCPlayer target_1, VampireUHCPlayer target_2) {
-        if (cupidon == null || marked == true) {
+        if (cupidon == null || marked) {
             return false;
-        } 
-        var uuid_cupidon = cupidon.getUuid();
-        manager.addMarker(target_1.getUuid(), MarkerType.AMOUR, uuid_cupidon);
-        manager.addMarker(target_2.getUuid(), MarkerType.AMOUR, uuid_cupidon);
-        this.marked = true;
-        this.loverUuids.add(target_1.getUuid());
-        this.loverUuids.add(target_2.getUuid());
-        this.lastKnownAmourHolders = new HashSet<>(loverUuids);
+        }
+        applyLoveMarks(manager, target_1.getUuid(), target_2.getUuid());
 
-        var bukkitCupidon = Bukkit.getPlayer(uuid_cupidon);
+        var bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
         if (bukkitCupidon != null) {
             bukkitCupidon.sendMessage(ChatColor.DARK_PURPLE + "Vous avez marqué les joueurs " + ChatColor.GOLD + target_1.getLastKnownName() + ChatColor.DARK_PURPLE + " et " + target_2.getLastKnownName());
         }
@@ -170,7 +215,8 @@ public class CupidonRole implements Role {
         }.runTaskLater(VampireUHC.getInstance(), 20L * durationSeconds);
     }
 
-    // Si une marque Amour change de propriétaire (ex : switch du Gremlin), on prévient le Cupidon.
+    // Si une marque Amour change de propriétaire (ex : switch du Gremlin), le Cupidon
+    // apprend qui la détient désormais, mais pas qui l'a perdue.
     public void notifyIfLoversMoved(MarkerManager manager) {
         if (cupidon == null) {
             return;
@@ -183,23 +229,39 @@ public class CupidonRole implements Role {
             }
         }
 
-        if (lastKnownAmourHolders != null && !currentHolders.equals(lastKnownAmourHolders)) {
-            ConfigManager config = VampireUHC.getInstance().getConfigManager();
-            int min = config.getCupidonNotifyMinSeconds();
-            int max = Math.max(min, config.getCupidonNotifyMaxSeconds());
-            long delay = ThreadLocalRandom.current().nextInt(min, max + 1) * 20L;
-
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    Player bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
-                    if (bukkitCupidon != null) {
-                        bukkitCupidon.sendMessage(ChatColor.DARK_PURPLE + "Attention ! L'un de vos marqueurs Amour a changé de propriétaire.");
-                    }
-                }
-            }.runTaskLater(VampireUHC.getInstance(), delay);
+        if (lastKnownAmourHolders == null) {
+            lastKnownAmourHolders = new HashSet<>(currentHolders);
+            return;
         }
 
-        lastKnownAmourHolders = currentHolders;
+        Set<UUID> newHolders = new HashSet<>(currentHolders);
+        newHolders.removeAll(lastKnownAmourHolders);
+
+        if (newHolders.isEmpty()) {
+            return;
+        }
+
+        lastKnownAmourHolders.addAll(newHolders);
+
+        List<String> names = new ArrayList<>();
+        for (UUID id : newHolders) {
+            names.add(displayName(id));
+        }
+
+        ConfigManager config = VampireUHC.getInstance().getConfigManager();
+        int min = config.getCupidonNotifyMinSeconds();
+        int max = Math.max(min, config.getCupidonNotifyMaxSeconds());
+        long delay = ThreadLocalRandom.current().nextInt(min, max + 1) * 20L;
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Player bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
+                if (bukkitCupidon != null) {
+                    bukkitCupidon.sendMessage(ChatColor.DARK_PURPLE + "Une marque Amour a changé de propriétaire : " + ChatColor.GOLD +
+                        String.join(", ", names) + ChatColor.DARK_PURPLE + " la porte désormais.");
+                }
+            }
+        }.runTaskLater(VampireUHC.getInstance(), delay);
     }
 }

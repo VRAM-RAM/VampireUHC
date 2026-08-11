@@ -22,7 +22,6 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
-import org.checkerframework.checker.units.qual.t;
 
 public class GameManager {
     private final VampireUHC plugin;
@@ -360,9 +359,12 @@ public class GameManager {
 
     // Pour debug et OP seulement
     public void setRole(Player player, RoleType type) {
+        var vampirePlayer = playerManager.get(player.getUniqueId());
+        if (vampirePlayer == null) {
+            player.sendMessage("Vous n'êtes pas en partie.");
+            return;
+        }
         fr.vampireuhc.roles.RoleManager manager = plugin.getRoleManager();
-        var id = player.getUniqueId();
-        var vampirePlayer = playerManager.get(id);
         manager.setRoleFromType(vampirePlayer, type);
         announceRoles();
         broadcast("Votre rôle a été distribué. Si vous n'êtes pas en partie de devtest, alors il y a un probleme...");
