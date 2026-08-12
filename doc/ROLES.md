@@ -16,6 +16,7 @@ Le but est l'interprétation.
   * [Paladin](#paladin)
   * [La Peseuse d'Âmes](#la-peseuse-dâmes)
   * [Le Fossoyeur](#fossoyeur)
+  * [Le Tisseur](#tisseur)
 
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)
@@ -208,6 +209,20 @@ Un noeud de votre réseau a assassiné.
 ```
 
 Le réseau ne s'effondre pas après un meurtre.
+
+### Cartographe
+
+Le cartographe est un rôle à info mineur.
+
+À l'aide de la commande :
+```mc
+/vuhc baliser
+```
+le cartographe place une balise à l'endroit où il se trouve.
+Durant l'épisode et l'épisode suivant, tout passage de joueur est enregistré par la balise et communiqué au début de l'épisode suivant au cartographe.
+À chaque épisode, il peut repositionner sa balise en réutilisant sa commande.
+La balise, après avoir passé 2 épisodes au même endroit, disparaît automatiquement, forçant le cartographe à en replacer une.
+
 
 ## Solitaires
 

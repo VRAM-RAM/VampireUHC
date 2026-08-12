@@ -8,7 +8,7 @@ author: Olruix (VRAM-RAM on github)
 commands:
   vuhc:
     description: Main command for VampireUHC plugin
-    usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|role>
+    usage: /vuhc [role|spectate|marquer|trancher|proteger|voter|switch|drain|lier|peser|admin|dev]
 
 permissions:
   vuhc.admin:

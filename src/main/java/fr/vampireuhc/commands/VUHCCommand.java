@@ -12,6 +12,7 @@ import fr.vampireuhc.vampire_vote.VampireVoteManager;
 import fr.vampireuhc.vampire_vote.VoteResult;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -21,6 +22,7 @@ import fr.vampireuhc.markers.AuraTier;
 import fr.vampireuhc.roles.CupidonRole;
 import fr.vampireuhc.roles.GremlinRole;
 import fr.vampireuhc.roles.MasterRole;
+import fr.vampireuhc.roles.Role;
 import fr.vampireuhc.roles.SaviorRole;
 import fr.vampireuhc.roles.SoulweigherRole;
 import fr.vampireuhc.roles.VampireMinion;
@@ -30,23 +32,26 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * /vuhc start [sec]       -> lance la partie (avec compte à rebours optionnel)
- * /vuhc stop              -> arrête la partie
- * /vuhc reset             -> réinitialise la partie
- * /vuhc spectate <joueur> -> le spectateur suit un joueur vivant
- * /vuhc status            -> affiche la phase et le temps ecoule
- * /vuhc who               -> (debug) affiche camp de chaque joueur connecte
- * /vuhc aura <joueur>     -> (debug) affiche le score/tier d'aura d'un joueur
- * /vuhc marquer <nom>     -> Maître Vampire marque un joueur
- * /vuhc trancher <nom>    -> Maître Vampire tranche une égalité de vote
- * /vuhc proteger <nom>    -> Salvateur protège un joueur (marque Salvation)
- * /vuhc voter <nom>       -> Sbire vampire vote pour la marque vampire
- * /vuhc switch <j1> <j2>  -> Gremlin échange les marques de deux joueurs
- * /vuhc role              -> Affiche son rôle ou la liste des vampires si infecté
- * /vuhc setTime <Time>    -> Change le timer au temps désigné (pour admin et debug seulement, en game classique, si on l'execute, ça casse pas mal de choses)
- * /vuhc setRole <RoleType>-> Applique le role au joueur, fait l'annonce des rôles. Pour le debug et devtest uniquement (si on le fait à plusieurs, les rôles sont cassés). 
- * /vuhc drain             -> pouvoir secondaire du gremlin
- * /vuhc peser <J2> <J2>   -> pouvoir de la peseuse d'âme.
+ * Commandes joueur (visibles uniquement par ceux qui peuvent les utiliser) :
+ *  * /vuhc role              -> Affiche son rôle (accessible à tous)
+ *  * /vuhc spectate <joueur> -> le spectateur suit un joueur vivant
+ *  * /vuhc marquer <nom>     -> Maître Vampire marque un joueur
+ *  * /vuhc trancher <nom>    -> Maître Vampire tranche une égalité de vote
+ *  * /vuhc proteger <nom>    -> Salvateur protège un joueur (marque Salvation)
+ *  * /vuhc voter <nom>       -> Sbire vampire vote pour la marque vampire
+ *  * /vuhc switch <j1> <j2>  -> Gremlin échange les marques de deux joueurs
+ *  * /vuhc drain             -> pouvoir secondaire du gremlin
+ *  * /vuhc lier <j1> <j2>    -> Cupidon lie deux joueurs
+ *  * /vuhc peser <j1> <j2>   -> Peseuse d'âmes pèse l'aura de deux joueurs
+ *
+ * Commandes admin (perm vuhc.admin) :
+ *  * /vuhc admin <start [sec]|stop|reset|status>
+ *
+ * Commandes dev (perm vuhc.admin) :
+ *  * /vuhc dev <setTime <min>|setRole <type>|who|aura <joueur>>
+ *
+ * Une commande n'est affichée (tab-complétion + aide) que si l'expéditeur
+ * peut l'utiliser. Toute commande inaccessible répond "Sous-commande inconnue."
  */
 public class VUHCCommand implements CommandExecutor, TabCompleter {
     private final GameManager gameManager;
@@ -56,7 +61,11 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     private final VampireVoteManager voteManager;
     private final SpectatorManager spectatorManager;
 
-    private static final List<String> SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "spectate", "status", "who", "aura", "marquer", "trancher", "proteger", "voter", "switch", "drain", "lier", "role", "setTime", "setRole", "peser");
+    private static final List<String> PLAYER_SUBCOMMANDS = Arrays.asList(
+            "role", "spectate", "marquer", "trancher", "proteger", "voter",
+            "switch", "drain", "lier", "peser");
+    private static final List<String> ADMIN_SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "status");
+    private static final List<String> DEV_SUBCOMMANDS = Arrays.asList("setTime", "setRole", "who", "aura");
 
     public VUHCCommand(GameManager gameManager, PlayerManager playerManager, MarkerManager markerManager, RoleManager roleManager, VampireVoteManager voteManager, SpectatorManager spectatorManager) {
         this.gameManager = gameManager;
@@ -73,373 +82,181 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             sendHelp(sender);
             return true;
         }
-       
-        switch (args[0].toLowerCase()) {
-            case "start":
-                if (!hasAdminPermission(sender)) {
-                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
-                    return true;
-                }
-                int seconds = gameManager.getDefaultCountdownSeconds();
-                if (args.length >= 2) {
-                    try {
-                        seconds = Math.max(0, Integer.parseInt(args[1]));
-                    } catch (NumberFormatException e) {
-                        sender.sendMessage(ChatColor.RED + "Durée invalide : " + args[1]);
-                        return true;
-                    }
-                }
-                if (gameManager.startCountdown(seconds)) {
-                    sender.sendMessage(ChatColor.GREEN + "Partie VampireUHC lancée (démarrage dans " + seconds + "s).");
-                } else {
-                    sender.sendMessage(ChatColor.RED + "Une partie est déjà en cours ou en cours de lancement.");
-                }
-                return true;
 
-            case "setrole":
-                if (!hasAdminPermission(sender)) {
-                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
-                    return true;
-                }
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
-                }
-                if (args.length >= 2) {
-                    try {
-                        var type = RoleType.fromString(args[1]);
-                        gameManager.setRole(player, type);
-                    } catch (IllegalArgumentException e) {
-                        player.sendMessage(ChatColor.RED + "Type de rôle invalide.");
-                    }
-                    return true;
-                }
-                sender.sendMessage(ChatColor.RED + "Usage: /vuhc setRole <RoleType>");
-                return true;
+        String sub = args[0].toLowerCase();
 
-            case "peser": {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
-                }
-                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+        if (sub.equals("admin")) {
+            handleAdmin(sender, Arrays.copyOfRange(args, 1, args.length));
+            return true;
+        }
 
-                if (localPlayer == null) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
-                    return true;
-                }
+        if (sub.equals("dev")) {
+            handleDev(sender, Arrays.copyOfRange(args, 1, args.length));
+            return true;
+        }
 
-                if (!(localPlayer.getRole() instanceof SoulweigherRole soulweigherRole)) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas la peseuse d'âme.");
-                    return true;
-                }
-                
-                Player target1 = Bukkit.getPlayer(args[1]);
-                Player target2 = Bukkit.getPlayer(args[2]);
-                if (target1 == null || target2 == null) {
-                    player.sendMessage(ChatColor.RED + "Un des joueurs est introuvable ou hors ligne.");
-                    return true;
-                }
-
-                VampireUHCPlayer t1 = playerManager.get(target1.getUniqueId());
-                VampireUHCPlayer t2 = playerManager.get(target2.getUniqueId());
-                if (t1 == null || t2 == null) {
-                    player.sendMessage(ChatColor.RED + "Un des joueurs n'est pas en partie.");
-                    return true;
-                }
-                if (t1.getUuid().equals(t2.getUuid())) {
-                    player.sendMessage(ChatColor.RED + "Les deux joueurs doivent être différents.");
-                    return true;
-                }
-                if (!soulweigherRole.weightAura(markerManager, t1, t2)) {
-                    player.sendActionBar(ChatColor.RED + "Erreur interne.");
-                }
+        if (PLAYER_SUBCOMMANDS.contains(sub)) {
+            if (!hasAccess(sender, sub)) {
+                unknown(sender);
                 return true;
             }
+            dispatchPlayerCommand(sender, sub, args);
+            return true;
+        }
 
+        unknown(sender);
+        return true;
+    }
 
-            case "settime":
-                if (!hasAdminPermission(sender)) {
-                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
-                    return true;
-                }
-                if (args.length >= 2) {
-                    int time = Integer.parseInt(args[1]);
-                    gameManager.setElapsedMinutes(time);
-                    sender.sendMessage(ChatColor.GREEN + "Vous avez changé le temps à " + time + " minutes.");
-                    return true;
-                }
-                sender.sendMessage(ChatColor.RED + "Usage: /vuhc setTime <TIME_MINUTE>");
-                return true;
-
-            case "stop":
-                if (!hasAdminPermission(sender)) {
-                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
-                    return true;
-                }
-                gameManager.stop();
-                sender.sendMessage(ChatColor.GREEN + "Partie arrêtée.");
-                return true;                
-
-            case "reset":
-                if (!hasAdminPermission(sender)) {
-                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
-                    return true;
-                }
-                gameManager.resetGame();
-                sender.sendMessage(ChatColor.GREEN + "Partie réinitialisée.");
-                return true;
-
-            case "spectate":
+    private void dispatchPlayerCommand(CommandSender sender, String sub, String[] args) {
+        switch (sub) {
+            case "role": {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
+                    return;
+                }
+
+                var local = playerManager.get(player);
+                if (local == null) {
+                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
+                    return;
+                }
+
+                // Message d'infection pour les joueurs infectés en cours de partie uniquement
+                if (local.getCamp() == Camp.VAMPIRE && local.isInfected()) {
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                            ChatColor.RED + "Vous avez été infecté et devez à présent gagner avec les vampires !"));
+
+                    // Liste des pseudos vampires uniquement
+                    List<String> vampireNames = new ArrayList<>();
+                    for (VampireUHCPlayer v : playerManager.getByCamp(Camp.VAMPIRE)) {
+                        if (!local.getUuid().equals(v.getUuid())) {
+                            vampireNames.add(v.getLastKnownName());
+                        }
+                    }
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&',
+                            ChatColor.YELLOW + "Liste des vampires connus : &f" + String.join(", ", vampireNames)));
+                } else {
+                    player.sendMessage(ChatColor.GREEN + "Vous êtes " + (local.getRole() != null ? local.getRole().getName() : "rien. Vous n'avez aucun rôle pour l'instant !"));
+                    player.sendMessage(ChatColor.WHITE + (local.getRole() != null ? local.getRole().getDescription() : ""));
+                }
+                return;
+            }
+
+            case "spectate": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return;
                 }
                 if (args.length < 2) {
                     player.sendMessage(ChatColor.RED + "Usage: /vuhc spectate <joueur>");
-                    return true;
+                    return;
                 }
                 Player targetSpec = Bukkit.getPlayer(args[1]);
                 if (targetSpec == null) {
                     player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
-                    return true;
+                    return;
                 }
                 spectatorManager.follow(player, targetSpec);
-                return true;
-
-            case "status":
-                if (!hasAdminPermission(sender)) {
-                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
-                    return true;
-                }
-                sender.sendMessage(ChatColor.YELLOW + "Phase: " + gameManager.getPhase() + " | Minute: " + gameManager.getElapsedMinutes());
-                return true;
-
-            case "who":
-                if (!hasAdminPermission(sender)) {
-                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
-                    return true;
-                }
-                for (VampireUHCPlayer p : playerManager.getAll()) {
-                    sender.sendMessage(p.getLastKnownName() + " -> " + p.getCamp());
-                }
-                return true;
-
-            case "aura":
-                if (!hasAdminPermission(sender)) {
-                    sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
-                    return true;
-                }
-                if (args.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /vuhc aura <joueur>");
-                    return true;
-                }
-                Player target = sender.getServer().getPlayer(args[1]);
-                if (target == null) {
-                    sender.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
-                    return true;
-                }
-                int score = markerManager.computeAuraScore(target.getUniqueId());
-                AuraTier tier = markerManager.computeAuraTier(target.getUniqueId());
-                sender.sendMessage(target.getName() + " -> score=" + score + " tier=" + tier);
-                return true;
-            
-            case "drain": {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
-                }
-                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-
-                if (localPlayer == null) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
-                    return true;
-                }
-
-                if (!(localPlayer.getRole() instanceof GremlinRole gremlinRole)) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas le gremlin.");
-                    return true;
-                }
-                if (gremlinRole.activateDrain(gameManager.getEpisode())) {
-                    player.sendActionBar(ChatColor.DARK_PURPLE + "Vous avez activé le " + ChatColor.DARK_GREEN + "drain" + ChatColor.DARK_PURPLE + " !");
-                } else {
-                    player.sendMessage(ChatColor.RED + "Vous ne pouvez pas activer votre drain pour l'instant.");
-                }
-                return true;
-            }
-
-            case "lier": {
-                if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
-                }
-                if (args.length < 3) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc lier <Joueur1> <Joueur2>");
-                    return true;
-                }
-
-                VampireUHCPlayer cupidon = playerManager.get(player.getUniqueId());
-                if (cupidon == null) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
-                    return true;
-                }
-                if (!(cupidon.getRole() instanceof CupidonRole cupidonRole)) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas le Cupidon.");
-                    return true;
-                }
-
-                Player target1 = Bukkit.getPlayer(args[1]);
-                Player target2 = Bukkit.getPlayer(args[2]);
-                if (target1 == null || target2 == null) {
-                    player.sendMessage(ChatColor.RED + "Un des joueurs est introuvable ou hors ligne.");
-                    return true;
-                }
-
-                VampireUHCPlayer t1 = playerManager.get(target1.getUniqueId());
-                VampireUHCPlayer t2 = playerManager.get(target2.getUniqueId());
-                if (t1 == null || t2 == null) {
-                    player.sendMessage(ChatColor.RED + "Un des joueurs n'est pas en partie.");
-                    return true;
-                }
-                if (t1.getUuid().equals(t2.getUuid())) {
-                    player.sendMessage(ChatColor.RED + "Les deux joueurs doivent être différents.");
-                    return true;
-                }
-                if (t1.getUuid().equals(player.getUniqueId()) || t2.getUuid().equals(player.getUniqueId())) {
-                    player.sendMessage(ChatColor.RED + "Vous ne pouvez pas vous lier vous-même.");
-                    return true;
-                }
-
-                if (cupidonRole.MarkLovers(markerManager, t1, t2)) {
-                    player.sendMessage(ChatColor.GREEN + "Vous avez lié " + ChatColor.GOLD + t1.getLastKnownName() + ChatColor.GREEN + " et " + ChatColor.GOLD + t2.getLastKnownName() + ChatColor.GREEN + ".");
-                } else {
-                    player.sendMessage(ChatColor.RED + "Vous avez déjà choisi vos amoureux.");
-                }
-                return true;
+                return;
             }
 
             case "marquer": {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
+                    return;
                 }
-
                 if (args.length < 2) {
                     player.sendMessage(ChatColor.RED + "Usage: /vuhc marquer <joueur>");
-                    return true;
+                    return;
                 }
 
                 Player marquerTarget = Bukkit.getPlayer(args[1]);
-
                 if (marquerTarget == null) {
                     player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
-                    return true;
+                    return;
                 }
 
                 VampireUHCPlayer targetPlayer = playerManager.get(marquerTarget.getUniqueId());
-
                 if (targetPlayer == null) {
                     player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
-                    return true;
+                    return;
                 }
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-
-                if (localPlayer == null) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
-                    return true;
-                }
-
-                if (!(localPlayer.getRole() instanceof MasterRole masterRole)) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas le Maître Vampire.");
-                    return true;
+                if (!(localPlayer != null && localPlayer.getRole() instanceof MasterRole masterRole)) {
+                    return;
                 }
 
                 masterRole.markPlayer(markerManager, targetPlayer, gameManager.getEpisode());
-                return true;
+                return;
             }
 
-            case "trancher":
+            case "trancher": {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
+                    return;
                 }
 
                 VoteResult.Tie pendingTie = voteManager.getPendingTie();
                 if (pendingTie == null) {
                     player.sendMessage(ChatColor.RED + "Aucune égalité à trancher en cours.");
-                    return true;
-                }
-
-                VampireUHCPlayer localTiePlayer = playerManager.get(player.getUniqueId());
-                if (localTiePlayer == null) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
-                    return true;
-                }
-
-                if (!(localTiePlayer.getRole() instanceof MasterRole)) {
-                    player.sendMessage(ChatColor.RED + "Seul le Maître Vampire peut trancher une égalité.");
-                    return true;
+                    return;
                 }
 
                 if (args.length < 2) {
                     player.sendMessage(ChatColor.RED + "Usage: /vuhc trancher <joueur>");
-                    return true;
+                    return;
                 }
 
                 Player tieTarget = Bukkit.getPlayer(args[1]);
                 if (tieTarget == null) {
                     player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
-                    return true;
+                    return;
                 }
 
                 if (!pendingTie.tiedPlayers().contains(tieTarget.getUniqueId())) {
                     player.sendMessage(ChatColor.RED + "Ce joueur ne fait pas partie de l'égalité à trancher.");
-                    return true;
+                    return;
                 }
 
                 VampireUHCPlayer tieTargetPlayer = playerManager.get(tieTarget.getUniqueId());
                 if (tieTargetPlayer == null) {
                     player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
-                    return true;
+                    return;
                 }
 
                 voteManager.resolveTieWith(tieTargetPlayer.getUuid());
                 player.sendMessage(ChatColor.DARK_PURPLE + "Vous avez choisi " + ChatColor.GOLD + tieTargetPlayer.getLastKnownName() + ChatColor.DARK_PURPLE + ".");
-                return true;
+                return;
+            }
 
-            case "proteger":
+            case "proteger": {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
+                    return;
                 }
 
                 if (args.length < 2) {
                     player.sendMessage(ChatColor.RED + "Usage: /vuhc proteger <joueur>");
-                    return true;
+                    return;
                 }
 
                 Player protTarget = Bukkit.getPlayer(args[1]);
                 if (protTarget == null) {
                     player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
-                    return true;
+                    return;
                 }
 
                 VampireUHCPlayer protTargetPlayer = playerManager.get(protTarget.getUniqueId());
                 if (protTargetPlayer == null) {
                     player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
-                    return true;
+                    return;
                 }
 
                 VampireUHCPlayer localProt = playerManager.get(player.getUniqueId());
-                if (localProt == null) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
-                    return true;
-                }
-
-                if (!(localProt.getRole() instanceof SaviorRole savior)) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas le Salvateur.");
-                    return true;
+                if (!(localProt != null && localProt.getRole() instanceof SaviorRole savior)) {
+                    return;
                 }
 
                 if (savior.applySalvation(markerManager, protTargetPlayer, gameManager.getEpisode())) {
@@ -447,50 +264,40 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 } else {
                     player.sendMessage(ChatColor.RED + "Vous ne pouvez pas protéger ce joueur pour l'instant.");
                 }
-                return true;
+                return;
+            }
 
-            case "voter":
+            case "voter": {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
+                    return;
                 }
 
                 if (args.length < 2) {
                     player.sendMessage(ChatColor.RED + "Usage: /vuhc voter <joueur>");
-                    return true;
+                    return;
                 }
 
                 Player voteTarget = Bukkit.getPlayer(args[1]);
                 if (voteTarget == null) {
                     player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
-                    return true;
+                    return;
                 }
 
                 VampireUHCPlayer voteTargetPlayer = playerManager.get(voteTarget.getUniqueId());
                 if (voteTargetPlayer == null) {
                     player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
-                    return true;
-                }
-
-                VampireUHCPlayer voter = playerManager.get(player.getUniqueId());
-                if (voter == null) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
-                    return true;
-                }
-
-                if (!(voter.getRole() instanceof VampireMinion) || !voter.canVoteVampireMark()) {
-                    player.sendMessage(ChatColor.RED + "Seuls les sbires vampires peuvent voter.");
-                    return true;
+                    return;
                 }
 
                 if (voteTargetPlayer.getCamp() == Camp.VAMPIRE) {
                     player.sendMessage(ChatColor.RED + "Vous ne pouvez pas voter pour un vampire.");
-                    return true;
+                    return;
                 }
 
                 if (!voteManager.isVoteOpen()) {
                     player.sendMessage(ChatColor.RED + "Aucun vote n'est en cours.");
-                    return true;
+                    return;
                 }
 
                 if (voteManager.addVote(player.getUniqueId(), voteTargetPlayer.getUuid())) {
@@ -498,42 +305,37 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 } else {
                     player.sendMessage(ChatColor.RED + "Vous avez déjà voté pour ce tour.");
                 }
-                return true;
+                return;
+            }
 
-            case "switch":
+            case "switch": {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
+                    return;
                 }
 
                 if (args.length < 3) {
                     player.sendMessage(ChatColor.RED + "Usage: /vuhc switch <joueur1> <joueur2>");
-                    return true;
+                    return;
                 }
 
                 Player switchTarget1 = Bukkit.getPlayer(args[1]);
                 Player switchTarget2 = Bukkit.getPlayer(args[2]);
                 if (switchTarget1 == null || switchTarget2 == null) {
                     player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
-                    return true;
+                    return;
                 }
 
                 VampireUHCPlayer t1 = playerManager.get(switchTarget1.getUniqueId());
                 VampireUHCPlayer t2 = playerManager.get(switchTarget2.getUniqueId());
                 if (t1 == null || t2 == null) {
                     player.sendMessage(ChatColor.RED + "Un des joueurs n'est pas en partie.");
-                    return true;
+                    return;
                 }
 
                 VampireUHCPlayer localSwitch = playerManager.get(player.getUniqueId());
-                if (localSwitch == null) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
-                    return true;
-                }
-
-                if (!(localSwitch.getRole() instanceof GremlinRole gremlin)) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas le Gremlin.");
-                    return true;
+                if (!(localSwitch != null && localSwitch.getRole() instanceof GremlinRole gremlin)) {
+                    return;
                 }
 
                 if (gremlin.SwitchMarkers(markerManager, t1, t2, gameManager.getEpisode())) {
@@ -548,96 +350,341 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 } else {
                     player.sendMessage(ChatColor.RED + "Vous avez déjà utilisé votre switch cet épisode.");
                 }
-                return true;
+                return;
+            }
 
-            case "role":
+            case "drain": {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
-                    return true;
+                    return;
                 }
 
-
-                var local = playerManager.get(player);
-                if (local == null) {
-                    sender.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
-                    return true;
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+                if (!(localPlayer != null && localPlayer.getRole() instanceof GremlinRole gremlinRole)) {
+                    return;
                 }
 
-                // Message d'infection pour les joueurs infectés en cours de partie uniquement
-                if (local.getCamp() == Camp.VAMPIRE && local.isInfected()) {
-                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                        ChatColor.RED + "Vous avez été infecté et devez à présent gagner avec les vampires !"));
-
-                    // Liste des pseudos vampires uniquement
-                    List<String> vampireNames = new ArrayList<>();
-                    for (VampireUHCPlayer v : playerManager.getByCamp(Camp.VAMPIRE)) {
-                        if (!local.getUuid().equals(v.getUuid())) {
-                            vampireNames.add(v.getLastKnownName());
-                        }
-                    }
-                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                        ChatColor.YELLOW + "Liste des vampires connus : &f" + String.join(", ", vampireNames)));
+                if (gremlinRole.activateDrain(gameManager.getEpisode())) {
+                    player.sendActionBar(ChatColor.DARK_PURPLE + "Vous avez activé le " + ChatColor.DARK_GREEN + "drain" + ChatColor.DARK_PURPLE + " !");
                 } else {
-                    sender.sendMessage(ChatColor.GREEN + "Vous êtes " + (local.getRole() != null ? local.getRole().getName() : "rien. Vous n'avez aucun rôle pour l'instant !"));
-                    sender.sendMessage(ChatColor.WHITE + (local.getRole() != null ? local.getRole().getDescription() : ""));
+                    player.sendMessage(ChatColor.RED + "Vous ne pouvez pas activer votre drain pour l'instant.");
                 }
-                return true;
+                return;
+            }
+
+            case "lier": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return;
+                }
+                if (args.length < 3) {
+                    player.sendMessage(ChatColor.RED + "Usage: /vuhc lier <Joueur1> <Joueur2>");
+                    return;
+                }
+
+                VampireUHCPlayer cupidon = playerManager.get(player.getUniqueId());
+                if (!(cupidon != null && cupidon.getRole() instanceof CupidonRole cupidonRole)) {
+                    return;
+                }
+
+                Player target1 = Bukkit.getPlayer(args[1]);
+                Player target2 = Bukkit.getPlayer(args[2]);
+                if (target1 == null || target2 == null) {
+                    player.sendMessage(ChatColor.RED + "Un des joueurs est introuvable ou hors ligne.");
+                    return;
+                }
+
+                VampireUHCPlayer t1 = playerManager.get(target1.getUniqueId());
+                VampireUHCPlayer t2 = playerManager.get(target2.getUniqueId());
+                if (t1 == null || t2 == null) {
+                    player.sendMessage(ChatColor.RED + "Un des joueurs n'est pas en partie.");
+                    return;
+                }
+                if (t1.getUuid().equals(t2.getUuid())) {
+                    player.sendMessage(ChatColor.RED + "Les deux joueurs doivent être différents.");
+                    return;
+                }
+                if (t1.getUuid().equals(player.getUniqueId()) || t2.getUuid().equals(player.getUniqueId())) {
+                    player.sendMessage(ChatColor.RED + "Vous ne pouvez pas vous lier vous-même.");
+                    return;
+                }
+
+                if (cupidonRole.MarkLovers(markerManager, t1, t2)) {
+                    player.sendMessage(ChatColor.GREEN + "Vous avez lié " + ChatColor.GOLD + t1.getLastKnownName() + ChatColor.GREEN + " et " + ChatColor.GOLD + t2.getLastKnownName() + ChatColor.GREEN + ".");
+                } else {
+                    player.sendMessage(ChatColor.RED + "Vous avez déjà choisi vos amoureux.");
+                }
+                return;
+            }
+
+            case "peser": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return;
+                }
+                if (args.length < 3) {
+                    player.sendMessage(ChatColor.RED + "Usage: /vuhc peser <Joueur1> <Joueur2>");
+                    return;
+                }
+
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+                if (!(localPlayer != null && localPlayer.getRole() instanceof SoulweigherRole soulweigherRole)) {
+                    return;
+                }
+
+                Player target1 = Bukkit.getPlayer(args[1]);
+                Player target2 = Bukkit.getPlayer(args[2]);
+                if (target1 == null || target2 == null) {
+                    player.sendMessage(ChatColor.RED + "Un des joueurs est introuvable ou hors ligne.");
+                    return;
+                }
+
+                VampireUHCPlayer t1 = playerManager.get(target1.getUniqueId());
+                VampireUHCPlayer t2 = playerManager.get(target2.getUniqueId());
+                if (t1 == null || t2 == null) {
+                    player.sendMessage(ChatColor.RED + "Un des joueurs n'est pas en partie.");
+                    return;
+                }
+                if (t1.getUuid().equals(t2.getUuid())) {
+                    player.sendMessage(ChatColor.RED + "Les deux joueurs doivent être différents.");
+                    return;
+                }
+
+                if (!soulweigherRole.weightAura(markerManager, t1, t2)) {
+                    player.sendActionBar(ChatColor.RED + "Erreur interne.");
+                }
+                return;
+            }
+
+            default:
+                return;
+        }
+    }
+
+    private void handleAdmin(CommandSender sender, String[] args) {
+        if (!hasAccess(sender, "admin")) {
+            unknown(sender);
+            return;
+        }
+
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "Usage: /vuhc admin <start [sec]|stop|reset|status>");
+            return;
+        }
+
+        switch (args[0].toLowerCase()) {
+            case "start":
+                int seconds = gameManager.getDefaultCountdownSeconds();
+                if (args.length >= 2) {
+                    try {
+                        seconds = Math.max(0, Integer.parseInt(args[1]));
+                    } catch (NumberFormatException e) {
+                        sender.sendMessage(ChatColor.RED + "Durée invalide : " + args[1]);
+                        return;
+                    }
+                }
+                if (gameManager.startCountdown(seconds)) {
+                    sender.sendMessage(ChatColor.GREEN + "Partie VampireUHC lancée (démarrage dans " + seconds + "s).");
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Une partie est déjà en cours ou en cours de lancement.");
+                }
+                return;
+
+            case "stop":
+                gameManager.stop();
+                sender.sendMessage(ChatColor.GREEN + "Partie arrêtée.");
+                return;
+
+            case "reset":
+                gameManager.resetGame();
+                sender.sendMessage(ChatColor.GREEN + "Partie réinitialisée.");
+                return;
+
+            case "status":
+                sender.sendMessage(ChatColor.YELLOW + "Phase: " + gameManager.getPhase() + " | Minute: " + gameManager.getElapsedMinutes());
+                return;
 
             default:
                 sender.sendMessage(ChatColor.RED + "Sous-commande inconnue.");
-                sendHelp(sender);
-                return true;
+                sender.sendMessage(ChatColor.RED + "Usage: /vuhc admin <start [sec]|stop|reset|status>");
+        }
+    }
+
+    private void handleDev(CommandSender sender, String[] args) {
+        if (!hasAccess(sender, "dev")) {
+            unknown(sender);
+            return;
+        }
+
+        if (args.length == 0) {
+            sender.sendMessage(ChatColor.RED + "Usage: /vuhc dev <setTime <min>|setRole <type>|who|aura <joueur>>");
+            return;
+        }
+
+        switch (args[0].toLowerCase()) {
+            case "settime":
+                if (args.length >= 2) {
+                    try {
+                        int time = Integer.parseInt(args[1]);
+                        gameManager.setElapsedMinutes(time);
+                        sender.sendMessage(ChatColor.GREEN + "Vous avez changé le temps à " + time + " minutes.");
+                    } catch (NumberFormatException e) {
+                        sender.sendMessage(ChatColor.RED + "Temps invalide : " + args[1]);
+                    }
+                    return;
+                }
+                sender.sendMessage(ChatColor.RED + "Usage: /vuhc dev setTime <TIME_MINUTE>");
+                return;
+
+            case "setrole":
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return;
+                }
+                if (args.length >= 2) {
+                    try {
+                        var type = RoleType.fromString(args[1]);
+                        gameManager.setRole(player, type);
+                    } catch (IllegalArgumentException e) {
+                        player.sendMessage(ChatColor.RED + "Type de rôle invalide.");
+                    }
+                    return;
+                }
+                sender.sendMessage(ChatColor.RED + "Usage: /vuhc dev setRole <RoleType>");
+                return;
+
+            case "who":
+                for (VampireUHCPlayer p : playerManager.getAll()) {
+                    sender.sendMessage(p.getLastKnownName() + " -> " + p.getCamp());
+                }
+                return;
+
+            case "aura":
+                if (args.length < 2) {
+                    sender.sendMessage(ChatColor.RED + "Usage: /vuhc dev aura <joueur>");
+                    return;
+                }
+                Player target = sender.getServer().getPlayer(args[1]);
+                if (target == null) {
+                    sender.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    return;
+                }
+                int score = markerManager.computeAuraScore(target.getUniqueId());
+                AuraTier tier = markerManager.computeAuraTier(target.getUniqueId());
+                sender.sendMessage(target.getName() + " -> score=" + score + " tier=" + tier);
+                return;
+
+            default:
+                sender.sendMessage(ChatColor.RED + "Sous-commande inconnue.");
+                sender.sendMessage(ChatColor.RED + "Usage: /vuhc dev <setTime <min>|setRole <type>|who|aura <joueur>>");
         }
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            List<String> matches = new ArrayList<>();
-            for (String sub : SUBCOMMANDS) {
-                if (sub.startsWith(args[0].toLowerCase())) {
-                    matches.add(sub);
-                }
+            String prefix = args[0].toLowerCase();
+            return visibleTopLevelSubcommands(sender).stream()
+                    .filter(sub -> sub.startsWith(prefix))
+                    .collect(Collectors.toList());
+        }
+
+        String sub = args[0].toLowerCase();
+
+        if (sub.equals("admin") && hasAccess(sender, "admin")) {
+            return filterStartsWith(ADMIN_SUBCOMMANDS, args[1]);
+        }
+
+        if (sub.equals("dev") && hasAccess(sender, "dev")) {
+            return filterStartsWith(DEV_SUBCOMMANDS, args[1]);
+        }
+
+        if (args.length == 2) {
+            if (sub.equals("trancher") && hasAccess(sender, "trancher")) {
+                return tiedPlayersStartingWith(args[1]);
             }
-            return matches;
-        }
-
-        if (args.length == 2 && args[0].equalsIgnoreCase("trancher")) {
-            VoteResult.Tie pendingTie = voteManager.getPendingTie();
-            if (pendingTie == null) {
-                return new ArrayList<>();
+            if ((sub.equals("marquer") || sub.equals("proteger") || sub.equals("voter")
+                    || sub.equals("switch") || sub.equals("lier") || sub.equals("peser")
+                    || sub.equals("spectate")) && hasAccess(sender, sub)) {
+                return playersStartingWith(args[1]);
             }
-            return pendingTie.tiedPlayers().stream()
-                    .map(id -> playerManager.get(id))
-                    .filter(p -> p != null)
-                    .map(VampireUHCPlayer::getLastKnownName)
-                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
-                    .collect(Collectors.toList());
+            return new ArrayList<>();
         }
 
-        if (args.length == 2 && (args[0].equalsIgnoreCase("voter")
-                || args[0].equalsIgnoreCase("proteger")
-                || args[0].equalsIgnoreCase("switch")
-                || args[0].equalsIgnoreCase("lier")
-                || args[0].equalsIgnoreCase("spectate"))) {
-            return Bukkit.getOnlinePlayers().stream()
-                    .map(Player::getName)
-                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
-                    .collect(Collectors.toList());
-        }
-
-        if (args.length == 3 && (args[0].equalsIgnoreCase("switch")
-                || args[0].equalsIgnoreCase("lier"))) {
-            return Bukkit.getOnlinePlayers().stream()
-                    .map(Player::getName)
-                    .filter(name -> name.toLowerCase().startsWith(args[2].toLowerCase()))
-                    .collect(Collectors.toList());
+        if (args.length == 3 && (sub.equals("switch") || sub.equals("lier") || sub.equals("peser"))
+                && hasAccess(sender, sub)) {
+            return playersStartingWith(args[2]);
         }
 
         return new ArrayList<>();
     }
 
     // Helpers
+
+    // Accès à une sous-commande selon le rôle/statut de l'expéditeur.
+    private boolean hasAccess(CommandSender sender, String sub) {
+        switch (sub) {
+            case "role":
+                return true;
+            case "spectate":
+                return sender instanceof Player player && player.getGameMode() == GameMode.SPECTATOR;
+            case "marquer":
+            case "trancher":
+                return hasRole(sender, MasterRole.class);
+            case "proteger":
+                return hasRole(sender, SaviorRole.class);
+            case "voter": {
+                VampireUHCPlayer vp = playerOf(sender);
+                return vp != null && vp.getRole() instanceof VampireMinion && vp.canVoteVampireMark();
+            }
+            case "switch":
+            case "drain":
+                return hasRole(sender, GremlinRole.class);
+            case "lier":
+                return hasRole(sender, CupidonRole.class);
+            case "peser":
+                return hasRole(sender, SoulweigherRole.class);
+            case "admin":
+            case "dev":
+            case "start":
+            case "stop":
+            case "reset":
+            case "status":
+            case "settime":
+            case "setrole":
+            case "who":
+            case "aura":
+                return hasAdminPermission(sender);
+            default:
+                return false;
+        }
+    }
+
+    private boolean hasRole(CommandSender sender, Class<? extends Role> roleClass) {
+        VampireUHCPlayer vp = playerOf(sender);
+        return vp != null && roleClass.isInstance(vp.getRole());
+    }
+
+    private VampireUHCPlayer playerOf(CommandSender sender) {
+        if (sender instanceof Player player) {
+            return playerManager.get(player.getUniqueId());
+        }
+        return null;
+    }
+
+    private List<String> visibleTopLevelSubcommands(CommandSender sender) {
+        List<String> result = new ArrayList<>();
+        for (String sub : PLAYER_SUBCOMMANDS) {
+            if (hasAccess(sender, sub)) {
+                result.add(sub);
+            }
+        }
+        if (hasAdminPermission(sender)) {
+            result.add("admin");
+            result.add("dev");
+        }
+        return result;
+    }
 
     // Autorisation admin : permission vuhc.admin OU pseudo listé dans config.yml (admins.players). La console est toujours autorisée.
     private boolean hasAdminPermission(CommandSender sender) {
@@ -650,7 +697,74 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private void unknown(CommandSender sender) {
+        sender.sendMessage(ChatColor.RED + "Sous-commande inconnue.");
+    }
+
+    private List<String> filterStartsWith(List<String> options, String prefix) {
+        return options.stream()
+                .filter(o -> o.toLowerCase().startsWith(prefix.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+
+    private List<String> playersStartingWith(String prefix) {
+        return Bukkit.getOnlinePlayers().stream()
+                .map(Player::getName)
+                .filter(name -> name.toLowerCase().startsWith(prefix.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+
+    private List<String> tiedPlayersStartingWith(String prefix) {
+        VoteResult.Tie pendingTie = voteManager.getPendingTie();
+        if (pendingTie == null) {
+            return new ArrayList<>();
+        }
+        return pendingTie.tiedPlayers().stream()
+                .map(id -> playerManager.get(id))
+                .filter(p -> p != null)
+                .map(VampireUHCPlayer::getLastKnownName)
+                .filter(name -> name.toLowerCase().startsWith(prefix.toLowerCase()))
+                .collect(Collectors.toList());
+    }
+
+    // Aide filtrée : seules les commandes accessibles à l'expéditeur sont affichées.
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.RED + "Usage: /vuhc <start [sec]|stop|reset|spectate <joueur>|status|who|aura|marquer|trancher|proteger|voter|switch|drain|lier <j1> <j2>|role|setTime|setRole|peser>");
+        sender.sendMessage(ChatColor.DARK_PURPLE + "— VampireUHC —");
+        if (hasAccess(sender, "role")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc role" + ChatColor.GRAY + " — Affiche votre rôle");
+        }
+        if (hasAccess(sender, "spectate")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc spectate <joueur>" + ChatColor.GRAY + " — Suivre un joueur vivant (spectateur)");
+        }
+        if (hasAccess(sender, "marquer")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc marquer <joueur>" + ChatColor.GRAY + " — Maître Vampire : pose un marqueur Maître");
+        }
+        if (hasAccess(sender, "trancher")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc trancher <joueur>" + ChatColor.GRAY + " — Maître Vampire : tranche une égalité de vote");
+        }
+        if (hasAccess(sender, "proteger")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc proteger <joueur>" + ChatColor.GRAY + " — Salvateur : pose une marque Salvation");
+        }
+        if (hasAccess(sender, "voter")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc voter <joueur>" + ChatColor.GRAY + " — Sbire vampire : vote une marque vampire");
+        }
+        if (hasAccess(sender, "switch")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc switch <j1> <j2>" + ChatColor.GRAY + " — Gremlin : échange les marques de deux joueurs");
+        }
+        if (hasAccess(sender, "drain")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc drain" + ChatColor.GRAY + " — Gremlin : active le drain (5 min)");
+        }
+        if (hasAccess(sender, "lier")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc lier <j1> <j2>" + ChatColor.GRAY + " — Cupidon : lie deux joueurs");
+        }
+        if (hasAccess(sender, "peser")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc peser <j1> <j2>" + ChatColor.GRAY + " — Peseuse d'âmes : pèse l'aura de deux joueurs");
+        }
+        if (hasAdminPermission(sender)) {
+            sender.sendMessage(ChatColor.GRAY + "— Admin —");
+            sender.sendMessage(ChatColor.WHITE + "/vuhc admin <start [sec]|stop|reset|status>");
+            sender.sendMessage(ChatColor.GRAY + "— Dev —");
+            sender.sendMessage(ChatColor.WHITE + "/vuhc dev <setTime <min>|setRole <type>|who|aura <joueur>>");
+        }
     }
 }
