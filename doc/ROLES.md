@@ -15,6 +15,7 @@ Le but est l'interprétation.
   * [Cupidon](#cupidon)
   * [Paladin](#paladin)
   * [La Peseuse d'Âmes](#la-peseuse-dâmes)
+  * [Le Fossoyeur](#fossoyeur)
 
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)
@@ -162,6 +163,51 @@ S'offrent alors trois possibilités de résultats :
 - `La balance s'équilibre...` => les deux joueurs ont exactement la même aura (très obscure, obscure, neutre...).
 - `La balance penche légèrement...` => les deux joueurs ont une aura de la même catégorie (obscure, neutre ou lumineuse).
 - `La balance penche...` => les deux joueurs ont une aura de catégorie différente
+
+### Fossoyeur
+
+Le fossoyeur est un rôle à info moyen, qui n'agit pas en early game, mais post-mortem d'un joueur :
+
+En se rendant sur le cadavre d'un joueur mort (qu'il voit entouré de particules **rouges**), il peut executer la commande `/vuhc exhumer`, et reçoit alors la liste des marqueurs détenus par le défunt.
+
+### Tisseur
+
+Le Tisseur est un rôle villageois à information moyenne, qui agit principalement en milieu et fin de partie. Son pouvoir ne révèle jamais directement des rôles : il lui permet d'observer les liens entre plusieurs joueurs et d'interpréter les événements qui s'y produisent.
+
+À l'aide de la commande :
+
+```mc
+/vuhc tisser <Joueur>
+```
+
+le Tisseur peut intégrer un joueur à son réseau.
+
+Il ne peut utiliser cette commande que sur un joueur proche de lui.
+
+Le Tisseur doit tisser un réseau de **3 à 4 joueurs**. Tant que son réseau contient moins de 3 personnes, il reste incomplet et ne produit aucun effet.
+
+Une fois le réseau constitué, le Tisseur n'obtient aucune information immédiate. Il doit attendre que des événements se produisent parmi les joueurs qu'il observe.
+
+#### Mort d'un joueur du réseau
+
+Si l'un des joueurs du réseau meurt, le Tisseur reçoit :
+
+* le pseudo du joueur mort ;
+* son aura exacte au moment de sa mort.
+
+Le réseau s'effondre alors entièrement.
+
+Le Tisseur doit ensuite reconstruire un nouveau réseau en utilisant à nouveau sa commande.
+
+#### Meurtres dans le réseau
+
+Si un joueur du réseau est crédité d'une élimination, le Tisseur reçoit une notification :
+
+```text
+Un noeud de votre réseau a assassiné.
+```
+
+Le réseau ne s'effondre pas après un meurtre.
 
 ## Solitaires
 
