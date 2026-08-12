@@ -16,7 +16,8 @@ Le but est l'interprétation.
   * [Paladin](#paladin)
   * [La Peseuse d'Âmes](#la-peseuse-dâmes)
   * [Le Fossoyeur](#fossoyeur)
-  * [Le Tisseur](#tisseur)
+  * [Tisseur](#tisseur)
+  * [Cartographe](#cartographe)
 
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)
