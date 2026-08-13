@@ -193,6 +193,7 @@ public class GameManager {
             countdownTask = null;
         }
         phase = GamePhase.ENDED;
+        notifyRolesGameEnd();
         if (plugin.getSidebarManager() != null) {
             plugin.getSidebarManager().stop();
         }
@@ -224,6 +225,7 @@ public class GameManager {
         startMillis = 0;
         elapsedMinutes = 0;
 
+        notifyRolesGameEnd();
         playerManager.reset();
         markerManager.clearMarkersOnAll();
         plugin.getVoteManager().reset();
@@ -256,6 +258,15 @@ public class GameManager {
     }
 
     // Helpers 
+
+    // Notifie chaque rôle que la partie est terminée/réinitialisée (nettoyage des tâches planifiées).
+    private void notifyRolesGameEnd() {
+        for (VampireUHCPlayer p : playerManager.getAll()) {
+            if (p.getRole() != null) {
+                p.getRole().onGameEnd();
+            }
+        }
+    }
 
     private void onMinuteElapsed() {
         elapsedMinutes++;

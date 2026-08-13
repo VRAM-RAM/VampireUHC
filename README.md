@@ -20,7 +20,8 @@ VampireUHC est un mode de jeu minecraft inspiré de Loup-Garou UHC.
   * [Les vampires](#vampires)
   * [Les marques vampires](#les-marques-vampires)
 * [Objectif de gameplay](#objectif-de-gameplay)
-* [Rôles](./doc/ROLES.md)
+* [Rôles](#rôles)
+* [License](#license)
 
 
 ## Concept
@@ -148,3 +149,12 @@ Le but est de comprendre ce qui s'est passé à partir des conséquences :
 - protections,
 - comportements.
 
+## Rôles
+
+Pour les rôles, lire [ROLES.md](./doc/ROLES.md).
+
+## License
+
+VampireUHC is licensed under [MIT licence](./LICENSE-MIT) and [CECILL licence](./LICENSE-CECILL-EN).
+
+VampireUHC est licensié sous les licenses [MIT](./LICENSE-MIT) et [CECILL](./LICENSE-CECILL-FR).

@@ -18,7 +18,9 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+
 import fr.vampireuhc.markers.AuraTier;
+import fr.vampireuhc.roles.CartographerRole;
 import fr.vampireuhc.roles.CupidonRole;
 import fr.vampireuhc.roles.GremlinRole;
 import fr.vampireuhc.roles.MasterRole;
@@ -26,6 +28,8 @@ import fr.vampireuhc.roles.Role;
 import fr.vampireuhc.roles.SaviorRole;
 import fr.vampireuhc.roles.SoulweigherRole;
 import fr.vampireuhc.roles.VampireMinion;
+import fr.vampireuhc.roles.WeaverRole;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,6 +47,7 @@ import java.util.stream.Collectors;
  *  * /vuhc drain             -> pouvoir secondaire du gremlin
  *  * /vuhc lier <j1> <j2>    -> Cupidon lie deux joueurs
  *  * /vuhc peser <j1> <j2>   -> Peseuse d'âmes pèse l'aura de deux joueurs
+ *  * /vuhc tisser <joueur>   -> Le Tisseur pose un fil sur un joueur.
  *
  * Commandes admin (perm vuhc.admin) :
  *  * /vuhc admin <start [sec]|stop|reset|status>
@@ -63,7 +68,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> PLAYER_SUBCOMMANDS = Arrays.asList(
             "role", "spectate", "marquer", "trancher", "proteger", "voter",
-            "switch", "drain", "lier", "peser");
+            "switch", "drain", "lier", "peser", "tisser", "baliser");
     private static final List<String> ADMIN_SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "status");
     private static final List<String> DEV_SUBCOMMANDS = Arrays.asList("setTime", "setRole", "who", "aura");
 
@@ -159,6 +164,59 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
                 spectatorManager.follow(player, targetSpec);
                 return;
+            }
+
+            case "tisser": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return;
+                }
+
+                if (args.length < 2) {
+                    player.sendMessage(ChatColor.RED + "Usage: /vuhc tisser <joueur>");
+                    return;
+                }
+
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    return;                
+                } 
+
+                VampireUHCPlayer targetPlayer = playerManager.get(target.getUniqueId());
+
+                if (targetPlayer == null) {
+                    player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
+                    return;
+                }
+
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+                if (!(localPlayer != null && localPlayer.getRole() instanceof WeaverRole weaverRole)) {
+                    return;
+                }
+
+                weaverRole.weavePlayer(markerManager, targetPlayer);
+                return;
+            }
+
+            case "baliser": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    return;
+                } 
+                
+                if (args.length > 1) {
+                    player.sendMessage(ChatColor.RED + "Usage: /vuhc baliser");
+                    return;
+                }
+
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+
+                if (!(localPlayer != null && localPlayer.getRole() instanceof CartographerRole cartographerRole)) {
+                    return;
+                }
+
+                cartographerRole.placeBeacon(player, gameManager.getEpisode());
             }
 
             case "marquer": {
@@ -605,7 +663,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
             if ((sub.equals("marquer") || sub.equals("proteger") || sub.equals("voter")
                     || sub.equals("switch") || sub.equals("lier") || sub.equals("peser")
-                    || sub.equals("spectate")) && hasAccess(sender, sub)) {
+                    || sub.equals("tisser") || sub.equals("spectate")) && hasAccess(sender, sub)) {
                 return playersStartingWith(args[1]);
             }
             return new ArrayList<>();
@@ -624,6 +682,10 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     // Accès à une sous-commande selon le rôle/statut de l'expéditeur.
     private boolean hasAccess(CommandSender sender, String sub) {
         switch (sub) {
+            case "tisser":
+                return hasRole(sender, WeaverRole.class);
+            case "baliser":
+                return hasRole(sender, CartographerRole.class);
             case "role":
                 return true;
             case "spectate":
@@ -759,6 +821,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         }
         if (hasAccess(sender, "peser")) {
             sender.sendMessage(ChatColor.WHITE + "/vuhc peser <j1> <j2>" + ChatColor.GRAY + " — Peseuse d'âmes : pèse l'aura de deux joueurs");
+        }
+        if (hasAccess(sender, "tisser")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc tisser <joueur>" + ChatColor.GRAY + " — Tisseur : pose un fil sur un joueur et tisse ainsi sa toîle.");
+        }
+        if (hasAccess(sender, "baliser")) {
+            sender.sendMessage(ChatColor.WHITE + "/vuhc baliser" + ChatColor.GRAY + " — Cartographe : pose une balise à sa position. Pendant 20 minutes, le beacon enregistre le passage de chaque joueur dans un rayon de 20 blocs.");
         }
         if (hasAdminPermission(sender)) {
             sender.sendMessage(ChatColor.GRAY + "— Admin —");

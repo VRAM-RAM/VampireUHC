@@ -2,11 +2,9 @@ package fr.vampireuhc.roles;
 
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.ConfigManager;
-import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
-import java.util.UUID;
 
 import org.bukkit.ChatColor;
 

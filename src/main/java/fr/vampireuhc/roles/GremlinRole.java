@@ -53,6 +53,15 @@ public class GremlinRole implements Role {
         this.gremlin = vampireUHCPlayer;
     }
 
+    @Override
+    public void onGameEnd() {
+        drainActive = false;
+        if (drainTask != null) {
+            drainTask.cancel();
+            drainTask = null;
+        }
+    }
+
     // Pouvoirs spécifiques au rôle :
     
     public boolean SwitchMarkers(MarkerManager manager, VampireUHCPlayer target_1, VampireUHCPlayer target_2, int current_episode) {
@@ -60,7 +69,7 @@ public class GremlinRole implements Role {
             return false;
         }
         // En gros, s'il a déjà intervertit cet épisode, ça ne marche pas.
-        if (episode == current_episode || applied_this_episode == true) {
+        if (episode == current_episode && applied_this_episode == true) {
             return false;
         }
         this.episode = current_episode; // On met à jour l'épisode.

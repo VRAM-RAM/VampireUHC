@@ -89,6 +89,14 @@ public class CupidonRole implements Role {
         }, 20L * 60);
     }
 
+    @Override
+    public void onGameEnd() {
+        if (linkFallbackTask != null) {
+            linkFallbackTask.cancel();
+            linkFallbackTask = null;
+        }
+    }
+
     // Joueurs portant une marque Amour posée par le cupidon.
     private Set<UUID> holdersOfAmourFrom(MarkerManager manager) {
         Set<UUID> holders = new HashSet<>();

@@ -1,10 +1,14 @@
 package fr.vampireuhc.listeners;
 
 import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.markers.MarkerManager;
+import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.ApprenticeSlayer;
 import fr.vampireuhc.roles.CupidonRole;
 import fr.vampireuhc.roles.PaladinRole;
+import fr.vampireuhc.roles.WeaverRole;
+
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -67,9 +71,15 @@ public class PlayerDeathListener implements Listener {
         }
 
         // Le Cupidon est notifié si l'un des amoureux meurt (penalty + identité du tueur).
+        // Le Tisseur est notifié si l'un des membres de sa toile / reseau meurt ou tue.
         for (VampireUHCPlayer p : plugin.getPlayerManager().getAll()) {
             if (p.getRole() instanceof CupidonRole cupidon) {
                 cupidon.onLoverDeath(plugin.getMarkerManager(), vp, killer);
+            }
+            if (p.getRole() instanceof WeaverRole weaver) {
+                MarkerManager markerManager = plugin.getMarkerManager();
+                weaver.tryInformDeathOfNodeAndDestroyWeb(markerManager, vp);
+                weaver.tryInformMurderByNodeOfWeb(markerManager, killerVp);
             }
         }
 

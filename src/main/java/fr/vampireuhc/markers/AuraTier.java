@@ -10,6 +10,27 @@ public enum AuraTier {
     LUMINEUSE,
     TRES_LUMINEUSE; 
 
+    public String toString() {
+        switch (this) {
+            case TRES_LUMINEUSE:
+                return "très lumineuse";
+            case LUMINEUSE:
+                return "lumineuse";
+
+            case NEUTRE:
+                return "neutre";
+
+            case TRES_OBSCURE:
+                return "très obscure";
+
+            case OBSCURE:
+                return "obscure";
+            
+            default:
+                return "inconnue";
+        }
+    }
+    
     public TightAuraTier getTight() {
         switch (this) {
             case TRES_LUMINEUSE:

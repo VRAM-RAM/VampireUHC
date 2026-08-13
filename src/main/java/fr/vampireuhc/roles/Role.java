@@ -20,6 +20,10 @@ public interface Role {
     /** Appele une fois, au moment ou le role est attribue a un joueur. */
     void onAssign(VampireUHCPlayer player);
 
+    /** Appelee quand la partie s'arrete ou est reinitialisee : nettoie les taches planifiees. */
+    default void onGameEnd() {
+    }
+
     // Retourne la description du role.
     public String getDescription();
 }

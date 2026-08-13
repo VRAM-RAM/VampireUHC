@@ -30,7 +30,9 @@ public class RoleManager {
         RoleType.PALADIN,
         RoleType.CUPIDON,
         RoleType.SAVIOR,
-        RoleType.SOUL_WEIGHTER
+        RoleType.SOUL_WEIGHTER,
+        RoleType.WEAVER,
+        RoleType.CARTOGRAPHER
     );
 
     private List<RoleType> soloroles = Arrays.asList(
@@ -43,7 +45,6 @@ public class RoleManager {
     public RoleManager(VampireUHC plugin, PlayerManager manager) {
         this.plugin = plugin;
         this.playerManager = manager;
-        
     }
 
     // Helpers publics :
@@ -134,17 +135,18 @@ public class RoleManager {
         }
     }
 
-    private void loadRolesConfig() {
-        // TODO: Charger depuis config.yml quand elle sera mise à jour
-        plugin.getLogger().info("Configuration des rôles chargée par défaut");
-    }
-
     // Crée une instance d'un rôle à partir d'un type de Rôle :
 
     public Role createRoleFromType(RoleType type, VampireUHCPlayer player) {
         switch (type) {
             case RoleType.MASTER:
                 return new MasterRole();
+
+            case RoleType.WEAVER:
+                return new WeaverRole(player);
+
+            case RoleType.CARTOGRAPHER:
+                return new CartographerRole(player);
 
             case RoleType.SOUL_WEIGHTER:
                 return new SoulweigherRole();
@@ -406,6 +408,8 @@ public class RoleManager {
             case "Apprenti Chasseur": return RoleType.APPRENTICE_SLAYER;
             case "Gremlin": return RoleType.GREMLIN;
             case "Peseuse d'âmes": return RoleType.SOUL_WEIGHTER;
+            case "Tisseur": return RoleType.WEAVER;
+            case "Cartographe": return RoleType.CARTOGRAPHER;
             default: return null;
         }
     }
