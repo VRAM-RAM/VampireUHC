@@ -63,24 +63,31 @@ public class PlayerDeathListener implements Listener {
             if (killerVp.getRole() instanceof PaladinRole paladin) {
                 paladin.gainLuminousMarkerOnKill(plugin.getMarkerManager(), vp);
             }
-
-            // L'Apprentie assassin récupère les marques (sauf Maître) du tué.
-            if (killerVp.getRole() instanceof ApprenticeSlayer slayer) {
-                slayer.CopyMarkersOnKill(plugin.getMarkerManager(), vp);
-            }
         }
 
         // Le Cupidon est notifié si l'un des amoureux meurt (penalty + identité du tueur).
         // Le Tisseur est notifié si l'un des membres de sa toile / reseau meurt ou tue.
+        // Ces hooks lisent l'état des marqueurs du défunt : ils doivent tourner AVANT
+        // que l'Apprentie assassin ne récupère les marques, sinon ils voient un état tronqué.
         for (VampireUHCPlayer p : plugin.getPlayerManager().getAll()) {
             if (p.getRole() instanceof CupidonRole cupidon) {
                 cupidon.onLoverDeath(plugin.getMarkerManager(), vp, killer);
             }
             if (p.getRole() instanceof WeaverRole weaver) {
                 MarkerManager markerManager = plugin.getMarkerManager();
-                weaver.tryInformDeathOfNodeAndDestroyWeb(markerManager, vp);
-                weaver.tryInformMurderByNodeOfWeb(markerManager, killerVp);
+                if (p.getUuid().equals(vp.getUuid())) {
+                    // Le Tisseur meurt : sa toile s'effondre avec lui.
+                    weaver.collapseWeb(markerManager);
+                } else {
+                    weaver.tryInformDeathOfNodeAndDestroyWeb(markerManager, vp);
+                    weaver.tryInformMurderByNodeOfWeb(markerManager, killerVp);
+                }
             }
+        }
+
+        // L'Apprentie assassin récupère les marques (sauf Maître) du tué.
+        if (killerVp != null && killerVp.getRole() instanceof ApprenticeSlayer slayer) {
+            slayer.CopyMarkersOnKill(plugin.getMarkerManager(), vp);
         }
 
         plugin.getGameManager().checkWinCondition();

@@ -1,5 +1,6 @@
 package fr.vampireuhc.roles;
 
+import fr.vampireuhc.markers.Marker;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
@@ -8,6 +9,8 @@ import fr.vampireuhc.player.Camp;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
+
+import java.util.UUID;
 
 public class WeaverRole implements Role {
     private VampireUHCPlayer weaver;
@@ -40,6 +43,19 @@ public class WeaverRole implements Role {
     @Override
     public void onAssign(VampireUHCPlayer vampireUHCPlayer) {
         this.weaver = vampireUHCPlayer;
+        // Restauration : le compteur de fils est re-dérivé des marqueurs existants.
+        // Sinon, après un reload serveur, thread = 0 et le Tisseur ne pourrait plus
+        // tisser (les cibles ont déjà un marqueur FIL) : rôle bloqué à jamais.
+        MarkerManager manager = fr.vampireuhc.VampireUHC.getInstance().getMarkerManager();
+        int count = 0;
+        for (UUID id : manager.getAllPlayers()) {
+            for (Marker m : manager.getMarkers(id, MarkerType.FIL)) {
+                if (weaver.getUuid().equals(m.getSource())) {
+                    count++;
+                }
+            }
+        }
+        this.thread = count;
     }
 
     // Pouvoir spécial : dépôt d'un fil sur un joueur
@@ -117,12 +133,16 @@ public class WeaverRole implements Role {
         // On recupere l'aura du joueur mort
         String deadNodeAura = manager.computeAuraTier(deadNode.getUuid()).toString();
         
-        // On supprime tous les marqueurs fil
-        manager.clearMarkersOfTypeOnAllPlayers(MarkerType.FIL);
-        // Et on reinitialise le nombre de fils/ noeuds
-        this.thread = 0;
+        // La toile s'effondre
+        collapseWeb(manager);
 
         bukkitWeaver.sendMessage(ChatColor.DARK_RED + "Le noeud " + ChatColor.GOLD + deadNode.getLastKnownName() + ChatColor.DARK_RED + " est décédé. Son aura était "  + ChatColor.GOLD + deadNodeAura + ChatColor.DARK_RED + ". Votre toîle s'effondre.");
+    }
+
+    // Effondre la toile : supprime tous les fils et remet le compteur à zéro.
+    public void collapseWeb(MarkerManager manager) {
+        manager.clearMarkersOfTypeOnAllPlayers(MarkerType.FIL);
+        this.thread = 0;
     }
 
 

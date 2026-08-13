@@ -110,6 +110,9 @@ public class CartographerRole implements Role {
             if (p.getGameMode() == GameMode.SPECTATOR) {
                 continue;
             }
+            if (p.getUniqueId().equals(cartographer.getUuid())) {
+                continue;
+            }
             if (!p.getWorld().equals(b.getWorld())) {
                 continue;
             }
