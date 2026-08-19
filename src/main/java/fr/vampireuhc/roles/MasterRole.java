@@ -6,6 +6,11 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -30,14 +35,21 @@ public class MasterRole implements Role {
 
     // Sa description :
     @Override
-    public String getDescription() {
+    public Component getDescription() {
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int episodeLength = config.getEpisodeLength();
         int toInfect = config.getMarksToInfect();
-        return "Le Maître est le chef des vampires. Toutes les " + ChatColor.DARK_PURPLE + episodeLength + ChatColor.GRAY
-            + " minutes, il peut poser une marque Maitre sur le joueur non-vampire de son choix. Il ne vote pas pour les marques vampires, mais, en cas d'égalité, prend la décision finale. Voici les effets qu'écopperont les joueurs marqués par la marque Maitre : \n 1 marque => Aucun effet, ne fait qu'obscursir l'aura du joueur marqué. \n 2 marques => Lorsque le joueur marqué consomme en pomme d'or, il ne gagne qu'un seul coeur d'absorption. \n "
-            + ChatColor.DARK_PURPLE + toInfect + ChatColor.GRAY
-            + " marques => Le joueur marqué est infecté : il rejoint le camp des vampires et doit gagner avec ce dernier. \n Attention ! Une fois un joueur infecté, toutes les marques Maitre disparaissent, vous ne pourrez plus en poser et ainsi plus aucun joueur ne sera affecté par la perte d'absorption !";
+        MiniMessage mm = MiniMessage.miniMessage();
+        return mm.deserialize(
+            "<gray>Vous êtes le chef des vampires. Vous avez <yellow>" + (8) + " coeurs</yellow> au lieu de 10 — vous êtes fragile mais redoutable.</gray>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>Toutes les <yellow>" + episodeLength + " minutes</yellow>, vous pouvez poser une marque Maître sur un joueur non-vampire.</gray>\n"
+            + "<dark_purple>▸</dark_purple> <gray>Vous ne votez pas pour les marques vampires, mais tranchez en cas d'égalité.</gray>\n\n"
+            + "<bold><dark_purple>Effets des marques Maître :</dark_purple></bold>\n"
+            + "  <gray>• 1 marque → Aucun effet visible, mais l'aura s'obscurcit.</gray>\n"
+            + "  <gray>• 2 marques → Le joueur ne gagne plus qu'<yellow>1 cœur d'absorption</yellow> par pomme d'or.</gray>\n"
+            + "  <gold>• " + toInfect + " marques → Le joueur est <red>infecté</red> et rejoint les vampires !</gold>\n\n"
+            + "<red>⚠ Attention :</red> <gray>après une infection, toutes les marques Maître disparaissent.</gray>"
+        );
     }
     
     // Mais aussi son camp :

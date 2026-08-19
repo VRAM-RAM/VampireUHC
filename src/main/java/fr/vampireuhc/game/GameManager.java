@@ -2,6 +2,7 @@ package fr.vampireuhc.game;
 
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.ConfigManager;
+import fr.vampireuhc.config.MessageUtil;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.PlayerManager;
@@ -461,10 +462,9 @@ public class GameManager {
                 continue;
             }
             if (vp.getRole() != null) {
-                bukkitPlayer.sendMessage(configManager.translate("&eVous êtes : &f" + vp.getRole().getName()));
-                bukkitPlayer.sendMessage(configManager.translateRaw("&7" + vp.getRole().getDescription()));
+                bukkitPlayer.sendMessage(MessageUtil.roleAnnounce(vp.getRole()));
             } else {
-                bukkitPlayer.sendMessage(configManager.translate("&eVous êtes : &fVillageois"));
+                bukkitPlayer.sendMessage(MessageUtil.info("Vous êtes : Villageois"));
             }
         }
     }

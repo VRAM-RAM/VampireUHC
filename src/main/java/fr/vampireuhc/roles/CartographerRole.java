@@ -14,6 +14,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class CartographerRole implements Role {
     private static final double BEACON_RADIUS = 20.0;
@@ -36,8 +38,18 @@ public class CartographerRole implements Role {
     }
 
     @Override
-    public String getDescription() {
-        return "Le Cartographe est un rôle villageois à information. Une fois par épisode, il peut poser une balise à sa position (/vuhc baliser). Pendant l'épisode, la balise enregistre discrètement les joueurs vivants qui passent dans un rayon de 20 blocs. À la fin de l'épisode, le Cartographe reçoit la liste des joueurs passés, puis la balise disparaît et peut être repositionnée à l'épisode suivant.";
+    public Component getDescription() {
+        MiniMessage mm = MiniMessage.miniMessage();
+        return mm.deserialize(
+            "<gray>Vous cartographiez discrètement les déplacements des joueurs.</gray>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>Placez une balise : <gold>/vuhc baliser</gold></gray>\n"
+            + "<dark_purple>▸</dark_purple> <gray>La balise enregistre les joueurs dans un rayon de <yellow>20 blocs</yellow>.</gray>\n\n"
+            + "<bold><dark_purple>Fonctionnement :</dark_purple></bold>\n"
+            + "  <gray>• La balise reste active pendant l'épisode en cours et le suivant.</gray>\n"
+            + "  <gray>• Au début de l'épisode suivant, vous recevez la liste des joueurs passés.</gray>\n"
+            + "  <gray>• Après 2 épisodes au même endroit, la balise disparaît.</gray>\n"
+            + "  <gray>• Réutilisez <gold>/vuhc baliser</gold> pour la repositionner.</gray>"
+        );
     }
 
     @Override

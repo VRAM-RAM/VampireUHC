@@ -9,7 +9,8 @@ public enum RoleType {
     CARTOGRAPHER, // Le Cartographe
     PALADIN, // Le paladin
     CUPIDON, // Cupidon
-    APPRENTICE_SLAYER, // Apprentie chasseur
+    APPRENTICE_SLAYER, // Apprentie assassin
+    SAND_MERCHANT, // Marchand de sable
     GREMLIN; //Le Gremlin
     
     public static RoleType fromString(String value) {

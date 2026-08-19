@@ -11,6 +11,8 @@ import org.bukkit.entity.Player;
 import java.util.Random;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.attribute.Attribute;
 
 public class GremlinRole implements Role {
@@ -34,8 +36,19 @@ public class GremlinRole implements Role {
     }
 
     @Override
-    public String getDescription() {
-        return "Le Gremlin est un rôle solitaire. Une fois par épisode, il peut échanger l'ensemble des marques de deux joueurs via /vuhc switch <joueur1> <joueur2> (il peut s'auto-switch). Pratique pour semer la zizanie, handicaper des rôles villageois ou retarder l'infection du Maître. Attention : le Cupidon est notifié si une marque Amour change de propriétaire. Son second pouvoir (/vuhc drain), utilisable une fois par épisode, lui permet de voler la vie de ses adversaires en combat : pendant 5 minutes, à chaque coup porté, il a 30 % de chance de regagner un demi-coeur. À la fin des 5 minutes, il subit un poison léger et court.";
+    public Component getDescription() {
+        MiniMessage mm = MiniMessage.miniMessage();
+        return mm.deserialize(
+            "<light_purple>Vous êtes un solitaire manipulant les marques et volant la vie de vos adversaires.</light_purple>\n\n"
+            + "<bold><dark_purple>Pouvoir 1 — Échange de marques :</dark_purple></bold>\n"
+            + "  <dark_purple>▸</dark_purple> <gray>Échangez <red>toutes</red> les marques de deux joueurs : <gold>/vuhc switch <j1> <j2></gold></gray>\n"
+            + "  <dark_purple>▸</dark_purple> <gray>Utilisable une fois par épisode. Vous pouvez vous auto-switch.</gray>\n"
+            + "  <dark_purple>▸</dark_purple> <gray>⚠ Le Cupidon est notifié si une marque Amour change de propriétaire.</gray>\n\n"
+            + "<bold><dark_purple>Pouvoir 2 — Vol de vie :</dark_purple></bold>\n"
+            + "  <dark_purple>▸</dark_purple> <gray>Activez : <gold>/vuhc drain</gold> — une fois par épisode.</gray>\n"
+            + "  <dark_purple>▸</dark_purple> <gray>Pendant <yellow>5 minutes</yellow>, chaque coup a <green>30% de chance</green> de vous voler un demi-coeur.</gray>\n"
+            + "  <dark_purple>▸</dark_purple> <red>À la fin : poison léger et court.</red>"
+        );
     }
 
     @Override

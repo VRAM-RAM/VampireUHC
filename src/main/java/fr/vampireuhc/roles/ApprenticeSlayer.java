@@ -7,6 +7,8 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.List;
 import java.util.UUID;
@@ -30,21 +32,23 @@ public class ApprenticeSlayer implements Role {
     }
 
     @Override
-    public String getDescription() {
+    public Component getDescription() {
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int darkThreshold = config.getSlayerDarkThreshold();
         int lightThreshold = config.getSlayerLightThreshold();
         int darkHighThreshold = config.getSlayerDarkHighThreshold();
         int lightHighThreshold = config.getSlayerLightHighThreshold();
-        return "L'Apprentie assassin est un rôle solitaire. Son but : gagner seule en éliminant tous les autres joueurs. À chaque kill, elle récupère les marques (sauf les marques Maître) du joueur tué. En fonction des marques qu'elle possède, ses pouvoirs varient (cumulatifs) : plus de "
-            + ChatColor.DARK_PURPLE + darkThreshold + ChatColor.GRAY
-            + " marqueurs obscurs => force légère la nuit ; plus de "
-            + ChatColor.DARK_PURPLE + lightThreshold + ChatColor.GRAY
-            + " marqueurs lumineux => force légère le jour ; plus de "
-            + ChatColor.DARK_PURPLE + darkHighThreshold + ChatColor.GRAY
-            + " marqueurs obscurs => force légère la nuit et régénération la nuit ; plus de "
-            + ChatColor.DARK_PURPLE + lightHighThreshold + ChatColor.GRAY
-            + " marqueurs lumineux => force légère le jour et régénération le jour.";
+        MiniMessage mm = MiniMessage.miniMessage();
+        return mm.deserialize(
+            "<light_purple>Vous gagnez seule en éliminant tous les autres joueurs.</light_purple>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>À chaque kill, vous récupérez les marques du joueur tué (sauf les marques Maître).</gray>\n\n"
+            + "<bold><dark_purple>Pouvoirs cumulatifs :</dark_purple></bold>\n"
+            + "  <gray>• <yellow>" + darkThreshold + "+ marqueurs obscurs</yellow> → <green>Force légère la nuit.</green></gray>\n"
+            + "  <gray>• <yellow>" + config.getSlayerLightThreshold() + "+ marqueurs lumineux</yellow> → <green>Force légère le jour.</green></gray>\n"
+            + "  <gray>• <yellow>" + darkHighThreshold + "+ marqueurs obscurs</yellow> → <green>Force + régénération la nuit.</green></gray>\n"
+            + "  <gray>• <yellow>" + lightHighThreshold + "+ marqueurs lumineux</yellow> → <green>Force + régénération le jour.</green></gray>\n\n"
+            + "<red>⚠</red> <gray>Les marques Maître que vous recevez vous rendent vulnérable (perte d'absorption, voire infection).</gray>"
+        );
     }
     @Override
     public String getName() {

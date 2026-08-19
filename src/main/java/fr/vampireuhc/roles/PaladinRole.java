@@ -5,6 +5,8 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -23,8 +25,19 @@ public class PaladinRole implements Role {
     }
 
     @Override
-    public String getDescription() {
-        return "Le Paladin est un rôle villageois dépendant de l'aura. Ses effets varient selon son aura : très obscure => perte d'un coeur et faiblesse légère ; obscure => faiblesse légère (invisible) ; neutre => aucun effet ; lumineuse => force légère (invisible) ; très lumineuse => force et deux coeurs supplémentaires. Lorsqu'il tue un vampire, il gagne une marque lumineuse.";
+    public Component getDescription() {
+        MiniMessage mm = MiniMessage.miniMessage();
+        return mm.deserialize(
+            "<gray>Votre puissance dépend de votre <yellow>aura</yellow>. Observez-la pour comprendre qui vous cible.</gray>\n\n"
+            + "<bold><dark_purple>Effets selon l'aura :</dark_purple></bold>\n"
+            + "  <dark_gray>• Très obscure →</dark_gray> <red>Perte d'un cœur + faiblesse légère.</red>\n"
+            + "  <gray>• Obscure →</gray> <red>Faiblesse légère</red> <gray>(invisible).</gray>\n"
+            + "  <white>• Neutre →</white> <gray>Aucun effet.</gray>\n"
+            + "  <yellow>• Lumineuse →</yellow> <green>Force légère</green> <gray>(invisible).</gray>\n"
+            + "  <gold>• Très lumineuse →</gold> <green>Force + 2 coeurs supplémentaires.</green>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>Lorsque vous tuez un vampire, vous gagnez une <yellow>marque lumineuse</yellow>.</gray>\n"
+            + "<dark_purple>▸</dark_purple> <gray>Cela permet de déduire si vos cibles sont vampires !</gray>"
+        );
     }
 
     @Override

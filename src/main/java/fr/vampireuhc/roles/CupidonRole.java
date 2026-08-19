@@ -13,6 +13,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import fr.vampireuhc.player.Camp;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -38,15 +40,21 @@ public class CupidonRole implements Role {
     }
 
     @Override
-    public String getDescription() {
+    public Component getDescription() {
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int heartsLost = config.getAmourHeartsLost();
         int penaltyMinutes = config.getAmourPenaltyDurationSeconds() / 60;
-        return "Le Cupidon est un rôle villageois. Au début de la partie, vous choisissez deux joueurs que vous liez avec /vuhc lier <Joueur1> <Joueur2> (sinon deux joueurs sont choisis au hasard après une minute). Les joueurs liés ne le savent pas. Si l'un meurt, l'autre perd temporairement "
-            + ChatColor.DARK_PURPLE + heartsLost + ChatColor.GRAY
-            + " coeurs pendant "
-            + ChatColor.DARK_PURPLE + penaltyMinutes + ChatColor.GRAY
-            + " minutes et connaît l'identité du tueur. Si une marque Amour change de propriétaire (ex : un Gremlin), vous apprenez, dans un délai aléatoire, qui la détient désormais — mais pas qui l'a perdue.";
+        MiniMessage mm = MiniMessage.miniMessage();
+        return mm.deserialize(
+            "<gray>Vous liez deux joueurs par un lien d'amour invisible.</gray>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>Au début de la partie, liez deux joueurs : <gold>/vuhc lier <j1> <j2></gold></gray>\n"
+            + "<dark_purple>▸</dark_purple> <gray>Les joueurs liés ne le savent pas.</gray>\n\n"
+            + "<bold><dark_purple>Effet du lien :</dark_purple></bold>\n"
+            + "  <gray>• Si l'un meurt, l'autre perd <red>" + heartsLost + " coeurs</red> pendant <yellow>" + penaltyMinutes + " minutes</yellow>.</gray>\n"
+            + "  <gray>• Il connaît l'identité du tueur.</gray>\n\n"
+            + "<bold><dark_purple>Surveillance :</dark_purple></bold>\n"
+            + "  <gray>Si une marque Amour change de propriétaire (ex : Gremlin), vous l'appprenez dans un délai aléatoire — mais pas qui l'a perdue.</gray>"
+        );
     }
 
     @Override

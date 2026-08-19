@@ -7,6 +7,8 @@ import java.util.UUID;
 
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 
 
@@ -26,8 +28,19 @@ public class SaviorRole implements Role {
     }
 
     @Override
-    public String getDescription() {
-        return "Le Salvateur est un rôle villageois. À chaque épisode, il place une marque Salvation sur un joueur. Cette marque possède une aura lumineuse. Si le joueur ciblé par un vampire ou le Maître possède la Salvation, la marque n'est pas appliquée et la marque Salvation disparaît, mais les vampires pensent quand même que leur action a fonctionné. Vous créez donc de fausses informations, tout en protégeant ceux que vous pensez être safe. Vous ne pouvez pas protéger le même joueur deux épisodes consécutifs.";
+    public Component getDescription() {
+        MiniMessage mm = MiniMessage.miniMessage();
+        return mm.deserialize(
+            "<gray>Vous protégez secrètement les villageois en semant la confusion chez les vampires.</gray>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>À chaque épisode, placez une marque <green>Salvation</green> sur un joueur : <gold>/vuhc proteger <joueur></gold></gray>\n"
+            + "<dark_purple>▸</dark_purple> <gray>La marque possède une <yellow>aura lumineuse</yellow>.</gray>\n\n"
+            + "<bold><dark_purple>Effet :</dark_purple></bold>\n"
+            + "  <gray>Si un vampire ou le Maître cible un joueur portant Salvation :</gray>\n"
+            + "  <gray>• La marque vampire <red>n'est pas appliquée</red>.</gray>\n"
+            + "  <gray>• Les vampires croient que leur action a fonctionné.</gray>\n"
+            + "  <gray>• La marque Salvation disparaît.</gray>\n\n"
+            + "<gray>Vous créez de fausses informations tout en protégeant ceux que vous jugez sûrs.</gray>"
+        );
     }
 
     @Override

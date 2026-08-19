@@ -6,6 +6,8 @@ import org.bukkit.ChatColor;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class SoulweigherRole implements Role {
     
@@ -33,12 +35,21 @@ public class SoulweigherRole implements Role {
     }
 
     @Override
-    public String getDescription() {
-        return "La Peseuse d'Âmes est un rôle à info mineur. À chaque épisode, avec /vuhc peser <Joueur1> <Joueur2>, elle pèse l'aura de deux joueurs. Trois résultats possibles : "
-            + ChatColor.DARK_PURPLE + "« La balance s'équilibre... »" + ChatColor.GRAY + " : les deux joueurs ont exactement la même aura (très obscure, obscure, neutre...). "
-            + ChatColor.DARK_PURPLE + "« La balance penche légèrement... »" + ChatColor.GRAY + " : ils ont une aura de la même catégorie (obscure, neutre ou lumineuse). "
-            + ChatColor.DARK_PURPLE + "« La balance penche... »" + ChatColor.GRAY + " : ils ont une aura de catégories différentes. "
-            + "Croisez ces informations avec les autres rôles pour démasquer les vampires !";
+    public Component getDescription() {
+        MiniMessage mm = MiniMessage.miniMessage();
+        return mm.deserialize(
+            "<gray>Vous pesez l'aura de deux joueurs pour déceler les différences.</gray>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>Commande : <gold>/vuhc peser <joueur1> <joueur2></gold></gray>\n"
+            + "<dark_purple>▸</dark_purple> <gray>Utilisable à chaque épisode.</gray>\n\n"
+            + "<bold><dark_purple>Résultats possibles :</dark_purple></bold>\n"
+            + "  <green>« La balance s'équilibre... »</green>\n"
+            + "  <gray>→ Même aura exacte (très obscure, obscure, neutre...).</gray>\n"
+            + "  <yellow>« La balance penche légèrement... »</yellow>\n"
+            + "  <gray>→ Même catégorie (obscure, neutre ou lumineuse).</gray>\n"
+            + "  <red>« La balance penche... »</red>\n"
+            + "  <gray>→ Catégories différentes.</gray>\n\n"
+            + "<gray>Croisez ces infos avec les autres rôles pour démasquer les vampires !</gray>"
+        );
     }
 
     // Pouvoir actif spécifique à la peseuse d'âme

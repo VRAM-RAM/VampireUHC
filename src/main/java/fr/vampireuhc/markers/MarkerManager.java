@@ -4,6 +4,8 @@ import fr.vampireuhc.VampireUHC;
 
 import java.util.*;
 
+import org.bukkit.entity.Player;
+
 public class MarkerManager {
     
     private final VampireUHC plugin;
@@ -99,6 +101,22 @@ public class MarkerManager {
             return false;
         }
         return list.remove(marker);
+    }
+
+    public ArrayList<Player> getPlayersThatHaveMarkerType(MarkerType type) {
+        ArrayList<Player> players = new ArrayList<>();
+        for (Map.Entry<UUID, List<Marker>> entry : markersByPlayer.entrySet()) {
+            for (Marker marker : entry.getValue()) {
+                if (marker.getType() == type) {
+                    Player player = plugin.getServer().getPlayer(entry.getKey());
+                    if (player != null) {
+                        players.add(player);
+                    }
+                    break;
+                }
+            }
+        }
+        return players;
     }
 
     // Retire tous les marqueurs d'un type donné

@@ -183,7 +183,7 @@ Le Tisseur est un rôle villageois à information moyenne, qui agit principaleme
 /vuhc tisser <Joueur>
 ```
 
-le Tisseur peut intégrer un joueur à son réseau.
+le Tisseur peut intégrer un joueur qui se trouve à moins de 20 blocs autour de lui à son réseau.
 
 Il ne peut utiliser cette commande que sur un joueur proche de lui.
 
@@ -228,7 +228,7 @@ La balise, après avoir passé 2 épisodes au même endroit, disparaît automati
 ### Marchand de Sable
 
 Le Marchand de Sable est un rôle de soutien léger.
-Chaque épisode, il peut, à l'aide de la commande `/vuhc ensabler <joueur>`, déposer un marqueur **sable** sur le joueur de son choix. Si le joueur ciblé est villageois, le marqueur prendra une aura lumineuse. Sinon, il prendra une aura neutre.
+Chaque épisode, il peut, à l'aide de la commande `/vuhc ensabler <joueur>`, déposer un marqueur **sable** sur un joueur de son choix qui se trouve dans un rayon de 10 blocs autour de lui. Si le joueur ciblé est villageois, le marqueur prendra une aura lumineuse. Sinon, il prendra une aura neutre.
 
 > [!NOTE] Le Marchand de sable peut s'ensabler lui-même, mais ne peut ensabler un joueur qu'une seule fois dans la partie.
 

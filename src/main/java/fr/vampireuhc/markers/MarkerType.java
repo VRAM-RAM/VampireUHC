@@ -13,7 +13,9 @@ public enum MarkerType {
     
     // Le reste :
     AMOUR(Aura.NEUTRE),
-    FIL(Aura.NEUTRE);
+    FIL(Aura.NEUTRE),
+    SABLE_LUMINEUX(Aura.LUMINEUSE),
+    SABLE_NEUTRE(Aura.NEUTRE);
 
     private final Aura aura;
 

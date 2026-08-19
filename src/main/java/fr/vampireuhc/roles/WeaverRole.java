@@ -5,6 +5,8 @@ import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -26,8 +28,18 @@ public class WeaverRole implements Role {
     }
 
     @Override
-    public String getDescription() {
-        return "TODO";
+    public Component getDescription() {
+        MiniMessage mm = MiniMessage.miniMessage();
+        return mm.deserialize(
+            "<gray>Vous tissez un réseau de joueurs pour observer les événements qui s'y produisent.</gray>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>Ajoutez un joueur à votre réseau : <gold>/vuhc tisser <joueur></gold></gray>\n"
+            + "<dark_purple>▸</dark_purple> <gray>Le joueur doit se trouver à moins de <yellow>20 blocs</yellow>.</gray>\n"
+            + "<dark_purple>▸</dark_purple> <gray>Constituez un réseau de <yellow>3 à 4 joueurs</yellow> pour activer votre pouvoir.</gray>\n\n"
+            + "<bold><dark_purple>Événements :</dark_purple></bold>\n"
+            + "  <red>• Mort d'un noeud</red> → <gray>Vous apprenez son nom + son aura exacte. Le réseau s'effondre.</gray>\n"
+            + "  <dark_red>• Meurtre par un noeud</red> → <gray>Vous êtes notifié. Le réseau ne s'effondre pas.</gray>\n\n"
+            + "<gray>Tant que le réseau contient moins de 3 personnes, il ne produit aucun effet.</gray>"
+        );
     }
 
     @Override
@@ -60,7 +72,7 @@ public class WeaverRole implements Role {
 
     // Pouvoir spécial : dépôt d'un fil sur un joueur
 
-    public  void weavePlayer(MarkerManager manager, VampireUHCPlayer target) {
+    public void weavePlayer(MarkerManager manager, VampireUHCPlayer target) {
         if (weaver == null) {
             return;
         }

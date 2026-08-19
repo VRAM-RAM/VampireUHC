@@ -5,6 +5,8 @@ import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.ChatColor;
 
@@ -23,18 +25,21 @@ public class VampireMinion implements Role {
     }
 
     @Override
-    public String getDescription() {
+    public Component getDescription() {
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int pvpAt = config.getPvpActivationAt();
         int weaknessThreshold = config.getMarksToRemoveWeakness();
         int strengthThreshold = config.getMarksForNightStrength();
-        return "Vous êtes un Sbire vampire. En début de partie, vous subissez une faiblesse pendant le jour. À "
-            + ChatColor.DARK_PURPLE + pvpAt + ChatColor.GRAY
-            + " minutes, vous découvrez la liste de vos alliés et pouvez voter pour attribuer des marques vampires (/vuhc voter <joueur>). Vos pouvoirs augmentent avec le nombre de joueurs marqués : à partir de "
-            + ChatColor.DARK_PURPLE + weaknessThreshold + ChatColor.GRAY
-            + " joueurs marqués vous perdez votre faiblesse, et à partir de "
-            + ChatColor.DARK_PURPLE + strengthThreshold + ChatColor.GRAY
-            + " joueurs marqués vous gagnez de la force la nuit. En cas d'égalité lors du vote, c'est le Maître qui tranche.";
+        MiniMessage mm = MiniMessage.miniMessage();
+        return mm.deserialize(
+            "<gray>Vous êtes un sbire vampire. En début de partie, vous subissez une <red>faiblesse pendant le jour</red>.</gray>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>À <yellow>" + pvpAt + " minutes</yellow>, vous découvrez vos alliés et pouvez voter pour marquer des joueurs.</gray>\n"
+            + "<dark_purple>▸</dark_purple> <gray>Commande : <gold>/vuhc voter <joueur></gold></gray>\n\n"
+            + "<bold><dark_purple>Progression :</dark_purple></bold>\n"
+            + "  <gray>• <yellow>" + weaknessThreshold + " joueurs marqués</yellow> → Vous perdez la faiblesse de jour.</gray>\n"
+            + "  <gray>• <yellow>" + strengthThreshold + " joueurs marqués</yellow> → Vous gagnez <green>force la nuit</green>.</gray>\n\n"
+            + "<gray>En cas d'égalité lors du vote, le Maître tranche.</gray>"
+        );
     }
 
     @Override

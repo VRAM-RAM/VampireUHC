@@ -1,7 +1,6 @@
 package fr.vampireuhc.roles;
 
 import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.game.GamePhase;
 import fr.vampireuhc.markers.Marker;
@@ -9,12 +8,9 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.PlayerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
-import fr.vampireuhc.roles.RoleType;
 import fr.vampireuhc.vampire_vote.VoteResult;
 import java.io.*;
-import java.lang.reflect.Type;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class RoleManager {  
     private final VampireUHC plugin;
@@ -32,7 +28,8 @@ public class RoleManager {
         RoleType.SAVIOR,
         RoleType.SOUL_WEIGHTER,
         RoleType.WEAVER,
-        RoleType.CARTOGRAPHER
+        RoleType.CARTOGRAPHER,
+        RoleType.SAND_MERCHANT
     );
 
     private List<RoleType> soloroles = Arrays.asList(
@@ -168,6 +165,9 @@ public class RoleManager {
 
             case RoleType.GREMLIN:
                 return new GremlinRole(player);
+
+            case RoleType.SAND_MERCHANT:
+                return new SandMerchantRole(player);
 
             default:
                 plugin.getLogger().warning("Rôle inconnu : " + type);
@@ -410,6 +410,7 @@ public class RoleManager {
             case "Peseuse d'âmes": return RoleType.SOUL_WEIGHTER;
             case "Tisseur": return RoleType.WEAVER;
             case "Cartographe": return RoleType.CARTOGRAPHER;
+            case "Marchand de Sable": return RoleType.SAND_MERCHANT;
             default: return null;
         }
     }

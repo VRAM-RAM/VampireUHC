@@ -2,11 +2,12 @@ package fr.vampireuhc.listeners;
 
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.markers.MarkerManager;
-import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.ApprenticeSlayer;
 import fr.vampireuhc.roles.CupidonRole;
 import fr.vampireuhc.roles.PaladinRole;
+import fr.vampireuhc.roles.RoleType;
+import fr.vampireuhc.roles.SandMerchantRole;
 import fr.vampireuhc.roles.WeaverRole;
 
 
@@ -85,6 +86,11 @@ public class PlayerDeathListener implements Listener {
             }
         }
 
+        if (vp.getRole() instanceof SandMerchantRole sandMerchant) {
+            MarkerManager markerManager = plugin.getMarkerManager();
+            sandMerchant.makePlayersSleepOnMarchantDeath(markerManager);
+        }
+        
         // L'Apprentie assassin récupère les marques (sauf Maître) du tué.
         if (killerVp != null && killerVp.getRole() instanceof ApprenticeSlayer slayer) {
             slayer.CopyMarkersOnKill(plugin.getMarkerManager(), vp);
