@@ -9,3 +9,6 @@ build
 .kotlin
 
 .DS_Store
+
+# Ignore the /bin (.class files)
+/bin
