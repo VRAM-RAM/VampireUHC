@@ -18,6 +18,7 @@ Le but est l'interprétation.
   * [Le Fossoyeur](#fossoyeur)
   * [Tisseur](#tisseur)
   * [Cartographe](#cartographe)
+  * [Marchand de Sable](#marchand-de-sable)
 
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)
@@ -224,6 +225,16 @@ Durant l'épisode et l'épisode suivant, tout passage de joueur est enregistré 
 À chaque épisode, il peut repositionner sa balise en réutilisant sa commande.
 La balise, après avoir passé 2 épisodes au même endroit, disparaît automatiquement, forçant le cartographe à en replacer une.
 
+### Marchand de Sable
+
+Le Marchand de Sable est un rôle de soutien léger.
+Chaque épisode, il peut, à l'aide de la commande `/vuhc ensabler <joueur>`, déposer un marqueur **sable** sur le joueur de son choix. Si le joueur ciblé est villageois, le marqueur prendra une aura lumineuse. Sinon, il prendra une aura neutre.
+
+> [!NOTE] Le Marchand de sable peut s'ensabler lui-même, mais ne peut ensabler un joueur qu'une seule fois dans la partie.
+
+À la mort du Marchand de Sable, toutes les personnes possédant un marqueur sable subissent un effet de blindness pendant 30 secondes, et un effet de lenteur pendant 3 minutes.
+
+> [!WARNING] L'aura d'un marqueur est fixe. Si, par exemple, Bob place un marqueur Sable sur Alice qui est villageoise, le marqueur prendra une aura lumineuse. Si le gremlin switch les marqueurs d'Alice et Majory, qui est vampire, ce dernier recevra le marqueur sable avec une aura lumineuse et non neutre.
 
 ## Solitaires
 
