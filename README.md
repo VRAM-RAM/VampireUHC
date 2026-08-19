@@ -60,6 +60,8 @@ Pour l'instant, voici les marqueurs prévus :
 - Marqueurs Vampire : donnés par les vampires (le résultat de leur vote). Ont une aura obscure.
 - Marqueurs Maitre : donnés par le maitre. A une aura obscure.
 - Marqueurs Lumineux : peuvent être donnés par divers moyens. Ont une aura lumineuse.
+- Marqueur Sable: Posé par le marchand de sable. Son aura dépend du camp du joueur ciblé.
+- Marqueur Fil: Posé par le tisseur, pour établir son réseau.
 
 ## Les auras
 
@@ -84,7 +86,7 @@ Elle n'indique pas directement de camp, mais permet de donner des indices (exemp
 Composition envisagée pour environ 24 joueurs :
 - 6 à 7 vampires maximum.
 - 15 à 16 villageois.
-- 2 à 3 solitaires. (dont le traire vampire qui apparait comme étant vampire)
+- 2 à 3 solitaires. (dont le traitre vampire qui apparait comme étant vampire)
 
 ### Vampires
 
