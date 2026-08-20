@@ -1,6 +1,7 @@
 package fr.vampireuhc.listeners;
 
 import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.config.MessageUtil;
 import fr.vampireuhc.game.GamePhase;
 import fr.vampireuhc.player.VampireUHCPlayer;
 
@@ -48,7 +49,7 @@ public class PlayerConnectionListener implements Listener {
         BukkitTask task = graceTasks.remove(player.getUniqueId());
         if (task != null) {
             task.cancel();
-            player.sendMessage(plugin.getConfigManager().translate("&aVous vous êtes reconnecté, votre partie continue !"));
+            player.sendMessage(MessageUtil.success("Vous vous êtes reconnecté, votre partie continue !"));
         }
 
         if (!vp.isAlive() || plugin.getGameManager().getPhase() == GamePhase.ENDED) {
@@ -68,9 +69,7 @@ public class PlayerConnectionListener implements Listener {
         }
 
         int graceMinutes = plugin.getConfigManager().getDisconnectGraceMinutes();
-        Bukkit.broadcastMessage(plugin.getConfigManager().translate(
-                "&7" + vp.getLastKnownName() + " &7s'est déconnecté. Il sera éliminé dans &f"
-                        + Math.max(1, graceMinutes) + "&7 min s'il ne revient pas."));
+        MessageUtil.broadcast("<gray>" + vp.getLastKnownName() + " s'est déconnecté. Il sera éliminé dans <white>" + Math.max(1, graceMinutes) + "</white> min s'il ne revient pas.</gray>");
         startGrace(vp);
     }
 
@@ -82,8 +81,7 @@ public class PlayerConnectionListener implements Listener {
             graceTasks.remove(uuid);
             if (Bukkit.getPlayer(uuid) == null && vp.isAlive()) {
                 vp.setDead();
-                Bukkit.broadcastMessage(plugin.getConfigManager().translate(
-                        "&c" + vp.getLastKnownName() + " &4a été éliminé (déconnexion)."));
+                MessageUtil.broadcast("<red>" + vp.getLastKnownName() + " <dark_red>a été éliminé (déconnexion).</dark_red></red>");
                 plugin.getGameManager().checkWinCondition();
             }
         }, 20L * 60L * graceMinutes));
@@ -96,7 +94,7 @@ public class PlayerConnectionListener implements Listener {
             player.teleport(world.getSpawnLocation());
         }
         player.setGameMode(GameMode.SPECTATOR);
-        player.sendMessage(plugin.getConfigManager().translate("&7Vous êtes spectateur."));
+        player.sendMessage(MessageUtil.info("Vous êtes spectateur."));
     }
 
     public void cancelAllGraceTasks() {

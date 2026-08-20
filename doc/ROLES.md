@@ -19,6 +19,7 @@ Le but est l'interprétation.
   * [Tisseur](#tisseur)
   * [Cartographe](#cartographe)
   * [Marchand de Sable](#marchand-de-sable)
+  * [Archer]
 
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)
@@ -235,6 +236,12 @@ Chaque épisode, il peut, à l'aide de la commande `/vuhc ensabler <joueur>`, d�
 À la mort du Marchand de Sable, toutes les personnes possédant un marqueur sable subissent un effet de blindness pendant 30 secondes, et un effet de lenteur pendant 3 minutes.
 
 > [!WARNING] L'aura d'un marqueur est fixe. Si, par exemple, Bob place un marqueur Sable sur Alice qui est villageoise, le marqueur prendra une aura lumineuse. Si le gremlin switch les marqueurs d'Alice et Majory, qui est vampire, ce dernier recevra le marqueur sable avec une aura lumineuse et non neutre.
+
+#### Archer
+
+L'archer est un rôle villageois pur pvp.
+À l'annonce des rôles, il reçoit un arc *infinity* et *unbreaking III*. 
+Il possède également un pouvoir passif : lorsqu'il tire et atteint quelqu'un, cette personne obtient un effet de glowing (visible seulement par l'archer) durant **15** secondes.
 
 ## Solitaires
 

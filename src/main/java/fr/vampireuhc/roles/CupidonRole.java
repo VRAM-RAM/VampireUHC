@@ -1,13 +1,13 @@
 package fr.vampireuhc.roles;
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.ConfigManager;
+import fr.vampireuhc.config.MessageUtil;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.markers.Marker;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -53,7 +53,7 @@ public class CupidonRole implements Role {
             + "  <gray>• Si l'un meurt, l'autre perd <red>" + heartsLost + " coeurs</red> pendant <yellow>" + penaltyMinutes + " minutes</yellow>.</gray>\n"
             + "  <gray>• Il connaît l'identité du tueur.</gray>\n\n"
             + "<bold><dark_purple>Surveillance :</dark_purple></bold>\n"
-            + "  <gray>Si une marque Amour change de propriétaire (ex : Gremlin), vous l'appprenez dans un délai aléatoire — mais pas qui l'a perdue.</gray>"
+            + "  <gray>Si une marque Amour change de propriétaire (ex : Gremlin), vous l'apprenez dans un délai aléatoire, et connaissez l'identité du nouveau propriétaire — mais pas celle de celui qui l'a perdue.</gray>"
         );
     }
 
@@ -85,7 +85,7 @@ public class CupidonRole implements Role {
         // Partie neuve : le cupidon choisit lui-même les amoureux.
         Player bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
         if (bukkitCupidon != null) {
-            bukkitCupidon.sendMessage(ChatColor.DARK_PURPLE + "Choisissez vos deux amoureux : /vuhc lier <Joueur1> <Joueur2>");
+            bukkitCupidon.sendMessage(MessageUtil.warn("Choisissez vos deux amoureux : /vuhc lier <Joueur1> <Joueur2>"));
         }
 
         // Fallback : auto-lien aléatoire après une minute s'il n'a pas choisi.
@@ -140,9 +140,9 @@ public class CupidonRole implements Role {
 
         Player bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
         if (bukkitCupidon != null) {
-            bukkitCupidon.sendMessage(ChatColor.DARK_PURPLE + "Vous n'avez pas choisi vos amoureux : " + ChatColor.GOLD +
-                displayName(first) + ChatColor.DARK_PURPLE + " et " + ChatColor.GOLD + displayName(second) +
-                ChatColor.DARK_PURPLE + " ont été liés au hasard.");
+            bukkitCupidon.sendMessage(MessageUtil.warn("Vous n'avez pas choisi vos amoureux : <gold>" +
+                displayName(first) + "</gold> et <gold>" + displayName(second) +
+                "</gold> ont été liés au hasard."));
         }
     }
 
@@ -178,7 +178,7 @@ public class CupidonRole implements Role {
 
         var bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
         if (bukkitCupidon != null) {
-            bukkitCupidon.sendMessage(ChatColor.DARK_PURPLE + "Vous avez marqué les joueurs " + ChatColor.GOLD + target_1.getLastKnownName() + ChatColor.DARK_PURPLE + " et " + target_2.getLastKnownName());
+            bukkitCupidon.sendMessage(MessageUtil.successTwoTargets("Joueurs marqués :", target_1.getLastKnownName(), target_2.getLastKnownName()));
         }
         return true;
     }
@@ -221,7 +221,10 @@ public class CupidonRole implements Role {
         }
 
         String killerName = killer != null ? killer.getName() : "inconnu";
-        bukkitPartner.sendMessage(ChatColor.RED + "Votre amoureux est mort ! Vous perdez " + heartsLost + " coeurs pendant " + durationSeconds + " secondes. Son tueur était : " + ChatColor.GOLD + killerName);
+        MiniMessage mm = MiniMessage.miniMessage();
+        bukkitPartner.sendMessage(mm.deserialize(
+            "<red>Votre amoureux est mort ! Vous perdez <gold>" + heartsLost + " coeurs</gold> pendant <gold>" + durationSeconds + " secondes</gold>. Son tueur était : <gold>" + killerName + "</gold></red>"
+        ));
 
         new BukkitRunnable() {
             @Override
@@ -274,8 +277,8 @@ public class CupidonRole implements Role {
             public void run() {
                 Player bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
                 if (bukkitCupidon != null) {
-                    bukkitCupidon.sendMessage(ChatColor.DARK_PURPLE + "Une marque Amour a changé de propriétaire : " + ChatColor.GOLD +
-                        String.join(", ", names) + ChatColor.DARK_PURPLE + " la porte désormais.");
+                    bukkitCupidon.sendMessage(MessageUtil.warn("Une marque Amour a changé de propriétaire : <gold>" +
+                        String.join(", ", names) + "</gold> la porte désormais."));
                 }
             }
         }.runTaskLater(VampireUHC.getInstance(), delay);

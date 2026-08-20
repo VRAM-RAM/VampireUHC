@@ -61,7 +61,9 @@ public class MapManager implements Listener {
 
         int y = world.getHighestBlockYAt(0, 0);
         world.setSpawnLocation(0, y, 0);
+        world.setTime(1000);
         plugin.getLogger().info("Map vuhc_world prête : " + config.getMapSize() + "x" + config.getMapSize() + " centrée sur 0;0.");
+    
     }
 
     // Supprime la map de la partie pour préparer la prochaine partie.
@@ -69,6 +71,10 @@ public class MapManager implements Listener {
         if (world == null) {
             return;
         }
+
+        var plugin = this.plugin;
+
+        Bukkit.getScheduler().cancelTasks(plugin);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (player.getWorld().equals(world)) {

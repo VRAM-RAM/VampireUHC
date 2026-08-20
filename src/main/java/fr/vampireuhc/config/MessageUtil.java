@@ -6,6 +6,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 
 public final class MessageUtil {
 
@@ -13,13 +14,13 @@ public final class MessageUtil {
 
     private MessageUtil() {}
 
-    // ── Prefix ──────────────────────────────────────────────────
+    //  Prefix 
 
     public static Component prefix() {
         return mm.deserialize("<dark_purple><bold>VampireUHC</bold> <gray>»</gray> ");
     }
 
-    // ── Generic helpers ─────────────────────────────────────────
+    //  Generic helpers 
 
     public static Component error(String text) {
         return prefix().append(mm.deserialize("<red>" + text));
@@ -37,7 +38,7 @@ public final class MessageUtil {
         return prefix().append(mm.deserialize("<gold>" + text));
     }
 
-    // ── Camp display ────────────────────────────────────────────
+    // Camp display 
 
     public static Component campName(Camp camp) {
         return switch (camp) {
@@ -47,7 +48,7 @@ public final class MessageUtil {
         };
     }
 
-    // ── Role banner (used by /vuhc role) ────────────────────────
+    // Role banner (used by /vuhc role) 
 
     public static Component roleBanner(Role role) {
         Component line = Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", NamedTextColor.DARK_PURPLE);
@@ -68,7 +69,7 @@ public final class MessageUtil {
                 .append(line);
     }
 
-    // ── Role announce (used at game start) ──────────────────────
+    // Role announce (used at game start)
 
     public static Component roleAnnounce(Role role) {
         Component line = Component.text("─────────────────────────────", NamedTextColor.DARK_PURPLE);
@@ -86,7 +87,7 @@ public final class MessageUtil {
                 .append(role.getDescription());
     }
 
-    // ── Infected player banner ──────────────────────────────────
+    // Infected player banner
 
     public static Component infectionBanner(java.util.List<String> vampireNames) {
         Component line = Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", NamedTextColor.DARK_RED);
@@ -113,7 +114,7 @@ public final class MessageUtil {
                 .append(line);
     }
 
-    // ── Help menu ───────────────────────────────────────────────
+    // Help menu
 
     public static Component helpBanner() {
         Component line = Component.text("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", NamedTextColor.DARK_PURPLE);
@@ -142,7 +143,7 @@ public final class MessageUtil {
                 .append(Component.text("— " + title + " —", NamedTextColor.DARK_PURPLE, TextDecoration.ITALIC));
     }
 
-    // ── Success messages with player names ──────────────────────
+    // Success messages with player names 
 
     public static Component successTarget(String message, String playerName) {
         return prefix().append(mm.deserialize(
@@ -154,5 +155,31 @@ public final class MessageUtil {
         return prefix().append(mm.deserialize(
             "<green>" + message + " <gold>" + name1 + "</gold><green> et </green><gold>" + name2 + "</gold><green>.</green>"
         ));
+    }
+
+    // Action bar 
+
+    public static Component actionBar(Component component) {
+        return component;
+    }
+
+    public static Component actionBar(String miniMessage) {
+        return mm.deserialize(miniMessage);
+    }
+
+    // Serialize (MiniMessage string → Component)
+
+    public static Component serialize(String miniMessage) {
+        return mm.deserialize(miniMessage);
+    }
+
+    // Broadcast
+
+    public static void broadcast(Component component) {
+        Bukkit.broadcast(component);
+    }
+
+    public static void broadcast(String miniMessage) {
+        Bukkit.broadcast(prefix().append(mm.deserialize(miniMessage)));
     }
 }

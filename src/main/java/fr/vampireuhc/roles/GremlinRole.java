@@ -1,12 +1,12 @@
 package fr.vampireuhc.roles;
 
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.config.MessageUtil;
 
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import java.util.Random;
 import fr.vampireuhc.markers.MarkerManager;
@@ -39,14 +39,13 @@ public class GremlinRole implements Role {
     public Component getDescription() {
         MiniMessage mm = MiniMessage.miniMessage();
         return mm.deserialize(
-            "<light_purple>Vous êtes un solitaire manipulant les marques et volant la vie de vos adversaires.</light_purple>\n\n"
+            "<light_purple>Vous êtes un rôle solitaire qui manipule les marques et vole la vie de vos adversaires.</light_purple>\n\n"
             + "<bold><dark_purple>Pouvoir 1 — Échange de marques :</dark_purple></bold>\n"
             + "  <dark_purple>▸</dark_purple> <gray>Échangez <red>toutes</red> les marques de deux joueurs : <gold>/vuhc switch <j1> <j2></gold></gray>\n"
             + "  <dark_purple>▸</dark_purple> <gray>Utilisable une fois par épisode. Vous pouvez vous auto-switch.</gray>\n"
-            + "  <dark_purple>▸</dark_purple> <gray>⚠ Le Cupidon est notifié si une marque Amour change de propriétaire.</gray>\n\n"
             + "<bold><dark_purple>Pouvoir 2 — Vol de vie :</dark_purple></bold>\n"
-            + "  <dark_purple>▸</dark_purple> <gray>Activez : <gold>/vuhc drain</gold> — une fois par épisode.</gray>\n"
-            + "  <dark_purple>▸</dark_purple> <gray>Pendant <yellow>5 minutes</yellow>, chaque coup a <green>30% de chance</green> de vous voler un demi-coeur.</gray>\n"
+            + "  <dark_purple>▸</dark_purple> <gray>Vous pouvez activer : <gold>/vuhc drain</gold> — une fois par épisode.</gray>\n"
+            + "  <dark_purple>▸</dark_purple> <gray>Pendant <yellow>5 minutes</yellow>, chaque coup a <green>30% de chance</green> de voler un demi-coeur à votre adversaire.</gray>\n"
             + "  <dark_purple>▸</dark_purple> <red>À la fin : poison léger et court.</red>"
         );
     }
@@ -117,7 +116,7 @@ public class GremlinRole implements Role {
         this.drainTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
             this.drainActive = false;
             if (player != null && player.isOnline() && player.isValid()) {
-                player.sendActionBar(ChatColor.DARK_RED + "Votre pouvoir de " + ChatColor.DARK_PURPLE + "drain" + ChatColor.RED + " est épuisé ! Vous ressentez une" + ChatColor.GREEN + " faiblesse" + ChatColor.RED + ".");
+                player.sendActionBar(MessageUtil.actionBar("<dark_red>Votre pouvoir de <dark_purple>drain</dark_purple> est épuisé ! Vous ressentez une <green>faiblesse</green>.</dark_red>"));
                 player.addPotionEffect(poisonEffect(1));
             }
         }, 20L * 60 * 5);

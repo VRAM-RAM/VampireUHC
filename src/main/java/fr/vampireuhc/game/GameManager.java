@@ -91,7 +91,7 @@ public class GameManager {
             return true;
         }
 
-        broadcast("&5La partie commence dans &f" + countdownRemaining + "&5 secondes !");
+        broadcast("<dark_purple>La partie commence dans <white>" + countdownRemaining + "</white> secondes !</dark_purple>");
         playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
 
         countdownTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
@@ -103,7 +103,7 @@ public class GameManager {
                 return;
             }
             if (countdownRemaining <= 10) {
-                broadcast("&5La partie commence dans &f" + countdownRemaining + "&5 secondes !");
+                broadcast("<dark_purple>La partie commence dans <white>" + countdownRemaining + "</white> secondes !</dark_purple>");
                 playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
             }
         }, 20L, 20L);
@@ -179,7 +179,7 @@ public class GameManager {
         if (plugin.getSpectatorManager() != null) {
             plugin.getSpectatorManager().start();
         }
-        broadcast("&5La partie a été restaurée.");
+        broadcast("<dark_purple>La partie a été restaurée.</dark_purple>");
     }
 
     // Et fonction qui la termine
@@ -242,6 +242,8 @@ public class GameManager {
         }
 
         plugin.getMapManager().resetWorld();
+        
+        
 
         // Remise à zéro des joueurs : mode survie dans le monde principal, inventaire vidé.
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -255,7 +257,7 @@ public class GameManager {
             player.setSaturation(20f);
             player.teleport(Bukkit.getWorlds().get(0).getSpawnLocation());
         }
-        broadcast("&5La partie a été réinitialisée.");
+        broadcast("<dark_purple>La partie a été réinitialisée.</dark_purple>");
     }
 
     // Helpers 
@@ -276,11 +278,11 @@ public class GameManager {
         int pvpAt = configManager.getPvpActivationAt();
 
         if (elapsedMinutes == rolesAt - 5) {
-            broadcast("&eLes rôles seront distribués dans 5 minutes !");
+            broadcast("<gold>Les rôles seront distribués dans 5 minutes !</gold>");
             playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
         }
         if (elapsedMinutes == rolesAt - 1) {
-            broadcast("&eLes rôles seront distribués dans 1 minute !");
+            broadcast("<gold>Les rôles seront distribués dans 1 minute !</gold>");
             playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
         }
 
@@ -294,11 +296,11 @@ public class GameManager {
         }
 
         if (elapsedMinutes == pvpAt - 5) {
-            broadcast("&cLe PvP sera activé dans 5 minutes !");
+            broadcast("<red>Le PvP sera activé dans 5 minutes !</red>");
             playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
         }
         if (elapsedMinutes == pvpAt - 1) {
-            broadcast("&cLe PvP sera activé dans 1 minute !");
+            broadcast("<red>Le PvP sera activé dans 1 minute !</red>");
             playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
         }
 
@@ -320,7 +322,7 @@ public class GameManager {
         // Annonce du début de chaque épisode.
         int episodeLength = configManager.getEpisodeLength();
         if (episodeLength > 0 && elapsedMinutes > 0 && elapsedMinutes % episodeLength == 0) {
-            broadcast("&5Début de l'épisode &f" + (elapsedMinutes / episodeLength + 1) + "&5 !");
+            broadcast("<dark_purple>Début de l'épisode <white>" + (elapsedMinutes / episodeLength + 1) + "</white> !</dark_purple>");
             playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
         }
 
@@ -365,7 +367,7 @@ public class GameManager {
             } else {
                 winner = "Les Villageois";
             }
-            broadcast("&5" + winner + " &fremporte la partie !");
+            broadcast("<dark_purple>" + winner + " <white>remporte la partie !</white></dark_purple>");
             playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
             stop();
         }
@@ -424,7 +426,7 @@ public class GameManager {
             }
             Player bukkitPlayer = Bukkit.getPlayer(vp.getUuid());
             if (bukkitPlayer != null) {
-                bukkitPlayer.sendMessage(configManager.translate("Votre camp : &e" + vp.getCamp().getDisplayName()));
+                bukkitPlayer.sendMessage(MessageUtil.info("Votre camp : <gold>" + vp.getCamp().getDisplayName() + "</gold>"));
             }
         }
 
@@ -447,7 +449,7 @@ public class GameManager {
         for (VampireUHCPlayer v : vampires) {
             Player bukkitPlayer = Bukkit.getPlayer(v.getUuid());
             if (bukkitPlayer != null) {
-                bukkitPlayer.sendMessage(configManager.translate("&cVos alliés vampires : &f" + names));
+                bukkitPlayer.sendMessage(MessageUtil.warn("Vos alliés vampires : <white>" + names + "</white>"));
             }
         }
 
@@ -475,7 +477,7 @@ public class GameManager {
             if (vp.isInfected() && !vp.isVampireListRevealed()) {
                 Player bukkit = Bukkit.getPlayer(vp.getUuid());
                 if (bukkit != null) {
-                    bukkit.sendMessage(configManager.translate("&cUn nouveau joueur a rejoint votre camp ! /vuhc role pour en savoir plus."));
+                    bukkit.sendMessage(MessageUtil.warn("Un nouveau joueur a rejoint votre camp ! /vuhc role pour en savoir plus."));
                 }
             }
         }
@@ -508,7 +510,7 @@ public class GameManager {
         }
     }
 
-    private void broadcast(String message) {
-        Bukkit.broadcastMessage(configManager.translate(message));
+    private void broadcast(String miniMessage) {
+        MessageUtil.broadcast(miniMessage);
     }
 }

@@ -60,17 +60,17 @@ public class SidebarManager {
         int episode = plugin.getGameManager().getEpisode() + 1;
         String time = formatTime(plugin.getGameManager().getElapsedSeconds());
         int players = plugin.getPlayerManager().getAll().size();
-
+        int groupsOf = plugin.getGroupsManager().getPeopleByGroups();
         for (VampireUHCPlayer vp : plugin.getPlayerManager().getAll()) {
             Player p = Bukkit.getPlayer(vp.getUuid());
             if (p == null || !p.isOnline()) {
                 continue;
             }
-            apply(p, episode, time, players);
+            apply(p, episode, time, players, groupsOf);
         }
     }
 
-    private void apply(Player player, int episode, String time, int players) {
+    private void apply(Player player, int episode, String time, int players, int groupsOf) {
         Scoreboard board = player.getScoreboard();
         Objective obj = board.getObjective(OBJECTIVE_NAME);
         if (obj == null) {
@@ -90,10 +90,12 @@ public class SidebarManager {
         }
 
         Set<String> current = new HashSet<>();
+        obj.getScore(ChatColor.GRAY + "Groupes de : " + ChatColor.WHITE + groupsOf).setScore(5);
         obj.getScore(ChatColor.GRAY + "Épisode : " + ChatColor.WHITE + episode).setScore(4);
         obj.getScore(ChatColor.GRAY + "Temps : " + ChatColor.WHITE + time).setScore(3);
         obj.getScore(ChatColor.GRAY + "Joueurs : " + ChatColor.WHITE + players).setScore(2);
         obj.getScore(" ").setScore(1);
+        current.add(ChatColor.GRAY + "Groupes de : " + ChatColor.WHITE + groupsOf);
         current.add(ChatColor.GRAY + "Épisode : " + ChatColor.WHITE + episode);
         current.add(ChatColor.GRAY + "Temps : " + ChatColor.WHITE + time);
         current.add(ChatColor.GRAY + "Joueurs : " + ChatColor.WHITE + players);

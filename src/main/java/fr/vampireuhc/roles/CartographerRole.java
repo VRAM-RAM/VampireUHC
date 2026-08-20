@@ -7,13 +7,13 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.config.MessageUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
@@ -43,12 +43,12 @@ public class CartographerRole implements Role {
         return mm.deserialize(
             "<gray>Vous cartographiez discrètement les déplacements des joueurs.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Placez une balise : <gold>/vuhc baliser</gold></gray>\n"
-            + "<dark_purple>▸</dark_purple> <gray>La balise enregistre les joueurs dans un rayon de <yellow>20 blocs</yellow>.</gray>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>La balise enregistre le passage des joueurs dans un rayon de <yellow>20 blocs</yellow>.</gray>\n\n"
             + "<bold><dark_purple>Fonctionnement :</dark_purple></bold>\n"
             + "  <gray>• La balise reste active pendant l'épisode en cours et le suivant.</gray>\n"
             + "  <gray>• Au début de l'épisode suivant, vous recevez la liste des joueurs passés.</gray>\n"
-            + "  <gray>• Après 2 épisodes au même endroit, la balise disparaît.</gray>\n"
-            + "  <gray>• Réutilisez <gold>/vuhc baliser</gold> pour la repositionner.</gray>"
+            + "  <gray>• Après 2 épisodes au même endroit, la balise disparaît automatiquement.</gray>\n"
+            + "  <gray>• Réutilisez <gold>/vuhc baliser</gold> pour la repositionner (disponible à chaque épisode).</gray>"
         );
     }
 
@@ -80,7 +80,7 @@ public class CartographerRole implements Role {
         }
 
         if (episode == current_episode && applied_this_episode) {
-            player.sendMessage(ChatColor.RED + "Vous avez déjà posé votre balise cet épisode !");
+            player.sendMessage(MessageUtil.error("Vous avez déjà posé votre balise cet épisode !"));
             return;
         }
 
@@ -88,7 +88,7 @@ public class CartographerRole implements Role {
         this.applied_this_episode = true;
         this.beacon_location = player.getLocation().clone();
         this.recordedPlayers.clear();
-        player.sendMessage(ChatColor.DARK_BLUE + "Balise posée en " + ChatColor.GREEN + beacon_location);
+        player.sendMessage(MessageUtil.successTarget("Balise posée en", beacon_location.getBlockX() + ", " + beacon_location.getBlockY() + ", " + beacon_location.getBlockZ()));
 
         var plugin = fr.vampireuhc.VampireUHC.getInstance();
 
@@ -144,14 +144,14 @@ public class CartographerRole implements Role {
         Player bukkitCartographer = Bukkit.getPlayer(cartographer.getUuid());
         if (bukkitCartographer != null) {
             if (recordedPlayers.isEmpty()) {
-                bukkitCartographer.sendMessage(ChatColor.DARK_BLUE + "Personne n'est passé à proximité de votre balise pendant l'épisode.");
+                bukkitCartographer.sendMessage(MessageUtil.info("Personne n'est passé à proximité de votre balise pendant l'épisode."));
             } else {
                 List<String> names = new ArrayList<>();
                 for (UUID id : recordedPlayers) {
                     VampireUHCPlayer vp = fr.vampireuhc.VampireUHC.getInstance().getPlayerManager().get(id);
                     names.add(vp != null ? vp.getLastKnownName() : id.toString());
                 }
-                bukkitCartographer.sendMessage(ChatColor.DARK_BLUE + "Passages enregistrés par votre balise : " + ChatColor.GREEN + String.join(", ", names));
+                bukkitCartographer.sendMessage(MessageUtil.success("Passages enregistrés par votre balise : <gold>" + String.join(", ", names)));
             }
         }
         suppressBeacon();

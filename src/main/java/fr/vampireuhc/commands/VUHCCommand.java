@@ -13,7 +13,6 @@ import fr.vampireuhc.vampire_vote.VampireVoteManager;
 import fr.vampireuhc.vampire_vote.VoteResult;
 import fr.vampireuhc.config.MessageUtil;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -120,13 +119,13 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         switch (sub) {
             case "role": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
 
                 var local = playerManager.get(player);
                 if (local == null) {
-                    player.sendMessage(ChatColor.RED + "Vous n'êtes pas en partie.");
+                    player.sendMessage(MessageUtil.error("Vous n'êtes pas en partie."));
                     return;
                 }
 
@@ -149,18 +148,18 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
             case "ensabler": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
 
                 if (args.length < 2) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc ensabler <joueur>");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc ensabler <joueur>"));
                     return;
                 }
 
                 Player target = Bukkit.getPlayer(args[1]);
                 if (target == null) {
-                    player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
                     return;                
                 } 
 
@@ -168,7 +167,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
 
                 if (targetPlayer == null) {
-                    player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
                     return;
                 }
 
@@ -183,16 +182,16 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
             case "spectate": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
                 if (args.length < 2) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc spectate <joueur>");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc spectate <joueur>"));
                     return;
                 }
                 Player targetSpec = Bukkit.getPlayer(args[1]);
                 if (targetSpec == null) {
-                    player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
                     return;
                 }
                 spectatorManager.follow(player, targetSpec);
@@ -201,25 +200,25 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
             case "tisser": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
 
                 if (args.length < 2) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc tisser <joueur>");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc tisser <joueur>"));
                     return;
                 }
 
                 Player target = Bukkit.getPlayer(args[1]);
                 if (target == null) {
-                    player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
                     return;                
                 } 
 
                 VampireUHCPlayer targetPlayer = playerManager.get(target.getUniqueId());
 
                 if (targetPlayer == null) {
-                    player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
                     return;
                 }
 
@@ -234,12 +233,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
             case "baliser": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 } 
                 
                 if (args.length > 1) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc baliser");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc baliser"));
                     return;
                 }
 
@@ -250,27 +249,28 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
 
                 cartographerRole.placeBeacon(player, gameManager.getEpisode());
+                return;
             }
 
             case "marquer": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
                 if (args.length < 2) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc marquer <joueur>");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc marquer <joueur>"));
                     return;
                 }
 
                 Player marquerTarget = Bukkit.getPlayer(args[1]);
                 if (marquerTarget == null) {
-                    player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
                     return;
                 }
 
                 VampireUHCPlayer targetPlayer = playerManager.get(marquerTarget.getUniqueId());
                 if (targetPlayer == null) {
-                    player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
                     return;
                 }
 
@@ -285,35 +285,35 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
             case "trancher": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
 
                 VoteResult.Tie pendingTie = voteManager.getPendingTie();
                 if (pendingTie == null) {
-                    player.sendMessage(ChatColor.RED + "Aucune égalité à trancher en cours.");
+                    player.sendMessage(MessageUtil.error("Aucune égalité à trancher en cours."));
                     return;
                 }
 
                 if (args.length < 2) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc trancher <joueur>");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc trancher <joueur>"));
                     return;
                 }
 
                 Player tieTarget = Bukkit.getPlayer(args[1]);
                 if (tieTarget == null) {
-                    player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
                     return;
                 }
 
                 if (!pendingTie.tiedPlayers().contains(tieTarget.getUniqueId())) {
-                    player.sendMessage(ChatColor.RED + "Ce joueur ne fait pas partie de l'égalité à trancher.");
+                    player.sendMessage(MessageUtil.error("Ce joueur ne fait pas partie de l'égalité à trancher."));
                     return;
                 }
 
                 VampireUHCPlayer tieTargetPlayer = playerManager.get(tieTarget.getUniqueId());
                 if (tieTargetPlayer == null) {
-                    player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
                     return;
                 }
 
@@ -324,24 +324,24 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
             case "proteger": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
 
                 if (args.length < 2) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc proteger <joueur>");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc proteger <joueur>"));
                     return;
                 }
 
                 Player protTarget = Bukkit.getPlayer(args[1]);
                 if (protTarget == null) {
-                    player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
                     return;
                 }
 
                 VampireUHCPlayer protTargetPlayer = playerManager.get(protTarget.getUniqueId());
                 if (protTargetPlayer == null) {
-                    player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
                     return;
                 }
 
@@ -353,74 +353,74 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 if (savior.applySalvation(markerManager, protTargetPlayer, gameManager.getEpisode())) {
                     player.sendMessage(MessageUtil.successTarget("Marque Salvation posée sur", protTargetPlayer.getLastKnownName()));
                 } else {
-                    player.sendMessage(ChatColor.RED + "Vous ne pouvez pas protéger ce joueur pour l'instant.");
+                    player.sendMessage(MessageUtil.error("Vous ne pouvez pas protéger ce joueur pour l'instant."));
                 }
                 return;
             }
 
             case "voter": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
 
                 if (args.length < 2) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc voter <joueur>");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc voter <joueur>"));
                     return;
                 }
 
                 Player voteTarget = Bukkit.getPlayer(args[1]);
                 if (voteTarget == null) {
-                    player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
                     return;
                 }
 
                 VampireUHCPlayer voteTargetPlayer = playerManager.get(voteTarget.getUniqueId());
                 if (voteTargetPlayer == null) {
-                    player.sendMessage(ChatColor.RED + "Ce joueur n'est pas en partie.");
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
                     return;
                 }
 
                 if (voteTargetPlayer.getCamp() == Camp.VAMPIRE) {
-                    player.sendMessage(ChatColor.RED + "Vous ne pouvez pas voter pour un vampire.");
+                    player.sendMessage(MessageUtil.error("Vous ne pouvez pas voter pour un vampire."));
                     return;
                 }
 
                 if (!voteManager.isVoteOpen()) {
-                    player.sendMessage(ChatColor.RED + "Aucun vote n'est en cours.");
+                    player.sendMessage(MessageUtil.error("Aucun vote n'est en cours."));
                     return;
                 }
 
                 if (voteManager.addVote(player.getUniqueId(), voteTargetPlayer.getUuid())) {
                     player.sendMessage(MessageUtil.successTarget("Vote enregistré pour", voteTargetPlayer.getLastKnownName()));
                 } else {
-                    player.sendMessage(ChatColor.RED + "Vous avez déjà voté pour ce tour.");
+                    player.sendMessage(MessageUtil.error("Vous avez déjà voté pour ce tour."));
                 }
                 return;
             }
 
             case "switch": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
 
                 if (args.length < 3) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc switch <joueur1> <joueur2>");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc switch <joueur1> <joueur2>"));
                     return;
                 }
 
                 Player switchTarget1 = Bukkit.getPlayer(args[1]);
                 Player switchTarget2 = Bukkit.getPlayer(args[2]);
                 if (switchTarget1 == null || switchTarget2 == null) {
-                    player.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
                     return;
                 }
 
                 VampireUHCPlayer t1 = playerManager.get(switchTarget1.getUniqueId());
                 VampireUHCPlayer t2 = playerManager.get(switchTarget2.getUniqueId());
                 if (t1 == null || t2 == null) {
-                    player.sendMessage(ChatColor.RED + "Un des joueurs n'est pas en partie.");
+                    player.sendMessage(MessageUtil.error("Un des joueurs n'est pas en partie."));
                     return;
                 }
 
@@ -439,14 +439,14 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                         }
                     }
                 } else {
-                    player.sendMessage(ChatColor.RED + "Vous avez déjà utilisé votre switch cet épisode.");
+                    player.sendMessage(MessageUtil.error("Vous avez déjà utilisé votre switch cet épisode."));
                 }
                 return;
             }
 
             case "drain": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
 
@@ -456,20 +456,20 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
 
                 if (gremlinRole.activateDrain(gameManager.getEpisode())) {
-                    player.sendActionBar(ChatColor.DARK_PURPLE + "Vous avez activé le " + ChatColor.DARK_GREEN + "drain" + ChatColor.DARK_PURPLE + " !");
+                    player.sendActionBar(MessageUtil.actionBar("<dark_purple>Vous avez activé le <dark_green>drain</dark_green> !"));
                 } else {
-                    player.sendMessage(ChatColor.RED + "Vous ne pouvez pas activer votre drain pour l'instant.");
+                    player.sendMessage(MessageUtil.error("Vous ne pouvez pas activer votre drain pour l'instant."));
                 }
                 return;
             }
 
             case "lier": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
                 if (args.length < 3) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc lier <Joueur1> <Joueur2>");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc lier <Joueur1> <Joueur2>"));
                     return;
                 }
 
@@ -481,40 +481,40 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 Player target1 = Bukkit.getPlayer(args[1]);
                 Player target2 = Bukkit.getPlayer(args[2]);
                 if (target1 == null || target2 == null) {
-                    player.sendMessage(ChatColor.RED + "Un des joueurs est introuvable ou hors ligne.");
+                    player.sendMessage(MessageUtil.error("Un des joueurs est introuvable ou hors ligne."));
                     return;
                 }
 
                 VampireUHCPlayer t1 = playerManager.get(target1.getUniqueId());
                 VampireUHCPlayer t2 = playerManager.get(target2.getUniqueId());
                 if (t1 == null || t2 == null) {
-                    player.sendMessage(ChatColor.RED + "Un des joueurs n'est pas en partie.");
+                    player.sendMessage(MessageUtil.error("Un des joueurs n'est pas en partie."));
                     return;
                 }
                 if (t1.getUuid().equals(t2.getUuid())) {
-                    player.sendMessage(ChatColor.RED + "Les deux joueurs doivent être différents.");
+                    player.sendMessage(MessageUtil.error("Les deux joueurs doivent être différents."));
                     return;
                 }
                 if (t1.getUuid().equals(player.getUniqueId()) || t2.getUuid().equals(player.getUniqueId())) {
-                    player.sendMessage(ChatColor.RED + "Vous ne pouvez pas vous lier vous-même.");
+                    player.sendMessage(MessageUtil.error("Vous ne pouvez pas vous lier vous-même."));
                     return;
                 }
 
                 if (cupidonRole.MarkLovers(markerManager, t1, t2)) {
                     player.sendMessage(MessageUtil.successTwoTargets("Joueurs liés :", t1.getLastKnownName(), t2.getLastKnownName()));
                 } else {
-                    player.sendMessage(ChatColor.RED + "Vous avez déjà choisi vos amoureux.");
+                    player.sendMessage(MessageUtil.error("Vous avez déjà choisi vos amoureux."));
                 }
                 return;
             }
 
             case "peser": {
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
                 if (args.length < 3) {
-                    player.sendMessage(ChatColor.RED + "Usage: /vuhc peser <Joueur1> <Joueur2>");
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc peser <Joueur1> <Joueur2>"));
                     return;
                 }
 
@@ -526,23 +526,23 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 Player target1 = Bukkit.getPlayer(args[1]);
                 Player target2 = Bukkit.getPlayer(args[2]);
                 if (target1 == null || target2 == null) {
-                    player.sendMessage(ChatColor.RED + "Un des joueurs est introuvable ou hors ligne.");
+                    player.sendMessage(MessageUtil.error("Un des joueurs est introuvable ou hors ligne."));
                     return;
                 }
 
                 VampireUHCPlayer t1 = playerManager.get(target1.getUniqueId());
                 VampireUHCPlayer t2 = playerManager.get(target2.getUniqueId());
                 if (t1 == null || t2 == null) {
-                    player.sendMessage(ChatColor.RED + "Un des joueurs n'est pas en partie.");
+                    player.sendMessage(MessageUtil.error("Un des joueurs n'est pas en partie."));
                     return;
                 }
                 if (t1.getUuid().equals(t2.getUuid())) {
-                    player.sendMessage(ChatColor.RED + "Les deux joueurs doivent être différents.");
+                    player.sendMessage(MessageUtil.error("Les deux joueurs doivent être différents."));
                     return;
                 }
 
                 if (!soulweigherRole.weightAura(markerManager, t1, t2)) {
-                    player.sendActionBar(ChatColor.RED + "Erreur interne.");
+                    player.sendActionBar(MessageUtil.actionBar("<red>Erreur interne."));
                 }
                 return;
             }
@@ -559,7 +559,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /vuhc admin <start [sec]|stop|reset|status>");
+            sender.sendMessage(MessageUtil.error("Usage: /vuhc admin <start [sec]|stop|reset|status>"));
             return;
         }
 
@@ -570,34 +570,34 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     try {
                         seconds = Math.max(0, Integer.parseInt(args[1]));
                     } catch (NumberFormatException e) {
-                        sender.sendMessage(ChatColor.RED + "Durée invalide : " + args[1]);
+                        sender.sendMessage(MessageUtil.error("Durée invalide : " + args[1]));
                         return;
                     }
                 }
                 if (gameManager.startCountdown(seconds)) {
-                    sender.sendMessage(ChatColor.GREEN + "Partie VampireUHC lancée (démarrage dans " + seconds + "s).");
+                    sender.sendMessage(MessageUtil.success("Partie VampireUHC lancée (démarrage dans " + seconds + "s)."));
                 } else {
-                    sender.sendMessage(ChatColor.RED + "Une partie est déjà en cours ou en cours de lancement.");
+                    sender.sendMessage(MessageUtil.error("Une partie est déjà en cours ou en cours de lancement."));
                 }
                 return;
 
             case "stop":
                 gameManager.stop();
-                sender.sendMessage(ChatColor.GREEN + "Partie arrêtée.");
+                sender.sendMessage(MessageUtil.success("Partie arrêtée."));
                 return;
 
             case "reset":
                 gameManager.resetGame();
-                sender.sendMessage(ChatColor.GREEN + "Partie réinitialisée.");
+                sender.sendMessage(MessageUtil.success("Partie réinitialisée."));
                 return;
 
             case "status":
-                sender.sendMessage(ChatColor.YELLOW + "Phase: " + gameManager.getPhase() + " | Minute: " + gameManager.getElapsedMinutes());
+                sender.sendMessage(MessageUtil.warn("Phase: " + gameManager.getPhase() + " | Minute: " + gameManager.getElapsedMinutes()));
                 return;
 
             default:
-                sender.sendMessage(ChatColor.RED + "Sous-commande inconnue.");
-                sender.sendMessage(ChatColor.RED + "Usage: /vuhc admin <start [sec]|stop|reset|status>");
+                sender.sendMessage(MessageUtil.error("Sous-commande inconnue."));
+                sender.sendMessage(MessageUtil.error("Usage: /vuhc admin <start [sec]|stop|reset|status>"));
         }
     }
 
@@ -608,7 +608,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /vuhc dev <setTime <min>|setRole <type>|who|aura <joueur>>");
+            sender.sendMessage(MessageUtil.error("Usage: /vuhc dev <setTime <min>|setRole <type>|who|aura <joueur>>"));
             return;
         }
 
@@ -618,18 +618,18 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     try {
                         int time = Integer.parseInt(args[1]);
                         gameManager.setElapsedMinutes(time);
-                        sender.sendMessage(ChatColor.GREEN + "Vous avez changé le temps à " + time + " minutes.");
+                        sender.sendMessage(MessageUtil.success("Vous avez changé le temps à " + time + " minutes."));
                     } catch (NumberFormatException e) {
-                        sender.sendMessage(ChatColor.RED + "Temps invalide : " + args[1]);
+                        sender.sendMessage(MessageUtil.error("Temps invalide : " + args[1]));
                     }
                     return;
                 }
-                sender.sendMessage(ChatColor.RED + "Usage: /vuhc dev setTime <TIME_MINUTE>");
+                sender.sendMessage(MessageUtil.error("Usage: /vuhc dev setTime <TIME_MINUTE>"));
                 return;
 
             case "setrole":
                 if (!(sender instanceof Player player)) {
-                    sender.sendMessage(ChatColor.RED + "Cette commande doit être exécutée par un joueur.");
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
                 if (args.length >= 2) {
@@ -637,11 +637,11 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                         var type = RoleType.fromString(args[1]);
                         gameManager.setRole(player, type);
                     } catch (IllegalArgumentException e) {
-                        player.sendMessage(ChatColor.RED + "Type de rôle invalide.");
+                        player.sendMessage(MessageUtil.error("Type de rôle invalide."));
                     }
                     return;
                 }
-                sender.sendMessage(ChatColor.RED + "Usage: /vuhc dev setRole <RoleType>");
+                sender.sendMessage(MessageUtil.error("Usage: /vuhc dev setRole <RoleType>"));
                 return;
 
             case "who":
@@ -652,12 +652,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
             case "aura":
                 if (args.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /vuhc dev aura <joueur>");
+                    sender.sendMessage(MessageUtil.error("Usage: /vuhc dev aura <joueur>"));
                     return;
                 }
                 Player target = sender.getServer().getPlayer(args[1]);
                 if (target == null) {
-                    sender.sendMessage(ChatColor.RED + "Joueur introuvable ou hors ligne.");
+                    sender.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
                     return;
                 }
                 int score = markerManager.computeAuraScore(target.getUniqueId());
@@ -666,8 +666,8 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 return;
 
             default:
-                sender.sendMessage(ChatColor.RED + "Sous-commande inconnue.");
-                sender.sendMessage(ChatColor.RED + "Usage: /vuhc dev <setTime <min>|setRole <type>|who|aura <joueur>>");
+                sender.sendMessage(MessageUtil.error("Sous-commande inconnue."));
+                sender.sendMessage(MessageUtil.error("Usage: /vuhc dev <setTime <min>|setRole <type>|who|aura <joueur>>"));
         }
     }
 
@@ -795,7 +795,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     }
 
     private void unknown(CommandSender sender) {
-        sender.sendMessage(ChatColor.RED + "Sous-commande inconnue.");
+        sender.sendMessage(MessageUtil.error("Sous-commande inconnue."));
     }
 
     private List<String> filterStartsWith(List<String> options, String prefix) {

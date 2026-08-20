@@ -1,11 +1,11 @@
 package fr.vampireuhc.roles;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.config.MessageUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
@@ -48,7 +48,6 @@ public class SoulweigherRole implements Role {
             + "  <gray>→ Même catégorie (obscure, neutre ou lumineuse).</gray>\n"
             + "  <red>« La balance penche... »</red>\n"
             + "  <gray>→ Catégories différentes.</gray>\n\n"
-            + "<gray>Croisez ces infos avec les autres rôles pour démasquer les vampires !</gray>"
         );
     }
 
@@ -67,14 +66,14 @@ public class SoulweigherRole implements Role {
             return false;
         }
         if (auraOfFirstTarget == auraOfSecondTarget) {
-            bukkitPlayer.sendMessage(ChatColor.GOLD + "La balance s'équilibre...");
+            bukkitPlayer.sendMessage(MessageUtil.success("La balance s'équilibre..."));
             return true;
         } 
         if (auraOfFirstTarget.getTight() == auraOfSecondTarget.getTight()) {
-            bukkitPlayer.sendMessage(ChatColor.GOLD + "La balance penche légèrement...");
+            bukkitPlayer.sendMessage(MessageUtil.warn("La balance penche légèrement..."));
             return true;
         }
-        bukkitPlayer.sendMessage(ChatColor.GOLD + "La balance penche...");
+        bukkitPlayer.sendMessage(MessageUtil.error("La balance penche..."));
         return false;
     }   
 }

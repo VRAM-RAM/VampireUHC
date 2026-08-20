@@ -1,5 +1,6 @@
 package fr.vampireuhc;
 
+import fr.skytasul.glowingentities.GlowingEntities;
 import fr.vampireuhc.commands.VUHCCommand;
 import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.game.GameManager;
@@ -7,6 +8,7 @@ import fr.vampireuhc.game.MapManager;
 import fr.vampireuhc.game.RoleBuffManager;
 import fr.vampireuhc.game.SidebarManager;
 import fr.vampireuhc.game.SpectatorManager;
+import fr.vampireuhc.groups.GroupsManager;
 import fr.vampireuhc.listeners.ChatListener;
 import fr.vampireuhc.listeners.GameplayListener;
 import fr.vampireuhc.listeners.PlayerConnectionListener;
@@ -37,6 +39,8 @@ public class VampireUHC extends JavaPlugin {
     private SpectatorManager spectatorManager;
     private PlayerConnectionListener connectionListener;
     private RulesListener rulesListener;
+    private GroupsManager groupsManager;
+    private GlowingEntities glowingEntities;
 
     @Override
     public void onEnable() {
@@ -49,8 +53,6 @@ public class VampireUHC extends JavaPlugin {
         this.markerManager = new MarkerManager(this);
         this.gameManager = new GameManager(this, playerManager, markerManager, configManager);
         
-        //On initialise RoleManager après tous les autres managers.
-
         this.roleManager = new RoleManager(this, playerManager);
 
         this.voteManager = new VampireVoteManager(this);
@@ -60,6 +62,8 @@ public class VampireUHC extends JavaPlugin {
         this.spectatorManager = new SpectatorManager(this);
         this.connectionListener = new PlayerConnectionListener(this);
         this.rulesListener = new RulesListener(this);
+        this.groupsManager = new GroupsManager(this, playerManager, markerManager, configManager);
+        this.glowingEntities = new GlowingEntities(this);
 
         getServer().getPluginManager().registerEvents(new PvPListener(gameManager), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
@@ -100,6 +104,14 @@ public class VampireUHC extends JavaPlugin {
 
     public static VampireUHC getInstance() {
         return instance;
+    }
+
+    public GroupsManager getGroupsManager() {
+        return groupsManager;
+    }
+
+    public GlowingEntities getGlowingEntities() {
+        return glowingEntities;
     }
 
     public ConfigManager getConfigManager() {

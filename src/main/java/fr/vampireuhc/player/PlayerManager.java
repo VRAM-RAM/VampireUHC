@@ -19,6 +19,22 @@ public class PlayerManager {
             id -> new VampireUHCPlayer(id, player.getName()));
     }
 
+    public int getNumberOfVampires() {
+        int result = 0;
+
+        // On itere sur l'ensemble des joueurs
+        for (VampireUHCPlayer player : players.values()) {
+            // Si le joueur est vampire ou infect, on incremente.
+            var role = player.getRole();
+            if (role != null) {
+                if (role.getDefaultCamp() == Camp.VAMPIRE || player.isInfected()) {
+                    result++;
+                }
+            }
+        }
+        return result;
+    }
+
     // Ajoute directement un joueur déjà construit (restauration après redémarrage).
     public void add(VampireUHCPlayer player) {
         players.put(player.getUuid(), player);

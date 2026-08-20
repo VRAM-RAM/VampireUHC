@@ -39,7 +39,6 @@ public class SaviorRole implements Role {
             + "  <gray>• La marque vampire <red>n'est pas appliquée</red>.</gray>\n"
             + "  <gray>• Les vampires croient que leur action a fonctionné.</gray>\n"
             + "  <gray>• La marque Salvation disparaît.</gray>\n\n"
-            + "<gray>Vous créez de fausses informations tout en protégeant ceux que vous jugez sûrs.</gray>"
         );
     }
 

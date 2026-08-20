@@ -1,6 +1,7 @@
 package fr.vampireuhc.game;
 
 import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.config.MessageUtil;
 import fr.vampireuhc.player.VampireUHCPlayer;
 
 import java.util.HashMap;
@@ -46,16 +47,16 @@ public class SpectatorManager implements Listener {
     // Le spectateur suit la cible (retourne false si impossible).
     public boolean follow(Player spectator, Player target) {
         if (spectator.getGameMode() != GameMode.SPECTATOR) {
-            spectator.sendMessage(plugin.getConfigManager().translate("&cVous devez être spectateur pour utiliser cette commande."));
+            spectator.sendMessage(MessageUtil.error("Vous devez être spectateur pour utiliser cette commande."));
             return false;
         }
         VampireUHCPlayer vp = plugin.getPlayerManager().get(target.getUniqueId());
         if (vp == null || !vp.isAlive()) {
-            spectator.sendMessage(plugin.getConfigManager().translate("&cCe joueur n'est pas en partie ou est mort."));
+            spectator.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie ou est mort."));
             return false;
         }
         follow.put(spectator.getUniqueId(), target.getUniqueId());
-        spectator.sendMessage(plugin.getConfigManager().translate("&aVous suivez désormais &e" + target.getName() + "&a."));
+        spectator.sendMessage(MessageUtil.successTarget("Vous suivez désormais", target.getName()));
         return true;
     }
 
@@ -77,7 +78,7 @@ public class SpectatorManager implements Listener {
         if (follow.containsKey(spectator.getUniqueId())
                 && follow.get(spectator.getUniqueId()).equals(target.getUniqueId())) {
             unfollow(spectator);
-            spectator.sendMessage(plugin.getConfigManager().translate("&7Vous ne suivez plus personne."));
+            spectator.sendMessage(MessageUtil.info("Vous ne suivez plus personne."));
         } else {
             follow(spectator, target);
         }

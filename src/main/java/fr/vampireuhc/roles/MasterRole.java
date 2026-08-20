@@ -2,19 +2,17 @@ package fr.vampireuhc.roles;
 
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.ConfigManager;
+import fr.vampireuhc.config.MessageUtil;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 // On définit le rôle "Maitre". 
@@ -41,7 +39,7 @@ public class MasterRole implements Role {
         int toInfect = config.getMarksToInfect();
         MiniMessage mm = MiniMessage.miniMessage();
         return mm.deserialize(
-            "<gray>Vous êtes le chef des vampires. Vous avez <yellow>" + (8) + " coeurs</yellow> au lieu de 10 — vous êtes fragile mais redoutable.</gray>\n\n"
+            "<gray>Vous êtes le chef des vampires. Vous avez <yellow>" + (8) + " coeurs</yellow> au lieu de 10.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Toutes les <yellow>" + episodeLength + " minutes</yellow>, vous pouvez poser une marque Maître sur un joueur non-vampire.</gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>Vous ne votez pas pour les marques vampires, mais tranchez en cas d'égalité.</gray>\n\n"
             + "<bold><dark_purple>Effets des marques Maître :</dark_purple></bold>\n"
@@ -95,7 +93,7 @@ public class MasterRole implements Role {
 
         var bukkitMaster = Bukkit.getPlayer(master.getUuid());
         if (bukkitMaster != null) {
-            bukkitMaster.sendMessage(ChatColor.DARK_PURPLE + "Vous avez posé votre marque maitre sur " + ChatColor.GOLD +  target.getLastKnownName() + ChatColor.DARK_PURPLE + ".");
+            bukkitMaster.sendMessage(MessageUtil.successTarget("Marque Maître posée sur", target.getLastKnownName()));
         }
 
         // Si il y a assez de marqueurs sur un joueur, il est infecté
@@ -116,8 +114,7 @@ public class MasterRole implements Role {
         if (master != null) {
             var bukkitMaster = Bukkit.getPlayer(master.getUuid());
             if (bukkitMaster != null) {
-                bukkitMaster.sendMessage(ChatColor.RED + "Le joueur " + ChatColor.GOLD +  target.getLastKnownName() + 
-                    ChatColor.RED + " a été infecté !");
+                bukkitMaster.sendMessage(MessageUtil.successTarget("Le joueur", target.getLastKnownName() + " a été infecté !"));
             }
         }
 
@@ -127,7 +124,7 @@ public class MasterRole implements Role {
         // Notification au joueur infecté
         Player bukkitTarget = Bukkit.getPlayer(target.getUuid());
         if (bukkitTarget != null) {
-            bukkitTarget.sendMessage(ChatColor.RED + "Vous avez été infecté et devez à présent gagner avec les vampires ! /vuhc role pour en savoir plus.");
+            bukkitTarget.sendMessage(MessageUtil.warn("Vous avez été infecté et devez gagner avec les vampires ! /vuhc role pour en savoir plus."));
         }
     }
 }

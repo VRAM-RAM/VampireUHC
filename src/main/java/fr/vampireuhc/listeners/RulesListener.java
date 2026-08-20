@@ -1,6 +1,7 @@
 package fr.vampireuhc.listeners;
 
 import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.config.MessageUtil;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -44,7 +45,7 @@ public class RulesListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        event.getPlayer().sendMessage(plugin.getConfigManager().translate("&cLes lits sont interdits dans cet UHC !"));
+        event.getPlayer().sendMessage(MessageUtil.error("Les lits sont interdits dans cet UHC !"));
     }
 
     // Empêche la création de tout portail (Nether ou End).
@@ -62,6 +63,6 @@ public class RulesListener implements Listener {
             return;
         }
         event.setCancelled(true);
-        event.getPlayer().sendMessage(plugin.getConfigManager().translate("&cLe Nether et l'End sont désactivés dans cet UHC !"));
+        event.getPlayer().sendMessage(MessageUtil.error("Le Nether et l'End sont désactivés dans cet UHC !"));
     }
 }

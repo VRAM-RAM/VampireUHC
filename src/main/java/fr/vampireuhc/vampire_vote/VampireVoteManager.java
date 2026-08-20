@@ -1,5 +1,6 @@
 package fr.vampireuhc.vampire_vote;
 import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.config.MessageUtil;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.VampireMinion;
@@ -8,7 +9,6 @@ import fr.vampireuhc.roles.VampireMinion;
 import java.util.*;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import net.kyori.adventure.text.Component;
@@ -33,7 +33,7 @@ public class VampireVoteManager {
         voters.clear();
         pendingTie = null;
         open = true;
-        broadcastToVampires(ChatColor.DARK_PURPLE + "Le vote pour la marque vampire est ouvert ! /vuhc voter <joueur>");
+        broadcastToVampires(MessageUtil.serialize("<dark_purple>Le vote pour la marque vampire est ouvert ! <gray>/vuhc voter <joueur></gray></dark_purple>"));
     }
 
     public void closeAndResolve() {
@@ -107,7 +107,7 @@ public class VampireVoteManager {
         for (UUID voterId : voters) {
             Player p = Bukkit.getPlayer(voterId);
             if (p != null) {
-                p.sendMessage(ChatColor.DARK_PURPLE + "Votre cible est " + ChatColor.GOLD + targetName + ChatColor.DARK_PURPLE + " !");
+                p.sendMessage(MessageUtil.serialize("<dark_purple>Votre cible est <gold>" + targetName + "</gold> !</dark_purple>"));
             }
         }
     }
@@ -116,7 +116,7 @@ public class VampireVoteManager {
         for (UUID voterId : voters) {
             Player p = Bukkit.getPlayer(voterId);
             if (p != null) {
-                p.sendMessage(ChatColor.RED + "Égalité entre plusieurs joueurs ! Le Maître va trancher...");
+                p.sendMessage(MessageUtil.serialize("<red>Égalité entre plusieurs joueurs ! Le Maître va trancher...</red>"));
             }
         }
     }
@@ -137,7 +137,7 @@ public class VampireVoteManager {
             return;
         }
 
-        master.sendMessage(ChatColor.DARK_PURPLE + "Égalité détectée ! Choisissez le joueur à marquer en cliquant sur son nom :");
+        master.sendMessage(MessageUtil.serialize("<dark_purple>Égalité détectée ! Choisissez le joueur à marquer en cliquant sur son nom :</dark_purple>"));
 
         for (UUID id : tie.tiedPlayers()) {
             Player bukkit = Bukkit.getPlayer(id);
@@ -203,7 +203,7 @@ public class VampireVoteManager {
         return new HashSet<>(markedPlayers);
     }
 
-    private void broadcastToVampires(String message) {
+    private void broadcastToVampires(Component message) {
         for (VampireUHCPlayer player : plugin.getPlayerManager().getAll()) {
             if (player.getRole() instanceof VampireMinion && player.isAlive()) {
                 Player p = Bukkit.getPlayer(player.getUuid());

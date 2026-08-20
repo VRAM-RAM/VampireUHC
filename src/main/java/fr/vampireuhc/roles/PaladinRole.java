@@ -28,7 +28,7 @@ public class PaladinRole implements Role {
     public Component getDescription() {
         MiniMessage mm = MiniMessage.miniMessage();
         return mm.deserialize(
-            "<gray>Votre puissance dépend de votre <yellow>aura</yellow>. Observez-la pour comprendre qui vous cible.</gray>\n\n"
+            "<gray>Votre puissance dépend de votre <yellow>aura</yellow>.</gray>\n\n"
             + "<bold><dark_purple>Effets selon l'aura :</dark_purple></bold>\n"
             + "  <dark_gray>• Très obscure →</dark_gray> <red>Perte d'un cœur + faiblesse légère.</red>\n"
             + "  <gray>• Obscure →</gray> <red>Faiblesse légère</red> <gray>(invisible).</gray>\n"

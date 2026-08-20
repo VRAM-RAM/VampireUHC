@@ -29,7 +29,8 @@ public class RoleManager {
         RoleType.SOUL_WEIGHTER,
         RoleType.WEAVER,
         RoleType.CARTOGRAPHER,
-        RoleType.SAND_MERCHANT
+        RoleType.SAND_MERCHANT,
+        RoleType.ARCHER
     );
 
     private List<RoleType> soloroles = Arrays.asList(
@@ -141,6 +142,9 @@ public class RoleManager {
 
             case RoleType.WEAVER:
                 return new WeaverRole(player);
+
+            case RoleType.ARCHER:
+                return new ArcherRole();
 
             case RoleType.CARTOGRAPHER:
                 return new CartographerRole(player);
@@ -411,6 +415,7 @@ public class RoleManager {
             case "Tisseur": return RoleType.WEAVER;
             case "Cartographe": return RoleType.CARTOGRAPHER;
             case "Marchand de Sable": return RoleType.SAND_MERCHANT;
+            case "Archer": return RoleType.ARCHER;
             default: return null;
         }
     }

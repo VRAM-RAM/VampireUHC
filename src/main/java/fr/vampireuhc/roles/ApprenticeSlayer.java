@@ -13,7 +13,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import java.util.List;
 import java.util.UUID;
 
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -47,12 +46,12 @@ public class ApprenticeSlayer implements Role {
             + "  <gray>• <yellow>" + config.getSlayerLightThreshold() + "+ marqueurs lumineux</yellow> → <green>Force légère le jour.</green></gray>\n"
             + "  <gray>• <yellow>" + darkHighThreshold + "+ marqueurs obscurs</yellow> → <green>Force + régénération la nuit.</green></gray>\n"
             + "  <gray>• <yellow>" + lightHighThreshold + "+ marqueurs lumineux</yellow> → <green>Force + régénération le jour.</green></gray>\n\n"
-            + "<red>⚠</red> <gray>Les marques Maître que vous recevez vous rendent vulnérable (perte d'absorption, voire infection).</gray>"
+            + "<red>⚠</red> <gray>Les marques Maître que vous recevez du maître directement vous rendent vulnérable (perte d'absorption, voire infection).</gray>"
         );
     }
     @Override
     public String getName() {
-        return "Apprenti Assassin";
+        return "Apprentie Assassin";
     }
 
     @Override

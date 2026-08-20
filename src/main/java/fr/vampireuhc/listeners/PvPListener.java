@@ -1,7 +1,9 @@
 package fr.vampireuhc.listeners;
 
+import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.game.GameManager;
 import fr.vampireuhc.game.GamePhase;
+import fr.vampireuhc.roles.ArcherRole;
 import fr.vampireuhc.roles.GremlinRole;
 
 import org.bukkit.entity.Player;
@@ -49,30 +51,50 @@ public class PvPListener implements Listener {
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if (gameManager.isPvPActive()) {
-            // Le pvp est actif, donc on regarder le drain du gremlin
-            if (event.getEntity() instanceof Player && event.getDamager() instanceof Player player) {
-                var roleManager = fr.vampireuhc.VampireUHC.getInstance().getRoleManager();
-                // Si l'attaquant est bien le gremlin... on passe la gestion du drain au code interne au gremlin
-                if (roleManager.getPlayerRole(player.getUniqueId()) instanceof GremlinRole gremlin) {
-                    gremlin.applyDrainEffect(player);
-                }
+
+        var plugin = VampireUHC.getInstance();
+        var roleManager = plugin.getRoleManager();
+
+        
+        // Pouvoir de l'Archer.
+        //Cette partie est volontairement exécutée avant la gestion du PvP. (car glow dans tous les cas)
+        if (event.getDamager() instanceof Arrow arrow
+                && arrow.getShooter() instanceof Player shooter
+                && roleManager.getPlayerRole(shooter.getUniqueId()) instanceof ArcherRole archer) {
+
+            archer.setGlowOnHit(event.getEntity(), plugin);
+        }
+
+        
+        //Gestion du PvP.
+        if (!gameManager.isPvPActive()) {
+
+            // Dégâts directs entre joueurs annulés si pvp non actid
+            if (event.getEntity() instanceof Player
+                    && event.getDamager() instanceof Player) {
+
+                event.setCancelled(true);
+                return;
             }
-            return;
-        }
-        // On vérifie que l'entité visée est bien un joueur.
-        if (!(event.getEntity() instanceof Player)) {
+
+            // Dégâts par flèche entre joueurs annulés si pvp non actif
+            if (event.getEntity() instanceof Player
+                    && event.getDamager() instanceof Arrow arrow
+                    && arrow.getShooter() instanceof Player) {
+
+                event.setCancelled(true);
+            }
+
             return;
         }
 
-        // Attaque directe d'un joueur.
-        if (event.getDamager() instanceof Player) {
-            event.setCancelled(true);
+        // Si pvp actif, gestion des pouvoirs
+        if (event.getEntity() instanceof Player
+                && event.getDamager() instanceof Player attacker
+                && roleManager.getPlayerRole(attacker.getUniqueId()) instanceof GremlinRole gremlin) {
 
-        // Attaque par une flèche tirée par un joueur.
-        } else if (event.getDamager() instanceof Arrow arrow
-                && arrow.getShooter() instanceof Player) {
-            event.setCancelled(true);
+            gremlin.applyDrainEffect(attacker);
         }
     }
+
 }

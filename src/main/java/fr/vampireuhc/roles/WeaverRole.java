@@ -5,11 +5,11 @@ import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
+import fr.vampireuhc.config.MessageUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -32,12 +32,12 @@ public class WeaverRole implements Role {
         MiniMessage mm = MiniMessage.miniMessage();
         return mm.deserialize(
             "<gray>Vous tissez un réseau de joueurs pour observer les événements qui s'y produisent.</gray>\n\n"
-            + "<dark_purple>▸</dark_purple> <gray>Ajoutez un joueur à votre réseau : <gold>/vuhc tisser <joueur></gold></gray>\n"
+            + "<dark_purple>▸</dark_purple> <gray>Ajouter un joueur à votre réseau : <gold>/vuhc tisser <joueur></gold></gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>Le joueur doit se trouver à moins de <yellow>20 blocs</yellow>.</gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>Constituez un réseau de <yellow>3 à 4 joueurs</yellow> pour activer votre pouvoir.</gray>\n\n"
             + "<bold><dark_purple>Événements :</dark_purple></bold>\n"
-            + "  <red>• Mort d'un noeud</red> → <gray>Vous apprenez son nom + son aura exacte. Le réseau s'effondre.</gray>\n"
-            + "  <dark_red>• Meurtre par un noeud</red> → <gray>Vous êtes notifié. Le réseau ne s'effondre pas.</gray>\n\n"
+            + "  <red>• Mort d'un noeud de votre réseau</red> → <gray>Vous apprenez son nom + son aura exacte. Le réseau s'effondre.</gray>\n"
+            + "  <dark_red>• Meurtre par un noeud de votre réseau</dark_red> → <gray>Vous êtes notifié. Le réseau ne s'effondre pas.</gray>\n\n"
             + "<gray>Tant que le réseau contient moins de 3 personnes, il ne produit aucun effet.</gray>"
         );
     }
@@ -86,20 +86,20 @@ public class WeaverRole implements Role {
         }
 
         if (target == weaver) {
-            bukkitWeaver.sendMessage(ChatColor.RED + "Vous ne pouvez pas vous tisser vous-même !");
+            bukkitWeaver.sendMessage(MessageUtil.error("Vous ne pouvez pas vous tisser vous-même !"));
             return;
         }
 
 
         // Si la cible a déjà un marqueur Fil, impossible de poser un autre marqueur
         if (manager.hasMarker(target.getUuid(), MarkerType.FIL)) {
-            bukkitWeaver.sendMessage(ChatColor.GRAY + "Le joueur " + ChatColor.DARK_BLUE + target.getLastKnownName() + ChatColor.GRAY + " appartient déjà à votre toîle !");
+            bukkitWeaver.sendMessage(MessageUtil.info("Le joueur <dark_blue>" + target.getLastKnownName() + "</dark_blue> appartient déjà à votre toîle !"));
             return;
         }
 
         // Si le nombre max de fils à été posé, on return
         if (thread >= 4) {
-            bukkitWeaver.sendMessage(ChatColor.RED + "Vous avez déjà posé 4 fils !");
+            bukkitWeaver.sendMessage(MessageUtil.error("Vous avez déjà posé 4 fils !"));
             return;
         }
 
@@ -108,20 +108,20 @@ public class WeaverRole implements Role {
 
         // En cas d'erreur, on retourne
         if (bukkitTarget == null) {
-            bukkitWeaver.sendMessage(ChatColor.RED + "Le joueur que vous ciblez n'est pas connecté.");
+            bukkitWeaver.sendMessage(MessageUtil.error("Le joueur que vous ciblez n'est pas connecté."));
             return;
         }
 
         // Si la target ne se trouve pas dans la range de 20 blocs de rayon, on retourne
         if (!isWithinRadius(bukkitWeaver, bukkitTarget, 20)) {
-            bukkitWeaver.sendMessage(ChatColor.RED + "Le joueur que vous ciblez n'est pas suffisamment proche de vous !");
+            bukkitWeaver.sendMessage(MessageUtil.error("Le joueur que vous ciblez n'est pas suffisamment proche de vous !"));
             return;
         }
 
         // On ajoute le marqueur
         manager.addMarker(bukkitTarget.getUniqueId(), MarkerType.FIL, bukkitWeaver.getUniqueId());
         this.thread += 1;
-        bukkitWeaver.sendMessage(ChatColor.GRAY + "Le joueur " + ChatColor.DARK_BLUE + target.getLastKnownName() + ChatColor.GRAY + " a été ajouté à votre toîle !");
+        bukkitWeaver.sendMessage(MessageUtil.successTarget("Le joueur", target.getLastKnownName() + " a été ajouté à votre toîle !"));
         return;
     }
 
@@ -148,7 +148,10 @@ public class WeaverRole implements Role {
         // La toile s'effondre
         collapseWeb(manager);
 
-        bukkitWeaver.sendMessage(ChatColor.DARK_RED + "Le noeud " + ChatColor.GOLD + deadNode.getLastKnownName() + ChatColor.DARK_RED + " est décédé. Son aura était "  + ChatColor.GOLD + deadNodeAura + ChatColor.DARK_RED + ". Votre toîle s'effondre.");
+        MiniMessage mm = MiniMessage.miniMessage();
+        bukkitWeaver.sendMessage(mm.deserialize(
+            "<dark_red>Le noeud <gold>" + deadNode.getLastKnownName() + "</gold> est décédé. Son aura était <gold>" + deadNodeAura + "</gold>. Votre toîle s'effondre.</dark_red>"
+        ));
     }
 
     // Effondre la toile : supprime tous les fils et remet le compteur à zéro.
@@ -175,7 +178,7 @@ public class WeaverRole implements Role {
             return;
         }
 
-        bukkitWeaver.sendMessage(ChatColor.DARK_RED + "Un noeud de votre réseau a assassiné.");
+        bukkitWeaver.sendMessage(MessageUtil.warn("Un noeud de votre réseau a assassiné."));
     }
 
 

@@ -8,8 +8,6 @@ import fr.vampireuhc.player.Camp;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
-import org.bukkit.ChatColor;
-
 public class VampireMinion implements Role {
     private VampireUHCPlayer minion;
 

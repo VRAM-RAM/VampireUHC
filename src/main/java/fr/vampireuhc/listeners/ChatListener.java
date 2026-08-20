@@ -1,6 +1,7 @@
 package fr.vampireuhc.listeners;
 
 import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.config.MessageUtil;
 import fr.vampireuhc.game.GamePhase;
 
 import org.bukkit.Bukkit;
@@ -9,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import net.kyori.adventure.text.Component;
 
 /**
  * Chat pendant la partie :
@@ -36,15 +38,15 @@ public class ChatListener implements Listener {
         event.setCancelled(true);
 
         if (sender.getGameMode() == GameMode.SPECTATOR) {
-            String formatted = plugin.getConfigManager().translateRaw(
-                    "&7[Spectateur] &7" + sender.getName() + " &8» &f" + event.getMessage());
+            Component formatted = MessageUtil.serialize(
+                    "<gray>[Spectateur] <gray>" + sender.getName() + " <dark_gray>» <white>" + event.getMessage() + "</white></dark_gray></gray>");
             for (Player online : Bukkit.getOnlinePlayers()) {
                 if (online.getGameMode() == GameMode.SPECTATOR) {
                     online.sendMessage(formatted);
                 }
             }
         } else {
-            sender.sendMessage(plugin.getConfigManager().translate("&cLe chat est désactivé pendant la partie."));
+            sender.sendMessage(MessageUtil.error("Le chat est désactivé pendant la partie."));
         }
     }
 }

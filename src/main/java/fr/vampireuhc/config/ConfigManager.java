@@ -245,11 +245,13 @@ public class ConfigManager {
     }
 
     // Traduit les codes couleur (&x) d'un message précédé du préfixe du plugin.
+    @Deprecated
     public String translate(String message) {
         return ChatColor.translateAlternateColorCodes('&', getPrefix() + message);
     }
 
     // Traduit les codes couleur (&x) d'un message, sans préfixe.
+    @Deprecated
     public String translateRaw(String message) {
         return ChatColor.translateAlternateColorCodes('&', message);
     }

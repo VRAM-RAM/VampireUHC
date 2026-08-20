@@ -3,7 +3,6 @@ package fr.vampireuhc.roles;
 import java.util.List;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -12,6 +11,7 @@ import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.config.MessageUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
@@ -75,13 +75,13 @@ public class SandMerchantRole implements Role {
 
         // Si la cible a déjà un marqueur sable (ici lumineux), impossible de poser un autre marqueur
         if (manager.hasMarker(target.getUuid(), MarkerType.SABLE_LUMINEUX)) {
-            bukkitMerchant.sendMessage(ChatColor.GRAY + "Le joueur " + ChatColor.DARK_BLUE + target.getLastKnownName() + ChatColor.GRAY + " est déjà ensablé !");
+            bukkitMerchant.sendMessage(MessageUtil.info("Le joueur <dark_blue>" + target.getLastKnownName() + "</dark_blue> est déjà ensablé !"));
             return;
         }
 
         // Pareil avec sable neutre
         if (manager.hasMarker(target.getUuid(), MarkerType.SABLE_NEUTRE)) {
-            bukkitMerchant.sendMessage(ChatColor.GRAY + "Le joueur " + ChatColor.DARK_BLUE + target.getLastKnownName() + ChatColor.GRAY + " est déjà ensablé !");
+            bukkitMerchant.sendMessage(MessageUtil.info("Le joueur <dark_blue>" + target.getLastKnownName() + "</dark_blue> est déjà ensablé !"));
             return;
         }
 
@@ -90,20 +90,20 @@ public class SandMerchantRole implements Role {
 
         // En cas d'erreur, on retourne
         if (bukkitTarget == null) {
-            bukkitMerchant.sendMessage(ChatColor.RED + "Le joueur que vous ciblez n'est pas connecté.");
+            bukkitMerchant.sendMessage(MessageUtil.error("Le joueur que vous ciblez n'est pas connecté."));
             return;
         }
 
         // Si la target ne se trouve pas dans la range de 10 blocs de rayon, on retourne
         if (!isWithinRadius(bukkitMerchant, bukkitTarget, 10)) {
-            bukkitMerchant.sendMessage(ChatColor.RED + "Le joueur que vous ciblez n'est pas suffisamment proche de vous !");
+            bukkitMerchant.sendMessage(MessageUtil.error("Le joueur que vous ciblez n'est pas suffisamment proche de vous !"));
             return;
         }
 
         var camp = target.getRole().getDefaultCamp();
 
         if (camp == null) {
-            bukkitMerchant.sendMessage(ChatColor.RED + "Le joueur que vous ciblez n'est dans aucun camp !");
+            bukkitMerchant.sendMessage(MessageUtil.error("Le joueur que vous ciblez n'est dans aucun camp !"));
             return;
         }
 
@@ -115,7 +115,7 @@ public class SandMerchantRole implements Role {
                 manager.addMarker(bukkitTarget.getUniqueId(), MarkerType.SABLE_NEUTRE, bukkitMerchant.getUniqueId());
         }
 
-        bukkitMerchant.sendMessage(ChatColor.GRAY + "Le joueur " + ChatColor.DARK_BLUE + target.getLastKnownName() + ChatColor.GRAY + " a été ensablé !");
+        bukkitMerchant.sendMessage(MessageUtil.successTarget("Le joueur", target.getLastKnownName() + " a été ensablé !"));
 
     }
     
@@ -138,7 +138,7 @@ public class SandMerchantRole implements Role {
 
     private void applyEffectsOnPlayers(List<Player> players) {
         for (Player p: players) {
-            p.sendActionBar(ChatColor.GOLD + "Vous avez été endormi par le Marchand de Sable !");
+            p.sendActionBar(MessageUtil.actionBar("<gold>Vous avez été endormi par le Marchand de Sable !"));
             p.addPotionEffect(slowness(0));
             p.addPotionEffect(blindness(3));
         }
