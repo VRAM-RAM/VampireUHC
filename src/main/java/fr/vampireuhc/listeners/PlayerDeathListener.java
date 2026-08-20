@@ -10,6 +10,8 @@ import fr.vampireuhc.roles.GravediggerRole;
 import fr.vampireuhc.roles.PaladinRole;
 import fr.vampireuhc.roles.SandMerchantRole;
 import fr.vampireuhc.roles.WeaverRole;
+import fr.vampireuhc.roles.WhiteLadyRole;
+
 import java.util.List;
 
 import net.kyori.adventure.text.Component;
@@ -37,13 +39,25 @@ public class PlayerDeathListener implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player victim = event.getEntity();
-        Location location = victim.getLastDeathLocation();
 
         VampireUHCPlayer vp = plugin.getPlayerManager().get(victim.getUniqueId());
         if (vp == null) {
             return;
         }
+
+        Player killer = victim.getKiller();
+        VampireUHCPlayer killerVp = killer != null ? plugin.getPlayerManager().get(killer.getUniqueId()) : null;
+
+        if (vp.getRole() instanceof WhiteLadyRole whiteLady) {
+            if (whiteLady.onDeath(killerVp)) {
+                event.setCancelled(true);
+                plugin.getMapManager().teleportPlayerRandomly(victim);
+                return;
+            }
+        }
         vp.setDead();
+
+        Location location = victim.getLastDeathLocation();
         
         MarkerManager markerManager = plugin.getMarkerManager();
 
@@ -54,8 +68,6 @@ public class PlayerDeathListener implements Listener {
             }
         });
 
-        Player killer = victim.getKiller();
-        VampireUHCPlayer killerVp = killer != null ? plugin.getPlayerManager().get(killer.getUniqueId()) : null;
 
         Component message = Component.text(victim.getName(), NamedTextColor.RED)
                 .append(Component.text(" est mort", NamedTextColor.GRAY));
@@ -76,6 +88,7 @@ public class PlayerDeathListener implements Listener {
         // Le Tisseur est notifié si l'un des membres de sa toile / reseau meurt ou tue.
         // Si le Fossoyeur est encore en vie, on fait pop des particules à l'endroit de la mort du joueur, et on ajoute
         // ses marqueurs (ceux qu'il avait) dans la `HashMap<>` du fossoyeur.
+        // Si la dame Blanche tue son tueur, le booléen `killedKiller` doit être update.
         // Ces hooks lisent l'état des marqueurs du défunt : ils doivent tourner AVANT
         // que l'Apprentie assassin ne récupère les marques, sinon ils voient un état tronqué.
         for (VampireUHCPlayer p : plugin.getPlayerManager().getAll()) {
@@ -96,6 +109,10 @@ public class PlayerDeathListener implements Listener {
             if (p.getRole() instanceof GravediggerRole graveDigger) {
                 List<MarkerType> markers = markerManager.getMarkerTypesByPlayer(vp.getUuid());
                 graveDigger.spawnParticlesAtLocation(location, markers);
+            }
+
+            if (p.getRole() instanceof WhiteLadyRole whiteLady) {
+                whiteLady.killedKiller(victim);
             }
         }
 

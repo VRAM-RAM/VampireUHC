@@ -32,6 +32,7 @@ public class RoleManager {
         RoleType.CARTOGRAPHER,
         RoleType.SAND_MERCHANT,
         RoleType.GRAVE_DIGGER,
+        RoleType.WHITE_LADY,
         RoleType.ARCHER
     );
 
@@ -147,6 +148,9 @@ public class RoleManager {
 
             case RoleType.WEAVER:
                 return new WeaverRole(player);
+
+            case RoleType.WHITE_LADY:
+                return new WhiteLadyRole();
 
             case RoleType.ARCHER:
                 return new ArcherRole();
@@ -422,6 +426,7 @@ public class RoleManager {
             case "Marchand de Sable": return RoleType.SAND_MERCHANT;
             case "Archer": return RoleType.ARCHER;
             case "Fossoyeur": return RoleType.GRAVE_DIGGER;
+            case "Dame Blanche": return RoleType.WHITE_LADY;
             default: return null;
         }
     }

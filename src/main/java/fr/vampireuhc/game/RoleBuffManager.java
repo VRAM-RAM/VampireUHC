@@ -7,6 +7,7 @@ import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.ApprenticeSlayer;
 import fr.vampireuhc.roles.PaladinRole;
+import fr.vampireuhc.roles.WhiteLadyRole;
 
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -50,6 +51,9 @@ public class RoleBuffManager {
             slayer.applyMarkerEffects(p, night,
                     slayer.countDarkMarkers(markers),
                     slayer.countLightMarkers(markers));
+        } else if (vp.getRole() instanceof WhiteLadyRole whiteLady) {
+            boolean night = !p.getWorld().isDayTime();
+            whiteLady.applyEffects(p, night);
         }
     }
 

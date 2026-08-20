@@ -28,6 +28,9 @@ Il manque donc 7-9 rôles villageois, un rôles solitaire et un rôles vampires 
   * [Apprentie assassin](#apprentie-assassin)
   * [Gremlin](#gremlin)
 
+* [Hybrides](#hybrides)
+  * [Dame Blanche](#dame-blanche)
+
 
 
 ## Vampires
@@ -285,3 +288,19 @@ Ce pouvoir est activable pendant 5 minutes à chaque épisode, à l'aide de la c
 
 À la fin des 5 minutes, il subit un malus temporaire léger (poison léger et court).
 
+## Hybrides
+
+### Dame Blanche
+
+La Dame Blanche est un rôle hybride. À l'annonce des rôles, elle appartient au village et n'a aucun pouvoir particulier. 
+En revanche, les conditions de sa mort determinent le reste de sa partie :
+
+- Si elle est tuée par un *villageois*, elle ressuscite et devient solitaire.
+- Si elle est tuée par un *vampire*, elle ressuscite et doit toujours gagner avec les villageois.
+- Si elle est tuée par un *rôle solitaire*, elle meurt définitivement.
+
+Elle ne peut ressusciter qu'une seule fois.
+
+Si elle devient solitaire, elle obtient un effet **résistance** de nuit et **force** de jour, ainsi qu'un effet de **speed** permanente si elle tue son meurtrier.
+\
+Si elle est tuée par un vampire, elle obtient l'effet **faiblesse** de jour.

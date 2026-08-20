@@ -120,6 +120,18 @@ public class MapManager implements Listener {
         plugin.getLogger().info("Joueurs éparpillés aléatoirement (rayon " + radius + ", distance min " + minDist + ").");
     }
 
+    public void teleportPlayerRandomly(Player player) {
+        if (world == null) {
+            return;
+        }
+        ConfigManager config = plugin.getConfigManager();
+        int radius = Math.min(config.getSpawnRadius(), Math.max(50, config.getDarkForestRadius() - 50));
+        int minDist = Math.max(10, Math.min(config.getMinSpawnDistance(), radius / 2));
+        Random random = new Random();
+        Location loc = randomSpawn(radius, minDist, new ArrayList<>(), random);
+        player.teleport(loc);
+    }
+
     private Location randomSpawn(int radius, int minDist, List<Location> taken, Random random) {
         Location fallback = null;
         for (int attempt = 0; attempt < 50; attempt++) {
