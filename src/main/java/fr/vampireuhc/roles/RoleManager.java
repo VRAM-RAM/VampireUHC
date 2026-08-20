@@ -9,6 +9,7 @@ import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.PlayerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.vampire_vote.VoteResult;
+
 import java.io.*;
 import java.util.*;
 
@@ -30,6 +31,7 @@ public class RoleManager {
         RoleType.WEAVER,
         RoleType.CARTOGRAPHER,
         RoleType.SAND_MERCHANT,
+        RoleType.GRAVE_DIGGER,
         RoleType.ARCHER
     );
 
@@ -139,6 +141,9 @@ public class RoleManager {
         switch (type) {
             case RoleType.MASTER:
                 return new MasterRole();
+
+            case RoleType.GRAVE_DIGGER:
+                return new GravediggerRole();
 
             case RoleType.WEAVER:
                 return new WeaverRole(player);
@@ -416,6 +421,7 @@ public class RoleManager {
             case "Cartographe": return RoleType.CARTOGRAPHER;
             case "Marchand de Sable": return RoleType.SAND_MERCHANT;
             case "Archer": return RoleType.ARCHER;
+            case "Fossoyeur": return RoleType.GRAVE_DIGGER;
             default: return null;
         }
     }

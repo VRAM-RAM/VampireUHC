@@ -19,6 +19,16 @@ public class MarkerManager {
         return addMarker(target, type, source, System.currentTimeMillis());
     }
 
+    public List<MarkerType> getMarkerTypesByPlayer(UUID target) {
+        List<MarkerType> result = new ArrayList<>();
+        List<Marker> markers = getMarkers(target);
+        for (Marker m: markers) {
+            result.add(m.getType());
+        }
+        return result;
+    }
+
+
     public Marker addMarker(UUID target, MarkerType type, UUID source, long placedAtMillis) {
         Marker marker = new Marker(type, source, placedAtMillis);
         markersByPlayer.computeIfAbsent(target, k -> new ArrayList<>()).add(marker);

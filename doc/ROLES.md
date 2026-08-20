@@ -4,6 +4,9 @@ Les rôles ne doivent pas simplement révéler des informations directes.
 
 Le but est l'interprétation.
 
+Progression : ~55 % (9 rôles villageois, 2 rôles vampire soit 5 joueurs vampires, 2 rôles solitaires => 16 joueurs).
+Il manque donc 7-9 rôles villageois, un rôles solitaire et un rôles vampires (peut être le traitre vampire?!).
+
 ## Sommaire
 
 * [Vampires](#vampires)
@@ -19,7 +22,7 @@ Le but est l'interprétation.
   * [Tisseur](#tisseur)
   * [Cartographe](#cartographe)
   * [Marchand de Sable](#marchand-de-sable)
-  * [Archer]
+  * [Archer](#archer)
 
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)

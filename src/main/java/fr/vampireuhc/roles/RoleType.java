@@ -12,6 +12,7 @@ public enum RoleType {
     APPRENTICE_SLAYER, // Apprentie assassin
     SAND_MERCHANT, // Marchand de sable
     ARCHER, // Archer
+    GRAVE_DIGGER,
     GREMLIN; //Le Gremlin
     
     public static RoleType fromString(String value) {

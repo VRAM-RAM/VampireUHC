@@ -14,6 +14,7 @@ import fr.vampireuhc.vampire_vote.VoteResult;
 import fr.vampireuhc.config.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -23,6 +24,7 @@ import org.bukkit.entity.Player;
 import fr.vampireuhc.markers.AuraTier;
 import fr.vampireuhc.roles.CartographerRole;
 import fr.vampireuhc.roles.CupidonRole;
+import fr.vampireuhc.roles.GravediggerRole;
 import fr.vampireuhc.roles.GremlinRole;
 import fr.vampireuhc.roles.MasterRole;
 import fr.vampireuhc.roles.Role;
@@ -50,6 +52,7 @@ import java.util.stream.Collectors;
  *  * /vuhc peser <j1> <j2>   -> Peseuse d'âmes pèse l'aura de deux joueurs
  *  * /vuhc tisser <joueur>   -> Le Tisseur pose un fil sur un joueur.
  *  * /vuhc ensabler <joueur> -> Le Marchand de sable pose un marqueur sable sur un joueur
+ *  * /vuhc exhumer           -> Le Fossoyeur exhume un cadavre.
  * 
  * Commandes admin (perm vuhc.admin) :
  *  * /vuhc admin <start [sec]|stop|reset|status>
@@ -70,7 +73,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> PLAYER_SUBCOMMANDS = Arrays.asList(
             "role", "spectate", "marquer", "trancher", "proteger", "voter",
-            "switch", "drain", "lier", "peser", "tisser", "baliser", "ensabler");
+            "switch", "drain", "lier", "peser", "tisser", "baliser", "ensabler", "exhumer");
     private static final List<String> ADMIN_SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "status");
     private static final List<String> DEV_SUBCOMMANDS = Arrays.asList("setTime", "setRole", "who", "aura");
 
@@ -143,6 +146,23 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 } else {
                     player.sendMessage(MessageUtil.info("Vous n'avez aucun rôle pour l'instant."));
                 }
+                return;
+            }
+
+            case "exhumer": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
+                    return;
+                }
+
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+                if (!(localPlayer != null && localPlayer.getRole() instanceof GravediggerRole graveDigger)) {
+                    return;
+                }
+
+                Location location = player.getLocation();
+
+                graveDigger.exhum(location);
                 return;
             }
 
@@ -721,6 +741,8 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 return hasRole(sender, CartographerRole.class);
             case "role":
                 return true;
+            case "exhumer":
+                return hasRole(sender, GravediggerRole.class);
             case "ensabler":
                 return hasRole(sender, SandMerchantRole.class);
             case "spectate":
@@ -832,6 +854,9 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         }
         if (hasAccess(sender, "ensabler")) {
             sender.sendMessage(MessageUtil.helpEntry("/vuhc ensabler <joueur>", "Ensabler un joueur (Mar. de Sable)"));
+        }
+        if (hasAccess(sender, "exhumer")) {
+            sender.sendMessage(MessageUtil.helpEntry("/vuhc exhumer", "Tenter d'exhumer le cadavre d'un défunt à votre position."));
         }
         if (hasAccess(sender, "spectate")) {
             sender.sendMessage(MessageUtil.helpEntry("/vuhc spectate <joueur>", "Suivre un joueur vivant"));
