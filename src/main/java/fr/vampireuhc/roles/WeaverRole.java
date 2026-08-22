@@ -16,7 +16,6 @@ import java.util.UUID;
 
 public class WeaverRole implements Role {
     private VampireUHCPlayer weaver;
-    private int thread;
 
     public WeaverRole(VampireUHCPlayer player) {
         this.weaver = player;
@@ -55,10 +54,14 @@ public class WeaverRole implements Role {
     @Override
     public void onAssign(VampireUHCPlayer vampireUHCPlayer) {
         this.weaver = vampireUHCPlayer;
-        // Restauration : le compteur de fils est re-dérivé des marqueurs existants.
-        // Sinon, après un reload serveur, thread = 0 et le Tisseur ne pourrait plus
-        // tisser (les cibles ont déjà un marqueur FIL) : rôle bloqué à jamais.
-        MarkerManager manager = fr.vampireuhc.VampireUHC.getInstance().getMarkerManager();
+    }
+
+    // Nombre réel de fils actifs : dérivé des marqueurs à la demande, donc
+    // insensible aux vols de marques (assassin) et aux switches (gremlin).
+    private int countThreads(MarkerManager manager) {
+        if (weaver == null) {
+            return 0;
+        }
         int count = 0;
         for (UUID id : manager.getAllPlayers()) {
             for (Marker m : manager.getMarkers(id, MarkerType.FIL)) {
@@ -67,7 +70,7 @@ public class WeaverRole implements Role {
                 }
             }
         }
-        this.thread = count;
+        return count;
     }
 
     // Pouvoir spécial : dépôt d'un fil sur un joueur
@@ -98,7 +101,7 @@ public class WeaverRole implements Role {
         }
 
         // Si le nombre max de fils à été posé, on return
-        if (thread >= 4) {
+        if (countThreads(manager) >= 4) {
             bukkitWeaver.sendMessage(MessageUtil.error("Vous avez déjà posé 4 fils !"));
             return;
         }
@@ -120,14 +123,13 @@ public class WeaverRole implements Role {
 
         // On ajoute le marqueur
         manager.addMarker(bukkitTarget.getUniqueId(), MarkerType.FIL, bukkitWeaver.getUniqueId());
-        this.thread += 1;
         bukkitWeaver.sendMessage(MessageUtil.successTarget("Le joueur", target.getLastKnownName() + " a été ajouté à votre toîle !"));
         return;
     }
 
     public void tryInformDeathOfNodeAndDestroyWeb(MarkerManager manager, VampireUHCPlayer deadNode) {
         // On passe la condition de la toile de trois noeuds minimum des le debut pour eviter des casts inutiles
-        if (weaver == null || thread < 3) {
+        if (weaver == null || countThreads(manager) < 3) {
             return;
         }
 
@@ -154,16 +156,16 @@ public class WeaverRole implements Role {
         ));
     }
 
-    // Effondre la toile : supprime tous les fils et remet le compteur à zéro.
+    // Effondre la toile : supprime tous les fils. Le compteur, dérivé des
+    // marqueurs, retombe à zéro automatiquement.
     public void collapseWeb(MarkerManager manager) {
         manager.clearMarkersOfTypeOnAllPlayers(MarkerType.FIL);
-        this.thread = 0;
     }
 
 
     public void tryInformMurderByNodeOfWeb(MarkerManager manager, VampireUHCPlayer killer) {
         // On passe la condition de la toile de trois noeuds minimum des le debut pour eviter des casts inutiles
-        if (weaver == null || thread < 3) {
+        if (weaver == null || countThreads(manager) < 3) {
             return;
         }
 

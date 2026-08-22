@@ -2,6 +2,7 @@ package fr.vampireuhc.roles;
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.config.MessageUtil;
+import fr.vampireuhc.game.RoleBuffManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.markers.Marker;
 import fr.vampireuhc.markers.MarkerType;
@@ -17,8 +18,10 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -29,6 +32,13 @@ public class CupidonRole implements Role {
     private final Set<UUID> loverUuids = new HashSet<>();
     private Set<UUID> lastKnownAmourHolders;
     private BukkitTask linkFallbackTask;
+
+    // Restaurations de cœurs en attente, par joueur (annulées en fin de partie).
+    private final Map<UUID, BukkitTask> pendingRestores = new HashMap<>();
+
+    // Notification « marque déplacée » à délai aléatoire (trackée pour être
+    // annulée : sinon elle peut tirer après un stop/reset, message stale).
+    private BukkitTask movedNotifyTask;
 
     public CupidonRole(VampireUHCPlayer player) {
         this.cupidon = player;
@@ -103,6 +113,15 @@ public class CupidonRole implements Role {
             linkFallbackTask.cancel();
             linkFallbackTask = null;
         }
+        if (movedNotifyTask != null) {
+            movedNotifyTask.cancel();
+            movedNotifyTask = null;
+        }
+        for (BukkitTask task : pendingRestores.values()) {
+            task.cancel();
+        }
+        pendingRestores.clear();
+        VampireUHC.getInstance().getBuffManager().clearHeartPenalties();
     }
 
     // Joueurs portant une marque Amour posée par le cupidon.
@@ -123,6 +142,7 @@ public class CupidonRole implements Role {
     private void autoLinkRandom(MarkerManager manager) {
         List<VampireUHCPlayer> candidates = VampireUHC.getInstance().getPlayerManager().getAll().stream()
                 .filter(p -> !p.getUuid().equals(cupidon.getUuid()))
+                .filter(VampireUHCPlayer::isAlive) // jamais de lien avec un mort/spectateur
                 .toList();
 
         if (candidates.size() < 2) {
@@ -206,32 +226,39 @@ public class CupidonRole implements Role {
             return;
         }
 
-        Player bukkitPartner = Bukkit.getPlayer(partner.getUuid());
-        if (bukkitPartner == null) {
-            return;
-        }
-
+        // La pénalité s'applique par UUID, partenaire en ligne ou pas (le buff
+        // manager retombe sur le handle courant à la reconnexion).
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int heartsLost = config.getAmourHeartsLost();
         int durationSeconds = config.getAmourPenaltyDurationSeconds();
 
-        bukkitPartner.setMaxHealth(Math.max(1, bukkitPartner.getMaxHealth() - heartsLost * 2));
-        if (bukkitPartner.getHealth() > bukkitPartner.getMaxHealth()) {
-            bukkitPartner.setHealth(bukkitPartner.getMaxHealth());
-        }
+        // La perte de cœurs est déléguée à l'autorité centrale du max health
+        // (RoleBuffManager), qui combine base + aura Paladin − pénalités actives.
+        RoleBuffManager buffs = VampireUHC.getInstance().getBuffManager();
+        buffs.registerHeartPenalty(partner.getUuid(), heartsLost);
 
         String killerName = killer != null ? killer.getName() : "inconnu";
         MiniMessage mm = MiniMessage.miniMessage();
-        bukkitPartner.sendMessage(mm.deserialize(
-            "<red>Votre amoureux est mort ! Vous perdez <gold>" + heartsLost + " coeurs</gold> pendant <gold>" + durationSeconds + " secondes</gold>. Son tueur était : <gold>" + killerName + "</gold></red>"
-        ));
+        Player bukkitPartner = Bukkit.getPlayer(partner.getUuid());
+        if (bukkitPartner != null) {
+            bukkitPartner.sendMessage(mm.deserialize(
+                "<red>Votre amoureux est mort ! Vous perdez <gold>" + heartsLost + " coeurs</gold> pendant <gold>" + durationSeconds + " secondes</gold>. Son tueur était : <gold>" + killerName + "</gold></red>"
+            ));
+        }
 
-        new BukkitRunnable() {
+        UUID partnerId = partner.getUuid();
+        BukkitTask previous = pendingRestores.remove(partnerId);
+        if (previous != null) {
+            previous.cancel();
+        }
+        BukkitTask restoreTask = new BukkitRunnable() {
             @Override
             public void run() {
-                bukkitPartner.setMaxHealth(bukkitPartner.getMaxHealth() + heartsLost * 2);
+                pendingRestores.remove(partnerId);
+                buffs.clearHeartPenalty(partnerId);
             }
         }.runTaskLater(VampireUHC.getInstance(), 20L * durationSeconds);
+        pendingRestores.put(partnerId, restoreTask);
     }
 
     // Si une marque Amour change de propriétaire (ex : switch du Gremlin), le Cupidon
@@ -272,9 +299,14 @@ public class CupidonRole implements Role {
         int max = Math.max(min, config.getCupidonNotifyMaxSeconds());
         long delay = ThreadLocalRandom.current().nextInt(min, max + 1) * 20L;
 
-        new BukkitRunnable() {
+        // Un seul rappel à la fois : un nouveau switch remplace le précédent.
+        if (movedNotifyTask != null) {
+            movedNotifyTask.cancel();
+        }
+        movedNotifyTask = new BukkitRunnable() {
             @Override
             public void run() {
+                movedNotifyTask = null;
                 Player bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
                 if (bukkitCupidon != null) {
                     bukkitCupidon.sendMessage(MessageUtil.warn("Une marque Amour a changé de propriétaire : <gold>" +

@@ -40,7 +40,7 @@ public class ApprenticeSlayer implements Role {
         MiniMessage mm = MiniMessage.miniMessage();
         return mm.deserialize(
             "<light_purple>Vous gagnez seule en éliminant tous les autres joueurs.</light_purple>\n\n"
-            + "<dark_purple>▸</dark_purple> <gray>À chaque kill, vous récupérez les marques du joueur tué (sauf les marques Maître).</gray>\n\n"
+            + "<dark_purple>▸</dark_purple> <gray>À chaque kill, vous récupérez les marqueurs du joueur tué (sauf les marques Maître, d'Amour et de Fil).</gray>\n\n"
             + "<bold><dark_purple>Pouvoirs cumulatifs :</dark_purple></bold>\n"
             + "  <gray>• <yellow>" + darkThreshold + "+ marqueurs obscurs</yellow> → <green>Force légère la nuit.</green></gray>\n"
             + "  <gray>• <yellow>" + config.getSlayerLightThreshold() + "+ marqueurs lumineux</yellow> → <green>Force légère le jour.</green></gray>\n"
@@ -66,13 +66,16 @@ public class ApprenticeSlayer implements Role {
 
     // Pouvoirs spécifiques au rôle. 
 
-    // Récupère les marqueurs du joueur tué (sauf les marques Maître, pour éviter une infection obligatoire).
+    // Récupère les marqueurs du joueur tué, sauf les marques Maître (infection obligatoire),
+    // d'Amour et de Fil (créeraient des holders fantômes pour le Cupidon et le Tisseur).
     public boolean CopyMarkersOnKill(MarkerManager manager, VampireUHCPlayer killed) {
         if (slayer == null) {
             return false;
         }
         List<Marker> markers = manager.getMarkers(killed.getUuid()).stream()
                 .filter(marker -> marker.getType() != MarkerType.MARQUE_MAITRE)
+                .filter(marker -> marker.getType() != MarkerType.AMOUR)
+                .filter(marker -> marker.getType() != MarkerType.FIL)
                 .toList();
         manager.addMarkers(slayer.getUuid(), markers);
         return true;

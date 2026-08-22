@@ -18,7 +18,9 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class GravediggerRole implements Role {
     private VampireUHCPlayer gravedigger;
-    private final Map<Location, List<MarkerType>> markersByLocation = new HashMap<>();
+
+    // Cadavres indexés par clé stable : monde + bloc (ignore yaw/pitch).
+    private final Map<String, List<MarkerType>> markersByKey = new HashMap<>();
 
     @Override
     public Camp getDefaultCamp() {
@@ -33,6 +35,14 @@ public class GravediggerRole implements Role {
     @Override
     public void onAssign(VampireUHCPlayer player) {
         this.gravedigger = player;
+    }
+
+    @Override
+    public void onGameEnd() {
+        // Les clés référencent l'ANCIEN monde : le nouveau est régénéré avec un
+        // autre terrain, ces cadavres seraient inexhumables. Pas de persistance
+        // volontaire (décision) : une partie = une map.
+        markersByKey.clear();
     }
 
     @Override
@@ -53,11 +63,15 @@ public class GravediggerRole implements Role {
     // Premier pouvoir (passif) : voit les particules sur les cadavres.
 
     public void spawnParticlesAtLocation(Location location, List<MarkerType> markers) {
-        if (gravedigger == null) {
+        if (gravedigger == null || location == null || location.getWorld() == null) {
             return;
         }
 
         Player bukkitGraveDigger = Bukkit.getPlayer(gravedigger.getUuid());
+
+        if (bukkitGraveDigger == null || !bukkitGraveDigger.isOnline()) {
+            return;
+        }
 
         // On crée les particules
         bukkitGraveDigger.spawnParticle(
@@ -70,23 +84,29 @@ public class GravediggerRole implements Role {
             0
         );
 
-        this.markersByLocation.put(location, markers);
+        this.markersByKey.put(corpseKey(location), markers);
+    }
+
+    // Clé stable d'un cadavre : monde + coordonnées de bloc.
+    private static String corpseKey(Location location) {
+        return location.getWorld().getName() + ":"
+                + location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ();
     }
 
 
     // Second pouvoir (actif) : /vuhc exhumer
 
     public void exhum(Location location) {
-        if (gravedigger == null) {
+        if (gravedigger == null || location == null || location.getWorld() == null) {
             return;
         }
         var bukkitGraveDigger = Bukkit.getPlayer(gravedigger.getUuid());
 
-        if (bukkitGraveDigger == null) {
+        if (bukkitGraveDigger == null || !bukkitGraveDigger.isOnline()) {
             return;
         }
 
-        var markers = markersByLocation.remove(location);
+        var markers = markersByKey.remove(corpseKey(location));
 
         if (markers == null) {
             bukkitGraveDigger.sendMessage(MessageUtil.warn("Vous ne trouvez aucun cadavre à exhumer."));
@@ -99,5 +119,7 @@ public class GravediggerRole implements Role {
         for (MarkerType marker: markers) {
             message = message.append(marker.toComponent());
         }
+
+        bukkitGraveDigger.sendMessage(message);
     }
 }

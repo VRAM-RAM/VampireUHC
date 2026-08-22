@@ -1,7 +1,9 @@
 package fr.vampireuhc.vampire_vote;
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.MessageUtil;
+import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
+import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.VampireMinion;
 
@@ -19,10 +21,8 @@ public class VampireVoteManager {
     private final VampireUHC plugin;
     private final Map<UUID, Integer> voteByPlayer = new HashMap<>();
     private final Set<UUID> voters = new HashSet<>();
-    private final Set<UUID> markedPlayers = new HashSet<>();
     private VoteResult.Tie pendingTie;
     private boolean open = false;
-    private int markedPlayerCount = 0;
 
     public VampireVoteManager(VampireUHC plugin) {
         this.plugin = plugin;
@@ -31,7 +31,11 @@ public class VampireVoteManager {
     public void openVote() {
         voteByPlayer.clear();
         voters.clear();
-        pendingTie = null;
+        // Un tie en attente SURVIT à l'ouverture du cycle suivant : l'écraser
+        // abandonnerait la marque sans prévenir personne. On rappelle le Maître.
+        if (pendingTie != null) {
+            notifyMasterOfTie(pendingTie);
+        }
         open = true;
         broadcastToVampires(MessageUtil.serialize("<dark_purple>Le vote pour la marque vampire est ouvert ! <gray>/vuhc voter <joueur></gray></dark_purple>"));
     }
@@ -49,6 +53,8 @@ public class VampireVoteManager {
         VoteResult result = resolveVote();
         switch (result) {
             case VoteResult.Winner w -> {
+                // Un vainqueur supersède un éventuel tie resté pendant.
+                pendingTie = null;
                 applyVampireMark(w.playerId());
                 sendVoteFeedback(w.playerId());
             }
@@ -94,11 +100,14 @@ public class VampireVoteManager {
     }
 
     // Applique la marque vampire sur le gagnant du vote (la Salvation peut la bloquer silencieusement).
+    // La cible est revérifiée au moment de la résolution : elle peut être morte ou infectée
+    // entre l'ouverture du vote et la fermeture.
     private void applyVampireMark(UUID targetId) {
-        boolean applied = plugin.getMarkerManager().tryApplyMark(targetId, MarkerType.MARQUE_VAMPIRE, null);
-        if (applied && markedPlayers.add(targetId)) {
-            markedPlayerCount++;
+        VampireUHCPlayer target = plugin.getPlayerManager().get(targetId);
+        if (target == null || !target.isAlive() || target.getCamp() == Camp.VAMPIRE) {
+            return;
         }
+        plugin.getMarkerManager().tryApplyMark(targetId, MarkerType.MARQUE_VAMPIRE, null);
     }
 
     // Les vampires ne reçoivent que le résultat de leur vote, même si la marque a été bloquée.
@@ -124,7 +133,11 @@ public class VampireVoteManager {
     // Le Maitre tranche une égalité
     public void masterResolves(VoteResult.Tie tie) {
         this.pendingTie = tie;
+        notifyMasterOfTie(tie);
+    }
 
+    // Envoie au Maître (s'il est en ligne) la liste cliquable des joueurs à égalité.
+    private void notifyMasterOfTie(VoteResult.Tie tie) {
         UUID masterId = findMaster();
         if (masterId == null) {
             plugin.getLogger().warning("Impossible de trouver le Maître pour trancher l'égalité.");
@@ -165,29 +178,40 @@ public class VampireVoteManager {
         this.pendingTie = null;
     }
 
+    // Porteurs actuels d'une marque vampire, dérivés des marqueurs.
+    private Set<UUID> markedHolders() {
+        MarkerManager markers = plugin.getMarkerManager();
+        Set<UUID> holders = new HashSet<>();
+        for (UUID id : markers.getAllPlayers()) {
+            if (markers.hasMarker(id, MarkerType.MARQUE_VAMPIRE)) {
+                holders.add(id);
+            }
+        }
+        return holders;
+    }
+
+    // Nombre de joueurs marqués, recompté à la demande depuis les marqueurs
+    // (aucun compteur incrémental à désynchroniser).
     public int getMarkedPlayerCount() {
-        return markedPlayerCount;
+        return markedHolders().size();
     }
 
     // Remet entièrement le système de vote à zéro (nouvelle partie).
     public void reset() {
         voteByPlayer.clear();
         voters.clear();
-        markedPlayers.clear();
-        markedPlayerCount = 0;
         pendingTie = null;
         open = false;
     }
 
-    // Restaure l'état des votes après un redémarrage du serveur.
-    public void restore(boolean open, Map<UUID, Integer> votes, Set<UUID> markedPlayers, int markedPlayerCount, VoteResult.Tie pendingTie) {
+    // Restaure l'état des votes après un redémarrage du serveur (voters inclus,
+    // sinon les Sbires pourraient revoter dans le même round après un restart).
+    public void restore(boolean open, Map<UUID, Integer> votes, Set<UUID> voters, VoteResult.Tie pendingTie) {
         this.open = open;
         this.voteByPlayer.clear();
         this.voteByPlayer.putAll(votes);
         this.voters.clear();
-        this.markedPlayers.clear();
-        this.markedPlayers.addAll(markedPlayers);
-        this.markedPlayerCount = markedPlayerCount;
+        this.voters.addAll(voters);
         this.pendingTie = pendingTie;
     }
 
@@ -199,8 +223,12 @@ public class VampireVoteManager {
         return new HashMap<>(voteByPlayer);
     }
 
+    public Set<UUID> getVotersCopy() {
+        return new HashSet<>(voters);
+    }
+
     public Set<UUID> getMarkedPlayersCopy() {
-        return new HashSet<>(markedPlayers);
+        return markedHolders();
     }
 
     private void broadcastToVampires(Component message) {

@@ -1,6 +1,7 @@
 package fr.vampireuhc.roles;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -17,6 +18,17 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class SandMerchantRole implements Role {
     private VampireUHCPlayer sandMerchant;
+
+    // Fenêtre des effets de mort (durées partagées par l'application directe et
+    // la livraison différée aux ensablés qui reviennent).
+    private static final int SLOWNESS_SECONDS = 180;
+    private static final int SLOWNESS_AMPLIFIER = 0;
+    private static final int BLINDNESS_SECONDS = 30;
+    private static final int BLINDNESS_AMPLIFIER = 3;
+
+    // Moment où les effets ont été déclenchés (-1 = jamais) : permet de livrer
+    // les effets restants aux joueurs qui étaient dans la grâce de déconnexion.
+    private long effectsAppliedAtMillis = -1;
 
     @Override
     public Camp getDefaultCamp() {
@@ -40,7 +52,7 @@ public class SandMerchantRole implements Role {
             + "  <gray>• Joueur <red>non-villageois</red> → marqueur <white>neutre</white>.</gray>\n"
             + "  <gray>• L'aura est fixe au moment du dépôt (même si les marques changent de propriétaire).</gray>\n\n"
             + "<bold><dark_purple>Effet à votre mort :</dark_purple></bold>\n"
-            + "  <gray>Tous les joueurs ensablés subissent <red>cécité</red> (30s) et <red>lenteur</red> (3 min).</gray>"
+            + "  <gray>Tous les joueurs ensablés subissent <red>blindness</red> (30s) et <red>lenteur</red> (3 min).</gray>"
         );
     }
 
@@ -129,11 +141,48 @@ public class SandMerchantRole implements Role {
             return;
         }
 
+        this.effectsAppliedAtMillis = System.currentTimeMillis();
+
         var players_with_marker_neutral = manager.getPlayersThatHaveMarkerType(MarkerType.SABLE_NEUTRE);
         var players_with_marker_light = manager.getPlayersThatHaveMarkerType(MarkerType.SABLE_LUMINEUX);
-        
+
         applyEffectsOnPlayers(players_with_marker_light);
         applyEffectsOnPlayers(players_with_marker_neutral);
+    }
+
+    // Livraison différée : appelé au retour d'un joueur ensablé qui était hors
+    // ligne au moment de la mort du marchand (fenêtre de grâce de déconnexion).
+    // Les durées sont proratisées sur ce qui reste de la fenêtre.
+    public void deliverPendingEffects(MarkerManager manager, UUID playerId) {
+        if (sandMerchant == null || effectsAppliedAtMillis < 0) {
+            return;
+        }
+        boolean marked = manager.hasMarker(playerId, MarkerType.SABLE_LUMINEUX)
+                || manager.hasMarker(playerId, MarkerType.SABLE_NEUTRE);
+        if (!marked) {
+            return;
+        }
+        Player bukkitTarget = Bukkit.getPlayer(playerId);
+        if (bukkitTarget == null || !bukkitTarget.isOnline()) {
+            return;
+        }
+
+        long elapsedSeconds = (System.currentTimeMillis() - effectsAppliedAtMillis) / 1000L;
+        int slownessRemaining = SLOWNESS_SECONDS - (int) elapsedSeconds;
+        int blindnessRemaining = BLINDNESS_SECONDS - (int) elapsedSeconds;
+
+        boolean applied = false;
+        if (slownessRemaining > 0) {
+            bukkitTarget.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slownessRemaining * 20, SLOWNESS_AMPLIFIER, true, false, true));
+            applied = true;
+        }
+        if (blindnessRemaining > 0) {
+            bukkitTarget.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blindnessRemaining * 20, BLINDNESS_AMPLIFIER, true, false, true));
+            applied = true;
+        }
+        if (applied) {
+            bukkitTarget.sendActionBar(MessageUtil.actionBar("<gold>Vous avez été endormi par le Marchand de Sable !"));
+        }
     }
 
     private void applyEffectsOnPlayers(List<Player> players) {

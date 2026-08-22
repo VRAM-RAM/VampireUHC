@@ -14,8 +14,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class SaviorRole implements Role {
     private VampireUHCPlayer salva;
-    private boolean applied_this_episode;
-    private int episode;
+    private int lastAppliedEpisode = -1;
     private UUID last_applied_Uuid;
 
     public SaviorRole(VampireUHCPlayer player) {
@@ -57,14 +56,29 @@ public class SaviorRole implements Role {
         this.salva = vampireUHCPlayer;
     }
 
+    // Restauration de l'état après un redémarrage.
+    public void restoreState(int lastAppliedEpisode, UUID lastTarget) {
+        this.lastAppliedEpisode = lastAppliedEpisode;
+        this.last_applied_Uuid = lastTarget;
+    }
+
+    public int getLastAppliedEpisode() {
+        return lastAppliedEpisode;
+    }
+
+    public UUID getLastAppliedUuid() {
+        return last_applied_Uuid;
+    }
+
     // Pouvoir spécifique au Salvateur : la marque de la salvation
 
     public boolean applySalvation(MarkerManager manager, VampireUHCPlayer target, int current_episode) {
         if (salva == null) {
             return false;
-        } 
+        }
 
-        if (episode == current_episode || applied_this_episode == true) {
+        // Une seule protection par épisode (le compteur d'épisode sert de gate).
+        if (lastAppliedEpisode == current_episode) {
             return false;
         }
 
@@ -73,15 +87,16 @@ public class SaviorRole implements Role {
             return false;
         }
 
-        this.episode = current_episode;
+        this.lastAppliedEpisode = current_episode;
 
         // On clear l'ancien marqueur salvation
-        manager.clearMarkersOfType(last_applied_Uuid, MarkerType.SALVATION);
+        if (last_applied_Uuid != null) {
+            manager.clearMarkersOfType(last_applied_Uuid, MarkerType.SALVATION);
+        }
 
         manager.addMarker(target.getUuid(), MarkerType.SALVATION, salva.getUuid());
-        
+
         this.last_applied_Uuid = target.getUuid();
-        this.applied_this_episode = true;
         return true;
     }
 }

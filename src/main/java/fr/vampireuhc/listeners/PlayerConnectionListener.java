@@ -4,6 +4,7 @@ import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.MessageUtil;
 import fr.vampireuhc.game.GamePhase;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.roles.SandMerchantRole;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,14 @@ public class PlayerConnectionListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+
+        // Nom périmé sinon (messages, UI de vote, game-state.json) après un
+        // changement de pseudo.
+        VampireUHCPlayer known = plugin.getPlayerManager().get(player.getUniqueId());
+        if (known != null && !player.getName().equals(known.getLastKnownName())) {
+            known.setLastKnownName(player.getName());
+        }
+
         VampireUHCPlayer vp = plugin.getPlayerManager().get(player.getUniqueId());
 
         if (!plugin.getGameManager().isGameStarted()) {
@@ -50,6 +59,15 @@ public class PlayerConnectionListener implements Listener {
         if (task != null) {
             task.cancel();
             player.sendMessage(MessageUtil.success("Vous vous êtes reconnecté, votre partie continue !"));
+        }
+
+        // Effets du Marchand de sable différés : l'ensablé était peut-être hors
+        // ligne au moment de la mort du marchand.
+        for (VampireUHCPlayer p : plugin.getPlayerManager().getAll()) {
+            if (p.getRole() instanceof SandMerchantRole merchant) {
+                merchant.deliverPendingEffects(plugin.getMarkerManager(), player.getUniqueId());
+                break;
+            }
         }
 
         if (!vp.isAlive() || plugin.getGameManager().getPhase() == GamePhase.ENDED) {

@@ -20,6 +20,7 @@ map:
   dark-forest-radius: 400       # Rayon de la forêt sombre garantie autour de 0;0
   spawn-radius: 350             # Rayon du disque dans lequel les joueurs sont éparpillés au début
   min-spawn-distance: 25        # Distance minimale entre deux joueurs au début de la partie
+  pregen-chunks-per-tick: 8     # Chunks demandés par tick pendant la pré-génération du disque d'éparpillement (lancée au /vuhc start)
   ores:                         # Minerais supplémentaires générés dans les caves (par chunk)
     iron-per-chunk: 6           #   Minerai de fer (Y < 64)
     gold-per-chunk: 4           #   Minerai d'or (Y < 32)

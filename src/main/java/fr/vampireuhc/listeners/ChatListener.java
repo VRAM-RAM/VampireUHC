@@ -11,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 
 /**
  * Chat pendant la partie :
@@ -38,8 +39,13 @@ public class ChatListener implements Listener {
         event.setCancelled(true);
 
         if (sender.getGameMode() == GameMode.SPECTATOR) {
-            Component formatted = MessageUtil.serialize(
-                    "<gray>[Spectateur] <gray>" + sender.getName() + " <dark_gray>» <white>" + event.getMessage() + "</white></dark_gray></gray>");
+            // Composition de Components : le message du joueur n'est jamais interprété
+            // par MiniMessage (aucune injection de tags possible).
+            Component formatted = MessageUtil.serialize("<gray>[Spectateur]</gray>")
+                    .append(Component.space())
+                    .append(Component.text(sender.getName(), NamedTextColor.GRAY))
+                    .append(Component.text(" » ", NamedTextColor.DARK_GRAY))
+                    .append(Component.text(event.getMessage(), NamedTextColor.WHITE));
             for (Player online : Bukkit.getOnlinePlayers()) {
                 if (online.getGameMode() == GameMode.SPECTATOR) {
                     online.sendMessage(formatted);

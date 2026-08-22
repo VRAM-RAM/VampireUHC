@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -85,6 +86,9 @@ public class SpectatorManager implements Listener {
     }
 
     private void update() {
+        if (follow.isEmpty()) {
+            return;
+        }
         for (Map.Entry<UUID, UUID> entry : new HashMap<>(follow).entrySet()) {
             Player spectator = Bukkit.getPlayer(entry.getKey());
             Player target = Bukkit.getPlayer(entry.getValue());
@@ -94,7 +98,14 @@ public class SpectatorManager implements Listener {
                 follow.remove(entry.getKey());
                 continue;
             }
-            spectator.teleport(target.getLocation());
+            Location targetLoc = target.getLocation();
+            Location current = spectator.getLocation();
+            // Déjà sur place (monde + position) : inutile de re-téléporter.
+            if (current.getWorld().equals(targetLoc.getWorld())
+                    && current.distanceSquared(targetLoc) < 0.01) {
+                continue;
+            }
+            spectator.teleport(targetLoc);
         }
     }
 }

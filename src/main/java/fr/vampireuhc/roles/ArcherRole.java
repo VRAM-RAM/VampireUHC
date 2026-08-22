@@ -53,8 +53,23 @@ public class ArcherRole implements Role {
     @Override
     public void onAssign(VampireUHCPlayer player) {
         this.archer = player;
+    }
+
+    @Override
+    public void onAssign(VampireUHCPlayer player, boolean restoring) {
+        this.archer = player;
+
+        // À la restauration (reload serveur), on ne redistribue PAS le kit :
+        // l'archer l'a déjà dans son inventaire.
+        if (restoring) {
+            return;
+        }
+
         var bukkitArcher = Bukkit.getPlayer(player.getUuid());
-        
+        if (bukkitArcher == null || !bukkitArcher.isOnline()) {
+            return;
+        }
+
         // On créé les livres enchantés (oui, tout ça pour deux pauvres livres...)
         ItemStack Infinitybook = new ItemStack(Material.ENCHANTED_BOOK);
         ItemStack PowerTwoBook = new ItemStack(Material.ENCHANTED_BOOK);

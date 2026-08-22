@@ -23,19 +23,24 @@ public class OrePopulator extends BlockPopulator {
 
     @Override
     public void populate(WorldInfo worldInfo, Random random, int chunkX, int chunkZ, LimitedRegion region) {
-        placeOre(region, random, chunkX, chunkZ, Material.IRON_ORE, config.getOreIronPerChunk(), 0, 64);
-        placeOre(region, random, chunkX, chunkZ, Material.GOLD_ORE, config.getOreGoldPerChunk(), 0, 32);
-        placeOre(region, random, chunkX, chunkZ, Material.DIAMOND_ORE, config.getOreDiamondPerChunk(), 0, 16);
+        placeOre(region, random, chunkX, chunkZ, Material.IRON_ORE, Material.DEEPSLATE_IRON_ORE, config.getOreIronPerChunk(), 0, 64);
+        placeOre(region, random, chunkX, chunkZ, Material.GOLD_ORE, Material.DEEPSLATE_GOLD_ORE, config.getOreGoldPerChunk(), 0, 32);
+        placeOre(region, random, chunkX, chunkZ, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE, config.getOreDiamondPerChunk(), 0, 16);
     }
 
     private void placeOre(LimitedRegion region, Random random, int chunkX, int chunkZ,
-                          Material ore, int count, int minY, int maxY) {
+                          Material ore, Material deepslateOre, int count, int minY, int maxY) {
         for (int i = 0; i < count; i++) {
             int x = chunkX * 16 + random.nextInt(16);
             int y = minY + random.nextInt(maxY - minY);
             int z = chunkZ * 16 + random.nextInt(16);
-            if (region.getType(x, y, z) == Material.STONE) {
+            // Sans la branche deepslate, toute la bande basse (Y < ~8) est
+            // silencieusement ignorée : diamants et or profond perdus.
+            Material existing = region.getType(x, y, z);
+            if (existing == Material.STONE) {
                 region.setType(x, y, z, ore);
+            } else if (existing == Material.DEEPSLATE) {
+                region.setType(x, y, z, deepslateOre);
             }
         }
     }

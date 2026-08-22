@@ -117,6 +117,12 @@ public class ConfigManager {
         return cfg().getInt("map.ores.diamond-per-chunk", 2);
     }
 
+    public int getPregenChunksPerTick() {
+        // Nombre de chunks demandés par tick pendant la pré-génération du disque
+        // d'éparpillement (lancée au début du compte à rebours de /vuhc start).
+        return Math.max(1, cfg().getInt("map.pregen-chunks-per-tick", 8));
+    }
+
     /* Utilitaires gameplay */
 
     public boolean isAutoSmeltEnabled() {

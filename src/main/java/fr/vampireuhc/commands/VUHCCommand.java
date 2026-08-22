@@ -443,6 +443,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(MessageUtil.error("Un des joueurs n'est pas en partie."));
                     return;
                 }
+                // Sinon SwitchMarkers stocke la MÊME instance de liste sous deux
+                // UUIDs : les mutations de l'un corrompraient les marqueurs de l'autre.
+                if (t1.getUuid().equals(t2.getUuid())) {
+                    player.sendMessage(MessageUtil.error("Les deux cibles doivent être différentes."));
+                    return;
+                }
 
                 VampireUHCPlayer localSwitch = playerManager.get(player.getUniqueId());
                 if (!(localSwitch != null && localSwitch.getRole() instanceof GremlinRole gremlin)) {
@@ -515,6 +521,11 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(MessageUtil.error("Les deux joueurs doivent être différents."));
                     return;
                 }
+                // Pas de lien avec un mort/spectateur (pénalités futures sur des corpses).
+                if (!t1.isAlive() || !t2.isAlive()) {
+                    player.sendMessage(MessageUtil.error("Les deux amoureux doivent être vivants."));
+                    return;
+                }
                 if (t1.getUuid().equals(player.getUniqueId()) || t2.getUuid().equals(player.getUniqueId())) {
                     player.sendMessage(MessageUtil.error("Vous ne pouvez pas vous lier vous-même."));
                     return;
@@ -561,7 +572,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     return;
                 }
 
-                if (!soulweigherRole.weightAura(markerManager, t1, t2)) {
+                if (!soulweigherRole.weightAura(markerManager, t1, t2, gameManager.getEpisode())) {
                     player.sendActionBar(MessageUtil.actionBar("<red>Erreur interne."));
                 }
                 return;
@@ -781,7 +792,8 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
     private boolean hasRole(CommandSender sender, Class<? extends Role> roleClass) {
         VampireUHCPlayer vp = playerOf(sender);
-        return vp != null && roleClass.isInstance(vp.getRole());
+        // Un joueur mort perd l'usage des pouvoirs de son rôle.
+        return vp != null && vp.isAlive() && roleClass.isInstance(vp.getRole());
     }
 
     private VampireUHCPlayer playerOf(CommandSender sender) {

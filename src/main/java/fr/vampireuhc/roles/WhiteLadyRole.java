@@ -1,5 +1,7 @@
 package fr.vampireuhc.roles;
 
+import java.util.UUID;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -44,11 +46,11 @@ public class WhiteLadyRole implements Role {
         return mm.deserialize(
             "<gray>Votre objectif est de gagner avec le <green>village</green>.\n\n"
             + "<gray>Vous ne disposez d'aucun pouvoir. Cependant :</gray>\n\n"
-            + "<dark_purple>• Si vous mourrez de la main d'un <dark_red>vampire</dark_red>, vous ressuscitez et devez toujours gagner avec le village.</dark_purple>\n"
-            + "<dark_purple>• Si vous mourrez de la main d'un <green>villageois</green>, vous ressuscitez et devez gagner <gold>seule</gold>, en éliminant tous les autres joueurs.</dark_purple>\n"
-            + "<dark_purple>• Si vous mourrez de la main d'un rôle <gold>solitaire</gold>, vous mourrez définitivement.</dark_purple>\n\n"
+            + "<dark_purple>• Si vous mourez de la main d'un <dark_red>vampire</dark_red>, vous ressuscitez et devez toujours gagner avec le village.</dark_purple>\n"
+            + "<dark_purple>• Si vous mourez de la main d'un <green>villageois</green>, vous ressuscitez et devez gagner <gold>seule</gold>, en éliminant tous les autres joueurs.</dark_purple>\n"
+            + "<dark_purple>• Si vous mourez de la main d'un rôle <gold>solitaire</gold>, vous mourez définitivement.</dark_purple>\n\n"
             + "<gray>Si vous devenez <gold>solitaire</gold>, vous gagnerez un effet <dark_purple>résistance</dark_purple> le jour et <dark_purple>force</dark_purple> la nuit, ainsi que <dark_purple>speed</dark_purple> si vous tuez votre assassin.\n\n</gray>"
-            + "<gray>Si vous ressuscitez après avoir été tué par un <dark_red>vampire</dark_red>, vous gagnerez un effet <dark_red>faiblesse</dark_red> le jour.</gray>"
+            + "<gray>Si vous ressuscitez après avoir été tué par un <dark_red>vampire</dark_red>, vous écopez d'un effet <dark_red>faiblesse</dark_red> le jour.</gray>"
         );
     }
 
@@ -64,11 +66,66 @@ public class WhiteLadyRole implements Role {
 
     @Override
     public void onAssign(VampireUHCPlayer player) {
-        this.whiteLady = player;        
-    }    
+        this.whiteLady = player;
+    }
+
+    // Restauration de l'état après un redémarrage : sans ça, une Dame Blanche
+    // ressuscitée-solo redevient silencieusement villageoise et perd son objectif.
+    public void restoreState(boolean isSolo, boolean killedByVampire, boolean killedKiller, UUID killerUuid) {
+        this.isSolo = isSolo;
+        this.killedByVampire = killedByVampire;
+        this.killedKiller = killedKiller;
+        if (killerUuid != null) {
+            var playerManager = fr.vampireuhc.VampireUHC.getInstance().getPlayerManager();
+            VampireUHCPlayer killerPlayer = playerManager.get(killerUuid);
+            // Le tueur peut avoir été restauré après nous (ordre JSON arbitraire) :
+            // dans ce cas on retente paresseusement via l'UUID stocké.
+            this.killer = killerPlayer != null ? killerPlayer : this.killer;
+            if (killerPlayer == null) {
+                this.pendingKillerUuid = killerUuid;
+            }
+        }
+    }
+
+    private UUID pendingKillerUuid;
+
+    // Résout le tueur si la restauration l'avait laissé en attente (appelé
+    // après le chargement complet des joueurs).
+    public void resolvePendingReferences() {
+        if (pendingKillerUuid != null) {
+            var playerManager = fr.vampireuhc.VampireUHC.getInstance().getPlayerManager();
+            VampireUHCPlayer killerPlayer = playerManager.get(pendingKillerUuid);
+            if (killerPlayer != null) {
+                this.killer = killerPlayer;
+                this.pendingKillerUuid = null;
+            }
+        }
+    }
+
+    public boolean isSoloState() {
+        return isSolo;
+    }
+
+    public boolean wasKilledByVampire() {
+        return killedByVampire;
+    }
+
+    public boolean hasKilledKiller() {
+        return killedKiller;
+    }
+
+    public UUID getKillerUuid() {
+        return killer != null ? killer.getUuid() : pendingKillerUuid;
+    }
 
     public boolean onDeath(VampireUHCPlayer killer) {
         if (whiteLady == null) {
+            return false;
+        }
+
+        // Mort sans tueur joueur (chute, lave, mob...) : rien à qualifier,
+        // mais surtout pas de NPE qui avorterait setDead()/checkWinCondition().
+        if (killer == null) {
             return false;
         }
 
@@ -77,9 +134,13 @@ public class WhiteLadyRole implements Role {
         if (killer.getCamp() != null) {
             // En gros, si le tueur est infecte, son Camp est defini et on le recupere
             camp = killer.getCamp();
-        } else {
+        } else if (killer.getRole() != null) {
             // Sinon on prend le camp par defaut
             camp = killer.getRole().getDefaultCamp();
+        }
+
+        if (camp == null) {
+            return false;
         }
 
         switch (camp) {
@@ -121,33 +182,38 @@ public class WhiteLadyRole implements Role {
     }
 
     public void killedKiller(Player player) {
+        if (killer == null || player == null) {
+            return;
+        }
         // Si elle tue son tueur, on update le booléen.
-        if (player.getUniqueId() == killer.getUuid()) {
+        if (player.getUniqueId().equals(killer.getUuid())) {
             this.killedKiller = true;
         }
     }
 
+    // Effets passifs :
+    // - statut solitaire (tuée par un villageois) : résistance de jour, force de nuit,
+    //   speed permanent si elle a tué son assassin ;
+    // - ressuscitée après un kill vampire : faiblesse de jour.
     public void applyEffects(Player player, boolean night) {
-        // Si elle n'a rien, on return
-        if (!isSolo || !killedByVampire) {
+        if (!isSolo && !killedByVampire) {
             return;
         }
-        
-        // Si tuée par vampire, on ajoute faiblesse de jour
-        if (killedByVampire || !night) {
+
+        if (isSolo) {
+            if (night) {
+                player.addPotionEffect(effect(PotionEffectType.STRENGTH, 1));
+            } else {
+                player.addPotionEffect(effect(PotionEffectType.RESISTANCE, 1));
+            }
+
+            if (killedKiller) {
+                player.addPotionEffect(effect(PotionEffectType.SPEED, 1));
+            }
+        }
+
+        if (killedByVampire && !night) {
             player.addPotionEffect(effect(PotionEffectType.WEAKNESS, 1));
-            return;
-        }
-
-        // Sinon, on ajoute les effets en fonction du jour ou de la nuit (cas de solitaire)        
-        if (night) {
-            player.addPotionEffect(effect(PotionEffectType.STRENGTH, 1));
-        } else {
-            player.addPotionEffect(effect(PotionEffectType.RESISTANCE, 1));
-        }
-
-        if (killedKiller) {
-            player.addPotionEffect(effect(PotionEffectType.SPEED, 1));
         }
     }
 

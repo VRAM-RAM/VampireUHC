@@ -249,6 +249,23 @@ L'archer est un rôle villageois pur pvp.
 À l'annonce des rôles, il reçoit un arc *infinity* et *unbreaking III*. 
 Il possède également un pouvoir passif : lorsqu'il tire et atteint quelqu'un, cette personne obtient un effet de glowing (visible seulement par l'archer) durant **15** secondes.
 
+#### Baba Yaga 
+
+**Baba Yaga** possède deux pouvoirs : sa résurrection et sa malédiction.
+\
+\
+*Résurrection (à usage unique)* :
+\
+Lorsqu'un joueur meurt, elle reçoit un message cliquable qui lui permet de le ressusciter.
+Si elle le fait, le joueur ressuscite avec tous ses pouvoirs et doit toujours gagner avec son camp, mais :
+
+- s'il était un vampire : Baba Yaga subit un effet léger (et invisible à ses yeux) de faiblesse permanente
+- si Baba Yaga meurt, la personne qu'elle a ressuscité meurt également
+
+\
+*Malédiction (à usage unique)* :
+\
+À l'aide la commande `/vuhc maudire <joueur>`, Baba Yaga peut maudire un joueur. Ce dernier voit ses pommes d'or ne lui conférer aucun coeur d'absorption pendant 10 minutes.
 ## Solitaires
 
 Les rôles solitaires gagnent tout seuls. Ils doivent éliminer l'intégralité de la partie.

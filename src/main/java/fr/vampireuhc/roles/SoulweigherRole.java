@@ -10,8 +10,11 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class SoulweigherRole implements Role {
-    
+
     private VampireUHCPlayer soulWeighter;
+
+    // Gate "une fois par épisode" (-1 = jamais utilisé).
+    private int lastWeightEpisode = -1;
 
 
     @Override
@@ -53,8 +56,16 @@ public class SoulweigherRole implements Role {
 
     // Pouvoir actif spécifique à la peseuse d'âme
 
-    public boolean weightAura(MarkerManager manager, VampireUHCPlayer targetOne, VampireUHCPlayer targetTwo) {
+    public boolean weightAura(MarkerManager manager, VampireUHCPlayer targetOne, VampireUHCPlayer targetTwo, int currentEpisode) {
         if (soulWeighter == null) {
+            return false;
+        }
+        // Une seule pesée par épisode (sinon brute-force des auras par paires).
+        if (lastWeightEpisode == currentEpisode) {
+            var bukkitWeighter = Bukkit.getPlayer(soulWeighter.getUuid());
+            if (bukkitWeighter != null) {
+                bukkitWeighter.sendMessage(MessageUtil.error("Vous avez déjà pesé des âmes cet épisode."));
+            }
             return false;
         }
 
@@ -65,15 +76,28 @@ public class SoulweigherRole implements Role {
         if (bukkitPlayer == null) {
             return false;
         }
+        lastWeightEpisode = currentEpisode;
+
+        // Les trois issues sont des résultats valides : "penche" ne doit pas
+        // être interprété comme une erreur interne par l'appelant.
         if (auraOfFirstTarget == auraOfSecondTarget) {
             bukkitPlayer.sendMessage(MessageUtil.success("La balance s'équilibre..."));
             return true;
-        } 
+        }
         if (auraOfFirstTarget.getTight() == auraOfSecondTarget.getTight()) {
             bukkitPlayer.sendMessage(MessageUtil.warn("La balance penche légèrement..."));
             return true;
         }
         bukkitPlayer.sendMessage(MessageUtil.error("La balance penche..."));
-        return false;
-    }   
+        return true;
+    }
+
+    // Restauration de l'état après un redémarrage.
+    public void restoreState(int lastWeightEpisode) {
+        this.lastWeightEpisode = lastWeightEpisode;
+    }
+
+    public int getLastWeightEpisode() {
+        return lastWeightEpisode;
+    }
 }

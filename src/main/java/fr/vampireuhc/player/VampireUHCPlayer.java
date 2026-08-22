@@ -49,6 +49,8 @@ public class VampireUHCPlayer {
 
     public void setDead() {
         this.alive = false;
+        // Un mort ne vote plus pour la marque vampire.
+        this.canVoteVampireMark = false;
     }
 
     public void setRole(Role role) {

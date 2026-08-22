@@ -35,8 +35,14 @@ public class MarkerManager {
         return marker;
     }
 
+    // Sans allocation : hot path (événements de dégâts, de mort, etc.).
     public boolean hasMarker(UUID target, MarkerType type) {
-        return getMarkers(target, type).size() > 0;
+        for (Marker marker : markersByPlayer.getOrDefault(target, Collections.emptyList())) {
+            if (marker.getType() == type) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -85,23 +91,26 @@ public class MarkerManager {
     }
 
     public void SwitchMarkers(UUID target_1, UUID target_2) {
-        // On récupère les marqueurs du premier joueur
-        List<Marker> markers_of_target_1 = markersByPlayer.get(target_1);
-        // On récupère les marqueurs du second joueur
-        List<Marker> markers_of_target_2 = markersByPlayer.get(target_2);
+        // Normalisation systématique : un joueur sans marqueur reçoit une liste
+        // vide, jamais null (sinon NPE en cascade dans tous les lecteurs, et une
+        // sauvegarde corrompue au disable).
+        List<Marker> markers_of_target_1 = markersByPlayer.getOrDefault(target_1, new ArrayList<>());
+        List<Marker> markers_of_target_2 = markersByPlayer.getOrDefault(target_2, new ArrayList<>());
 
-        // Puis on clear leurs marqueurs :
-        markersByPlayer.remove(target_1);
-        markersByPlayer.remove(target_2);
-
-        //Et on ajoute les marqueurs de l'autre (on intervertit) :
-
-        markersByPlayer.putIfAbsent(target_1, markers_of_target_2);
-        markersByPlayer.putIfAbsent(target_2, markers_of_target_1);
+        // On intervertit les marqueurs :
+        markersByPlayer.put(target_1, markers_of_target_2);
+        markersByPlayer.put(target_2, markers_of_target_1);
     }
 
+    // Sans allocation : hot path (événements de dégâts, de mort, etc.).
     public int countMarkers(UUID target, MarkerType type) {
-        return getMarkers(target, type).size();
+        int count = 0;
+        for (Marker marker : markersByPlayer.getOrDefault(target, Collections.emptyList())) {
+            if (marker.getType() == type) {
+                count++;
+            }
+        }
+        return count;
     }
 
     // Retire le marker si possible

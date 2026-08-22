@@ -26,18 +26,24 @@ public class PvPListener implements Listener {
         this.gameManager = gameManager;
     }
 
-    // Invincibilité avant les 20 premières minutes : aucun dégât.
+    // Invincibilité avant les 20 premières minutes, MAIS seulement en partie :
+    // la phase initiale vaut déjà PRE_ROLES, sans ce gate tout le lobby serait
+    // invincible (chute/feu/mob) jusqu'au premier resetGame.
     @EventHandler
-    public void onEntityDamage(EntityDamageEvent event) { 
-        if (gameManager.getPhase() == GamePhase.PRE_ROLES && event.getEntity() instanceof Player) {
+    public void onEntityDamage(EntityDamageEvent event) {
+        if (gameManager.isGameStarted()
+                && gameManager.getPhase() == GamePhase.PRE_ROLES
+                && event.getEntity() instanceof Player) {
             event.setCancelled(true);
         }
     }
 
-    // Invincibilité explicite à la lave et au feu pendant la phase PRE_ROLES.
+    // Invincibilité explicite à la lave et au feu pendant la phase PRE_ROLES (en partie).
     @EventHandler
     public void onLavaOrFireDamage(EntityDamageEvent event) {
-        if (gameManager.getPhase() != GamePhase.PRE_ROLES || !(event.getEntity() instanceof Player)) {
+        if (!gameManager.isGameStarted()
+                || gameManager.getPhase() != GamePhase.PRE_ROLES
+                || !(event.getEntity() instanceof Player)) {
             return;
         }
         EntityDamageEvent.DamageCause cause = event.getCause();
@@ -89,11 +95,11 @@ public class PvPListener implements Listener {
         }
 
         // Si pvp actif, gestion des pouvoirs
-        if (event.getEntity() instanceof Player
+        if (event.getEntity() instanceof Player victim
                 && event.getDamager() instanceof Player attacker
                 && roleManager.getPlayerRole(attacker.getUniqueId()) instanceof GremlinRole gremlin) {
 
-            gremlin.applyDrainEffect(attacker);
+            gremlin.applyDrainEffect(attacker, victim);
         }
     }
 

@@ -98,7 +98,17 @@ public class VampireUHC extends JavaPlugin {
         if (gameManager != null) {
             gameManager.stop();
         }
-        
+
+        // Sans disable(), les listeners/packet handlers restent installés après un
+        // reload et la nouvelle instance duplique tout.
+        if (glowingEntities != null) {
+            try {
+                glowingEntities.disable();
+            } catch (Exception e) {
+                getLogger().warning("Impossible de désactiver proprement GlowingEntities : " + e.getMessage());
+            }
+        }
+
         getLogger().info("VampireUHC desactivé !");
     }
 

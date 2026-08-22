@@ -85,6 +85,12 @@ public class GameManager {
             resetGame();
         }
 
+        // Préchargement de la map PENDANT le compte à rebours : le monde est créé
+        // immédiatement puis les chunks du disque d'éparpillement sont générés en
+        // tâche de fond. Plus aucun freeze au moment du téléport des joueurs.
+        plugin.getMapManager().loadWorld();
+        plugin.getMapManager().startPregeneration();
+
         countdownRemaining = Math.max(0, seconds);
         if (countdownRemaining <= 0) {
             beginGame();
@@ -193,6 +199,7 @@ public class GameManager {
             countdownTask.cancel();
             countdownTask = null;
         }
+        plugin.getMapManager().cancelPregeneration();
         phase = GamePhase.ENDED;
         notifyRolesGameEnd();
         if (plugin.getSidebarManager() != null) {
@@ -286,7 +293,10 @@ public class GameManager {
             playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
         }
 
-        if (elapsedMinutes == rolesAt && phase == GamePhase.PRE_ROLES) {
+        // Transitions en >= (et non ==) : un /vuhc dev setTime qui saute le seuil
+        // déclenche la transition à la minute suivante au lieu de wedge la phase
+        // pour toujours (invincibilité permanente, PvP/jamais activés).
+        if (elapsedMinutes >= rolesAt && phase == GamePhase.PRE_ROLES) {
             assignRolesAndCamps();
             checkInfections();
             announceRoles();
@@ -304,7 +314,7 @@ public class GameManager {
             playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
         }
 
-        if (elapsedMinutes == pvpAt && phase == GamePhase.PRE_PVP) {
+        if (elapsedMinutes >= pvpAt && phase == GamePhase.PRE_PVP) {
             activatePvp();
             plugin.getVoteManager().openVote();
             playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);

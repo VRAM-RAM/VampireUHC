@@ -21,6 +21,15 @@ public interface Role {
     /** Appele une fois, au moment ou le role est attribue a un joueur. */
     void onAssign(VampireUHCPlayer player);
 
+    /**
+     * Variante avec contexte d'assignation : {@code restoring} vaut true quand le rôle
+     * est recréé depuis game-state.json après un redémarrage. Les effets "one-shot"
+     * (kits, soins complets...) ne doivent pas être réappliqués dans ce cas.
+     */
+    default void onAssign(VampireUHCPlayer player, boolean restoring) {
+        onAssign(player);
+    }
+
     /** Appelee quand la partie s'arrete ou est reinitialisee : nettoie les taches planifiees. */
     default void onGameEnd() {
     }

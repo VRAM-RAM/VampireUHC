@@ -62,12 +62,18 @@ public class MasterRole implements Role {
         this.master = player;
 
         // Le Maitre est volontairement fragile : ~8 coeurs au lieu de 10.
-        Player bukkitMaster = Bukkit.getPlayer(player.getUuid());
-        if (bukkitMaster != null) {
-            int hearts = VampireUHC.getInstance().getConfigManager().getMasterStartingHearts();
-            bukkitMaster.setMaxHealth(hearts * 2);
-            bukkitMaster.setHealth(bukkitMaster.getMaxHealth());
-        }
+        // Le max health est posé par RoleBuffManager (autorité centrale) ;
+        // application immédiate ici, sans full heal (le serveur démarre pleine vie).
+        fr.vampireuhc.VampireUHC.getInstance().getBuffManager().refreshMaxHealth(player.getUuid());
+    }
+
+    // Restauration de l'état après un redémarrage.
+    public void restoreState(int lastMarkedEpisode) {
+        this.lastMarkedEpisode = lastMarkedEpisode;
+    }
+
+    public int getLastMarkedEpisode() {
+        return lastMarkedEpisode;
     }
 
     // Maintenant, les pouvoirs spécifiques au maitre :
@@ -78,6 +84,11 @@ public class MasterRole implements Role {
             return false;
         }
         if (target.getCamp() == Camp.VAMPIRE) {
+            return false;
+        }
+        // Pas de marque sur un cadavre : la charge d'épisode serait consommée
+        // pour rien (et infect() s'appliquerait à un mort).
+        if (!target.isAlive()) {
             return false;
         }
         if (lastMarkedEpisode == currentEpisode) {

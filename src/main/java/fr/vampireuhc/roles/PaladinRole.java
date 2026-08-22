@@ -36,7 +36,6 @@ public class PaladinRole implements Role {
             + "  <yellow>• Lumineuse →</yellow> <green>Force légère</green> <gray>(invisible).</gray>\n"
             + "  <gold>• Très lumineuse →</gold> <green>Force + 2 coeurs supplémentaires.</green>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Lorsque vous tuez un vampire, vous gagnez une <yellow>marque lumineuse</yellow>.</gray>\n"
-            + "<dark_purple>▸</dark_purple> <gray>Cela permet de déduire si vos cibles sont vampires !</gray>"
         );
     }
 
@@ -58,7 +57,9 @@ public class PaladinRole implements Role {
     // Pouvoir actif spécifique au paladin : lorsqu'il tue un joueur vampire, il gagne un marqueur lumineux
 
     public boolean gainLuminousMarkerOnKill(MarkerManager markerManager, VampireUHCPlayer killed) {
-        if (paladin == null || !killed.getRole().isVampire()) {
+        // On teste le CAMP (et pas le rôle) : un joueur infecté a le camp VAMPIRE
+        // tout en gardant son rôle villageois, et doit compter comme un vampire.
+        if (paladin == null || killed.getCamp() != Camp.VAMPIRE) {
             return false;
         }
         markerManager.addMarker(paladin.getUuid(), MarkerType.LUMINEUX, paladin.getUuid());
@@ -66,35 +67,15 @@ public class PaladinRole implements Role {
     }
 
     // Effets passifs liés à l'aura. Les effets sont invisibles (sans particules).
+    // Le max health est géré centralement par RoleBuffManager (delta selon le tier) :
+    // ne jamais écrire setMaxHealth ici, sinon les pénalités Cupidon seraient écrasées.
     public void applyAuraEffects(Player player, AuraTier tier) {
         switch (tier) {
-            case TRES_OBSCURE -> {
-                player.setMaxHealth(18);
-                player.addPotionEffect(effect(PotionEffectType.WEAKNESS, 1));
-            }
-            case OBSCURE -> {
-                player.setMaxHealth(20);
-                player.addPotionEffect(effect(PotionEffectType.WEAKNESS, 0));
-            }
-            case NEUTRE -> {
-                player.setMaxHealth(20);
-                player.getActivePotionEffects().forEach(e -> {
-                    if (e.getType() == PotionEffectType.WEAKNESS || e.getType() == PotionEffectType.STRENGTH) {
-                        player.removePotionEffect(e.getType());
-                    }
-                });
-            }
-            case LUMINEUSE -> {
-                player.setMaxHealth(20);
-                player.addPotionEffect(effect(PotionEffectType.STRENGTH, 0));
-            }
-            case TRES_LUMINEUSE -> {
-                player.setMaxHealth(24);
-                player.addPotionEffect(effect(PotionEffectType.STRENGTH, 1));
-            }
-        }
-        if (player.getHealth() > player.getMaxHealth()) {
-            player.setHealth(player.getMaxHealth());
+            case TRES_OBSCURE -> player.addPotionEffect(effect(PotionEffectType.WEAKNESS, 1));
+            case OBSCURE -> player.addPotionEffect(effect(PotionEffectType.WEAKNESS, 0));
+            case NEUTRE -> { }
+            case LUMINEUSE -> player.addPotionEffect(effect(PotionEffectType.STRENGTH, 0));
+            case TRES_LUMINEUSE -> player.addPotionEffect(effect(PotionEffectType.STRENGTH, 1));
         }
     }
 

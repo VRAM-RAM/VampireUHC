@@ -6,9 +6,11 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bukkit.Bukkit;
@@ -24,6 +26,7 @@ import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.world.LootGenerateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Ajustements de gameplay : fonte automatique des minerais, meilleurs loots
@@ -33,6 +36,10 @@ import org.bukkit.scheduler.BukkitRunnable;
 public class GameplayListener implements Listener {
     private final VampireUHC plugin;
     private final Random random = new Random();
+
+    // Timer actif de clamp d'absorption par joueur : on ne crée jamais deux
+    // timers simultanés pour le même joueur (sinon ils s'empilent à chaque pomme).
+    private final Map<UUID, BukkitTask> absorptionClampTasks = new HashMap<>();
 
     private static final Map<Material, ItemStack> AUTO_SMELT = Map.of(
             Material.IRON_ORE, new ItemStack(Material.IRON_INGOT, 1),
@@ -130,19 +137,26 @@ public class GameplayListener implements Listener {
             }
         }, 1L);
 
+        UUID uuid = player.getUniqueId();
+        BukkitTask previous = absorptionClampTasks.remove(uuid);
+        if (previous != null) {
+            previous.cancel();
+        }
+
         AtomicInteger ticks = new AtomicInteger(0);
-        new BukkitRunnable() {
+        absorptionClampTasks.put(uuid, new BukkitRunnable() {
             @Override
             public void run() {
                 int elapsed = ticks.addAndGet(10);
                 if (elapsed >= 20 * 120 || !player.isOnline()) {
                     cancel();
+                    absorptionClampTasks.remove(uuid, this);
                     return;
                 }
                 if (player.getAbsorptionAmount() > 2) {
                     player.setAbsorptionAmount(2);
                 }
             }
-        }.runTaskTimer(plugin, 10L, 10L);
+        }.runTaskTimer(plugin, 10L, 10L));
     }
 }

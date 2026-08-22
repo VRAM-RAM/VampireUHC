@@ -3,9 +3,8 @@ package fr.vampireuhc.game;
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.player.VampireUHCPlayer;
 
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,6 +19,10 @@ import org.bukkit.scoreboard.Scoreboard;
 /**
  * Menu affiché à droite de l'écran pendant la partie : nom du plugin,
  * épisode, temps écoulé et nombre de joueurs en jeu. Rafraîchi chaque seconde.
+ *
+ * Les valeurs affichées sont globales à tous les joueurs : elles sont calculées
+ * une seule fois par tick et les scoreboards ne sont touchés que lorsqu'une
+ * valeur change réellement (aucune allocation par joueur/seconde).
  */
 public class SidebarManager {
     private final VampireUHC plugin;
@@ -28,8 +31,10 @@ public class SidebarManager {
     private static final String OBJECTIVE_NAME = "vuhc_sidebar";
     private static final String TITLE = ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "VampireUHC";
 
-    // Entrées affichées à la dernière mise à jour, pour reset celles qui changent.
-    private final Map<UUID, Set<String>> lastEntries = new HashMap<>();
+    // Lignes affichées lors de la dernière mise à jour (identiques pour tous).
+    private String[] lastLines = null;
+    // Joueurs dont le scoreboard affiche déjà ces lignes.
+    private final Set<UUID> rendered = new HashSet<>();
 
     public SidebarManager(VampireUHC plugin) {
         this.plugin = plugin;
@@ -53,7 +58,8 @@ public class SidebarManager {
                 p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
             }
         }
-        lastEntries.clear();
+        lastLines = null;
+        rendered.clear();
     }
 
     public void update() {
@@ -61,16 +67,33 @@ public class SidebarManager {
         String time = formatTime(plugin.getGameManager().getElapsedSeconds());
         int players = plugin.getPlayerManager().getAll().size();
         int groupsOf = plugin.getGroupsManager().getPeopleByGroups();
+
+        String[] lines = {
+                ChatColor.GRAY + "Groupes de : " + ChatColor.WHITE + groupsOf,
+                ChatColor.GRAY + "Épisode : " + ChatColor.WHITE + episode,
+                ChatColor.GRAY + "Temps : " + ChatColor.WHITE + time,
+                ChatColor.GRAY + "Joueurs : " + ChatColor.WHITE + players,
+                " "
+        };
+
+        boolean changed = lastLines == null || !Arrays.equals(lines, lastLines);
+
         for (VampireUHCPlayer vp : plugin.getPlayerManager().getAll()) {
             Player p = Bukkit.getPlayer(vp.getUuid());
             if (p == null || !p.isOnline()) {
                 continue;
             }
-            apply(p, episode, time, players, groupsOf);
+            if (!changed && rendered.contains(vp.getUuid())) {
+                continue;
+            }
+            apply(p, lines);
+            rendered.add(vp.getUuid());
         }
+
+        lastLines = lines;
     }
 
-    private void apply(Player player, int episode, String time, int players, int groupsOf) {
+    private void apply(Player player, String[] lines) {
         Scoreboard board = player.getScoreboard();
         Objective obj = board.getObjective(OBJECTIVE_NAME);
         if (obj == null) {
@@ -78,30 +101,28 @@ public class SidebarManager {
             obj = board.registerNewObjective(OBJECTIVE_NAME, "dummy", TITLE);
             obj.setDisplaySlot(DisplaySlot.SIDEBAR);
             player.setScoreboard(board);
-        } else {
-            obj.setDisplayName(TITLE);
         }
 
-        Set<String> previous = lastEntries.remove(player.getUniqueId());
-        if (previous != null) {
-            for (String entry : previous) {
-                board.resetScores(entry);
+        // Retire uniquement les anciennes lignes qui n'existent plus.
+        if (lastLines != null) {
+            for (String old : lastLines) {
+                boolean stillUsed = false;
+                for (String line : lines) {
+                    if (line.equals(old)) {
+                        stillUsed = true;
+                        break;
+                    }
+                }
+                if (!stillUsed) {
+                    board.resetScores(old);
+                }
             }
         }
 
-        Set<String> current = new HashSet<>();
-        obj.getScore(ChatColor.GRAY + "Groupes de : " + ChatColor.WHITE + groupsOf).setScore(5);
-        obj.getScore(ChatColor.GRAY + "Épisode : " + ChatColor.WHITE + episode).setScore(4);
-        obj.getScore(ChatColor.GRAY + "Temps : " + ChatColor.WHITE + time).setScore(3);
-        obj.getScore(ChatColor.GRAY + "Joueurs : " + ChatColor.WHITE + players).setScore(2);
-        obj.getScore(" ").setScore(1);
-        current.add(ChatColor.GRAY + "Groupes de : " + ChatColor.WHITE + groupsOf);
-        current.add(ChatColor.GRAY + "Épisode : " + ChatColor.WHITE + episode);
-        current.add(ChatColor.GRAY + "Temps : " + ChatColor.WHITE + time);
-        current.add(ChatColor.GRAY + "Joueurs : " + ChatColor.WHITE + players);
-        current.add(" ");
-
-        lastEntries.put(player.getUniqueId(), current);
+        int score = lines.length;
+        for (String line : lines) {
+            obj.getScore(line).setScore(score--);
+        }
     }
 
     private String formatTime(long seconds) {
