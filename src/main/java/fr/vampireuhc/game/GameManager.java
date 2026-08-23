@@ -332,8 +332,18 @@ public class GameManager {
         // Annonce du début de chaque épisode.
         int episodeLength = configManager.getEpisodeLength();
         if (episodeLength > 0 && elapsedMinutes > 0 && elapsedMinutes % episodeLength == 0) {
-            broadcast("<dark_purple>Début de l'épisode <white>" + (elapsedMinutes / episodeLength + 1) + "</white> !</dark_purple>");
+            int newEpisode = elapsedMinutes / episodeLength + 1;
+            broadcast("<dark_purple>Début de l'épisode <white>" + newEpisode + "</white> !</dark_purple>");
             playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
+
+            // Hook générique : chaque rôle décide s'il réagit à un début
+            // d'épisode (ex : le cri de la Banshee). Boucle identique à
+            // notifyRolesGameEnd(), GameManager reste agnostique des rôles.
+            for (VampireUHCPlayer p : playerManager.getAll()) {
+                if (p.getRole() != null) {
+                    p.getRole().onEpisodeStart(newEpisode);
+                }
+            }
         }
 
         if (plugin.getBuffManager() != null) {

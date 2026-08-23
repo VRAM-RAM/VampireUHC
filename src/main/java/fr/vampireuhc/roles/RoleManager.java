@@ -33,6 +33,7 @@ public class RoleManager {
         RoleType.SAND_MERCHANT,
         RoleType.GRAVE_DIGGER,
         RoleType.WHITE_LADY,
+        RoleType.BANSHEE,
         RoleType.ARCHER
     );
 
@@ -181,6 +182,9 @@ public class RoleManager {
 
             case RoleType.SAND_MERCHANT:
                 return new SandMerchantRole(player);
+
+            case RoleType.BANSHEE:
+                return new BansheeRole();
 
             default:
                 plugin.getLogger().warning("Rôle inconnu : " + type);
@@ -559,9 +563,7 @@ public class RoleManager {
             case "Salvateur": return RoleType.SAVIOR;
             case "Paladin": return RoleType.PALADIN;
             case "Cupidon": return RoleType.CUPIDON;
-            // Alias "Apprenti Chasseur" conservé pour les vieilles sauvegardes.
-            case "Apprentie Assassin":
-            case "Apprenti Chasseur": return RoleType.APPRENTICE_SLAYER;
+            case "Apprenti Assassin": return RoleType.APPRENTICE_SLAYER;
             case "Gremlin": return RoleType.GREMLIN;
             case "Peseuse d'âmes": return RoleType.SOUL_WEIGHTER;
             case "Tisseur": return RoleType.WEAVER;
@@ -570,6 +572,7 @@ public class RoleManager {
             case "Archer": return RoleType.ARCHER;
             case "Fossoyeur": return RoleType.GRAVE_DIGGER;
             case "Dame Blanche": return RoleType.WHITE_LADY;
+            case "Banshee": return RoleType.BANSHEE;
             default: return null;
         }
     }

@@ -14,6 +14,7 @@ public enum RoleType {
     ARCHER, // Archer
     GRAVE_DIGGER, // Fossoyeur
     WHITE_LADY, // Dame Blanche
+    BANSHEE, // Banshee
     GREMLIN; //Le Gremlin
     
     public static RoleType fromString(String value) {

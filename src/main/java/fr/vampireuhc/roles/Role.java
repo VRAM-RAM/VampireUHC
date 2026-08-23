@@ -34,6 +34,13 @@ public interface Role {
     default void onGameEnd() {
     }
 
+    /**
+     * Appelé à chaque début d'épisode (à la frontière : épisodes 2+, jamais
+     * pendant l'épisode 1). Le numéro passé correspond à l'épisode qui démarre.
+     */
+    default void onEpisodeStart(int episode) {
+    }
+
     // Retourne la description du role.
     public Component getDescription();
 }
