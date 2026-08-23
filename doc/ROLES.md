@@ -4,8 +4,8 @@ Les rôles ne doivent pas simplement révéler des informations directes.
 
 Le but est l'interprétation.
 
-Progression : ~55 % (9 rôles villageois, 2 rôles vampire soit 5 joueurs vampires, 2 rôles solitaires => 16 joueurs).
-Il manque donc 7-9 rôles villageois, un rôles solitaire et un rôles vampires (peut être le traitre vampire?!).
+Progression : ~70 % (11 rôles villageois, 2 rôles vampire soit 5 joueurs vampires, 2 rôles solitaires, et un rôle hybride => 19 joueurs).
+Il manque donc 4-5 rôles villageois et un rôle vampire.
 
 ## Sommaire
 
@@ -23,6 +23,8 @@ Il manque donc 7-9 rôles villageois, un rôles solitaire et un rôles vampires 
   * [Cartographe](#cartographe)
   * [Marchand de Sable](#marchand-de-sable)
   * [Archer](#archer)
+  * [Baba Yaga](#baba-yaga)
+  * [Banshee](#banshee)
 
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)
@@ -241,7 +243,7 @@ Chaque épisode, il peut, à l'aide de la commande `/vuhc ensabler <joueur>`, d�
 
 À la mort du Marchand de Sable, toutes les personnes possédant un marqueur sable subissent un effet de blindness pendant 30 secondes, et un effet de lenteur pendant 3 minutes.
 
-> [!WARNING] L'aura d'un marqueur est fixe. Si, par exemple, Bob place un marqueur Sable sur Alice qui est villageoise, le marqueur prendra une aura lumineuse. Si le gremlin switch les marqueurs d'Alice et Majory, qui est vampire, ce dernier recevra le marqueur sable avec une aura lumineuse et non neutre.
+> [!WARN] L'aura d'un marqueur est fixe. Si, par exemple, Bob place un marqueur Sable sur Alice qui est villageoise, le marqueur prendra une aura lumineuse. Si le gremlin switch les marqueurs d'Alice et Majory, qui est vampire, ce dernier recevra le marqueur sable avec une aura lumineuse et non neutre.
 
 #### Archer
 
@@ -260,12 +262,22 @@ Lorsqu'un joueur meurt, elle reçoit un message cliquable qui lui permet de le r
 Si elle le fait, le joueur ressuscite avec tous ses pouvoirs et doit toujours gagner avec son camp, mais :
 
 - s'il était un vampire : Baba Yaga subit un effet léger (et invisible à ses yeux) de faiblesse permanente
-- si Baba Yaga meurt, la personne qu'elle a ressuscité meurt également
+- si Baba Yaga meurt, la personne qu'elle a ressuscité meurt également (sauf s'il est solitaire !)
 
 \
 *Malédiction (à usage unique)* :
 \
 À l'aide la commande `/vuhc maudire <joueur>`, Baba Yaga peut maudire un joueur. Ce dernier voit ses pommes d'or ne lui conférer aucun coeur d'absorption pendant 10 minutes.
+
+#### Banshee
+
+La **Banshee** est un rôle villageois à info qui s'apparente au Montreur d'Ours en loup-garou UHC.
+À chaque début d'épisode, un message est envoyé à tous les joueurs. Le contenu de ce message dépend du nombre d'auras obscures qui se trouvent dans un rayon de *50* blocs autour d'elle.
+
+- Aucune aura obscure : Pas de message
+- 1-2 auras obscures : `La Banshee pleure...`
+- 3+ : `La Banshee pousse un cri effrayant !`
+
 ## Solitaires
 
 Les rôles solitaires gagnent tout seuls. Ils doivent éliminer l'intégralité de la partie.
