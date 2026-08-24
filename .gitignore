@@ -17,3 +17,12 @@ build
 
 # Mon rapport de bugs (corrigés depuis)
 BUGS_REPORT.md
+
+# Pour la 26.2
+/26.2/build
+/26.2/.gradle
+/26.2/bin
+/26.2/.kotlin
+
+# Pour la 1.8.9
+spigot-1.8.8.jar

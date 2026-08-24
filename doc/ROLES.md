@@ -4,8 +4,8 @@ Les rôles ne doivent pas simplement révéler des informations directes.
 
 Le but est l'interprétation.
 
-Progression : ~70 % (11 rôles villageois, 2 rôles vampire soit 5 joueurs vampires, 2 rôles solitaires, et un rôle hybride => 19 joueurs).
-Il manque donc 4-5 rôles villageois et un rôle vampire.
+Progression : ~70 % (12 rôles villageois, 2 rôles vampire soit 5 joueurs vampires, 2 rôles solitaires, et un rôle hybride => 19 joueurs).
+Il manque donc 3-4 rôles villageois et un rôle vampire.
 
 ## Sommaire
 
