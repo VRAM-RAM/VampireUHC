@@ -32,6 +32,8 @@ import fr.vampireuhc.roles.SaviorRole;
 import fr.vampireuhc.roles.SoulweigherRole;
 import fr.vampireuhc.roles.VampireMinion;
 import fr.vampireuhc.roles.WeaverRole;
+import fr.vampireuhc.roles.ExorcistRole;
+
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,7 +75,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> PLAYER_SUBCOMMANDS = Arrays.asList(
             "role", "spectate", "marquer", "trancher", "proteger", "voter",
-            "switch", "drain", "lier", "peser", "tisser", "baliser", "ensabler", "exhumer");
+            "switch", "drain", "lier", "peser", "tisser", "baliser", "ensabler", "exhumer", "exorciser");
     private static final List<String> ADMIN_SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "status");
     private static final List<String> DEV_SUBCOMMANDS = Arrays.asList("setTime", "setRole", "who", "aura");
 
@@ -146,6 +148,39 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 } else {
                     player.sendMessage(MessageUtil.info("Vous n'avez aucun rôle pour l'instant."));
                 }
+                return;
+            }
+
+            case "exorciser": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
+                    return;
+                }
+
+                if (args.length < 2) {
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc exorciser <joueur>"));
+                    return;
+                }
+
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
+                    return;                
+                } 
+
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+                if (!(localPlayer != null && localPlayer.getRole() instanceof ExorcistRole exorcist)) {
+                    return;
+                }
+
+                VampireUHCPlayer targetPlayer = playerManager.get(target.getUniqueId());
+
+                if (targetPlayer == null) {
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
+                    return;
+                }
+
+                exorcist.exorcisePlayer(targetPlayer, markerManager);
                 return;
             }
 
@@ -727,7 +762,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
             if ((sub.equals("marquer") || sub.equals("proteger") || sub.equals("voter")
                     || sub.equals("switch") || sub.equals("lier") || sub.equals("peser")
-                    || sub.equals("tisser") || sub.equals("spectate") || sub.equals("ensabler")) && hasAccess(sender, sub)) {
+                    || sub.equals("tisser") || sub.equals("spectate") || sub.equals("ensabler")) || sub.equals("exorciser") && hasAccess(sender, sub)) {
                 return playersStartingWith(args[1]);
             }
             return new ArrayList<>();
@@ -752,6 +787,8 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 return hasRole(sender, CartographerRole.class);
             case "role":
                 return true;
+            case "exorciser":
+                return hasRole(sender, ExorcistRole.class);
             case "exhumer":
                 return hasRole(sender, GravediggerRole.class);
             case "ensabler":
@@ -866,6 +903,9 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         }
         if (hasAccess(sender, "ensabler")) {
             sender.sendMessage(MessageUtil.helpEntry("/vuhc ensabler <joueur>", "Ensabler un joueur (Mar. de Sable)"));
+        }
+        if (hasAccess(sender, "exorciser")) {
+            sender.sendMessage(MessageUtil.helpEntry("/vuhc exorciser <joueur>", "Exorciser un joueur (Une seule fois par joueur)"));
         }
         if (hasAccess(sender, "exhumer")) {
             sender.sendMessage(MessageUtil.helpEntry("/vuhc exhumer", "Tenter d'exhumer le cadavre d'un défunt à votre position."));

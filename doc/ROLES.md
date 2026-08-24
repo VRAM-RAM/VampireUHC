@@ -25,6 +25,7 @@ Il manque donc 4-5 rôles villageois et un rôle vampire.
   * [Archer](#archer)
   * [Baba Yaga](#baba-yaga)
   * [Banshee](#banshee)
+  * [L'Exorciste](#lexorciste)
 
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)
@@ -245,13 +246,13 @@ Chaque épisode, il peut, à l'aide de la commande `/vuhc ensabler <joueur>`, d�
 
 > [!WARN] L'aura d'un marqueur est fixe. Si, par exemple, Bob place un marqueur Sable sur Alice qui est villageoise, le marqueur prendra une aura lumineuse. Si le gremlin switch les marqueurs d'Alice et Majory, qui est vampire, ce dernier recevra le marqueur sable avec une aura lumineuse et non neutre.
 
-#### Archer
+### Archer
 
 L'archer est un rôle villageois pur pvp.
 À l'annonce des rôles, il reçoit un arc *infinity* et *unbreaking III*. 
 Il possède également un pouvoir passif : lorsqu'il tire et atteint quelqu'un, cette personne obtient un effet de glowing (visible seulement par l'archer) durant **15** secondes.
 
-#### Baba Yaga 
+### Baba Yaga 
 
 **Baba Yaga** possède deux pouvoirs : sa résurrection et sa malédiction.
 \
@@ -269,7 +270,7 @@ Si elle le fait, le joueur ressuscite avec tous ses pouvoirs et doit toujours ga
 \
 À l'aide la commande `/vuhc maudire <joueur>`, Baba Yaga peut maudire un joueur. Ce dernier voit ses pommes d'or ne lui conférer aucun coeur d'absorption pendant 10 minutes.
 
-#### Banshee
+### Banshee
 
 La **Banshee** est un rôle villageois à info qui s'apparente au Montreur d'Ours en loup-garou UHC.
 À chaque début d'épisode, un message est envoyé à tous les joueurs. Le contenu de ce message dépend du nombre d'auras obscures qui se trouvent dans un rayon de *50* blocs autour d'elle.
@@ -277,6 +278,10 @@ La **Banshee** est un rôle villageois à info qui s'apparente au Montreur d'Our
 - Aucune aura obscure : Pas de message
 - 1-2 auras obscures : `La Banshee pleure...`
 - 3+ : `La Banshee pousse un cri effrayant !`
+
+### L'Exorciste
+
+L'**Exorciste** est un rôle villageois puissant. A chaque épisode, à l'aide de la commande `/vuhc exorciser <Joueur>`, il peut supprimer l'ensemble des marqueurs obscurs d'un joueur, et connaître l'ensemble des marqueurs obscurs que possédait le joueur (utilisable une seule fois par joueur au cours de la partie).
 
 ## Solitaires
 

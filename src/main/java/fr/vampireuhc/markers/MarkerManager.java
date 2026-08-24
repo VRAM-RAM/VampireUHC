@@ -1,9 +1,11 @@
 package fr.vampireuhc.markers;
 
+import fr.vampireuhc.markers.TightAuraTier;
 import fr.vampireuhc.VampireUHC;
 
 import java.util.*;
 
+import fr.vampireuhc.markers.Marker;
 import org.bukkit.entity.Player;
 
 public class MarkerManager {
@@ -73,6 +75,23 @@ public class MarkerManager {
         return getMarkers(target).stream()
                 .filter(marker -> marker.getType() == type)
                 .toList();
+    }
+
+    public List<MarkerType> getMarkerTypeOfAura(UUID target, TightAuraTier tier) {
+        Aura aura = tier.toAura();
+        return getMarkers(target).stream()
+                .filter(marker -> marker.getAura() == aura)
+                .map(Marker::getType)
+                .toList();        
+    }
+
+
+    public void clearMarkersOfAura(UUID target, Aura aura) {
+        List<Marker> list = markersByPlayer.get(target);
+
+        if (list != null) {
+            list.removeIf(marker -> marker.getAura() == aura);
+        }
     }
 
     public void clearMarkersOfType(UUID target, MarkerType type) {
