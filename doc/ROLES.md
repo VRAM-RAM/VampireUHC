@@ -279,6 +279,16 @@ La **Banshee** est un rôle villageois à info qui s'apparente au Montreur d'Our
 - 1-2 auras obscures : `La Banshee pleure...`
 - 3+ : `La Banshee pousse un cri effrayant !`
 
+### Le Veilleur
+
+Le **veilleur** est un rôle villageois à information mineure. Il peut, à chaque épisode, inspecter aléatoirement un des marqueurs que possède le joueur ciblé (se trouvant dans un rayon de 20 blocs autour de lui), à l'aide de la commande :
+\
+```mc
+/vuhc veiller <joueur>
+```
+
+Il ne peut pas *veiller* le même joueur deux fois de suite, et peut se *veiller* lui-même.
+
 ### L'Exorciste
 
 L'**Exorciste** est un rôle villageois puissant. A chaque épisode, à l'aide de la commande `/vuhc exorciser <Joueur>`, il peut supprimer l'ensemble des marqueurs obscurs d'un joueur, et connaître l'ensemble des marqueurs obscurs que possédait le joueur (utilisable une seule fois par joueur au cours de la partie).

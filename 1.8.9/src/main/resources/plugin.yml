@@ -1,0 +1,16 @@
+name: VampireUHC
+version: '1.0.0'
+main: fr.vampireuhc.VampireUHC
+api-version: '26.2'
+description: UHC a mecanique de marqueurs/auras inspire du Loup-Garou UHC
+author: Olruix (VRAM-RAM on github)
+
+commands:
+  vuhc:
+    description: Main command for VampireUHC plugin
+    usage: /vuhc [role|spectate|marquer|trancher|proteger|voter|switch|drain|lier|peser|admin|dev]
+
+permissions:
+  vuhc.admin:
+    description: Permet de lancer, arrêter et réinitialiser la partie
+    default: op

@@ -36,9 +36,9 @@ Les deux versions ont des builds différents, et sont parfaitement indépendante
 \
 Cependant, le mode de jeu est exactement le même, la config est également très similaire. Seules certaines différences existent.
 
-Si vous êtes intéressé par la version `26.2`, en voici la [doc technique](/doc/26.2.md).
+Si vous êtes intéressé par la version `26.2`, en voici le [readme](/26.2/README.md).
 \
-Si vous êtes intéressé par la version `1.8.9`, en voici la [doc technique](/doc/1.8.9.md).
+Si vous êtes intéressé par la version `1.8.9`, en voici la [readme](/1.8.9/README.md)..
 
 ## Concept
 

@@ -1,0 +1,82 @@
+# Timeline configuration
+timeline:
+  role-assignment-at: 20        # Rôles distribués à 20 minutes
+  pvp-activation-at: 45         # PVP activé à 45 minutes
+  episode-length: 20            # Durée d'un épisode (20 min)
+
+# Composition configuration
+compo:
+  reference-player-count: 28    # Nombre de joueurs de référence pour le calcul des camps
+  vampire-min: 6                # Minimum de vampires
+  vampire-max: 8                # Maximum de vampires
+  solo-min: 1                   # Minimum de rôles solitaires
+  solo-max: 2                   # Maximum de rôles solitaires
+  vote-every-minutes: 10        # Les vampires votent pour une marque toutes les X minutes
+
+# Map configuration
+map:
+  size: 1000                    # Taille de la map (carré, centrée sur 0;0)
+  seed: 0                       # Seed de génération (0 = seed aléatoire du serveur)
+  dark-forest-radius: 400       # Rayon de la forêt sombre garantie autour de 0;0
+  spawn-radius: 350             # Rayon du disque dans lequel les joueurs sont éparpillés au début
+  min-spawn-distance: 25        # Distance minimale entre deux joueurs au début de la partie
+  pregen-chunks-per-tick: 8     # Chunks demandés par tick pendant la pré-génération du disque d'éparpillement (lancée au /vuhc start)
+  ores:                         # Minerais supplémentaires générés dans les caves (par chunk)
+    iron-per-chunk: 6           #   Minerai de fer (Y < 64)
+    gold-per-chunk: 4           #   Minerai d'or (Y < 32)
+    diamond-per-chunk: 2        #   Minerai de diamant (Y < 16)
+
+# Gameplay configuration
+gameplay:
+  auto-smelt: true              # Fonte automatique des minerais (fer, or, débris antiques...)
+  better-loot: true             # Meilleurs loots (plus d'or, de cuir, de pommes)
+  apple-drop-chance: 0.05       # Chance qu'une feuille casse donne une pomme
+  leather-bonus: 2              # Nombre de cuirs bonus par vache tuée
+
+# Game lifecycle configuration
+game:
+  countdown-seconds: 30         # Durée du compte à rebours de /vuhc start (secondes)
+  disconnect-grace-minutes: 10  # Temps de grâce avant élimination après une déconnexion
+  starting-kit: true            # Kit de départ (pioche/hache/épée en pierre + nourriture)
+
+# UHC rules configuration
+rules:
+  no-natural-regen: true        # Pas de régénération naturelle de vie
+  beds-blocked: true            # Les lits sont interdits
+  nether-end-blocked: true      # Nether et End désactivés
+
+# Vampire configuration
+vampires:
+  day-weakness: true            # Faiblesse des vampires le jour (désactivable)
+  marks-to-remove-weakness: 2   # A partir de X joueurs marqués, perte de la faiblesse
+  marks-for-night-strength: 4   # A partir de nX joueurs marqués, force la nuit
+  master:
+    starting-hearts: 8          # Coeurs initiaux du Maître Vampire
+    marks-to-infect: 3          # Nombre de marques nécessaires pour infecter un joueur
+
+# Marker configuration
+markers:
+  cupidon:
+    notify-delay-min-seconds: 0      # Délai minimum avant notification Cupidon (secondes)
+    notify-delay-max-seconds: 600    # Délai maximum avant notification Cupidon (secondes)
+  amour-death:
+    hearts-lost: 5                   # Coeurs perdus quand l'amour meurt
+    duration-seconds: 600            # Durée du penalty (secondes)
+
+# Messages configuration
+messages:
+  prefix: "&5&lVampireUHC &8» &r"   # Préfixe utilisé dans tous les messages
+
+# Administrateurs autorisés à lancer, arrêter ou réinitialiser la partie
+admins:
+  players:
+    - "Pseudo1"
+    - "Pseudo2"
+
+# Apprentie assassin configuration
+solo:
+  slayer:
+    dark-threshold: 3          # Plus de X marqueurs obscurs --> force légère la nuit
+    light-threshold: 3         # Plus de X marqueurs lumineux --> force légère le jour
+    dark-high-threshold: 6     # Plus de nX marqueurs obscurs --> force + régénération la nuit
+    light-high-threshold: 6    # Plus de nX marqueurs lumineux --> force + régénération le jour
