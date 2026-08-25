@@ -7,8 +7,6 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.List;
 import org.bukkit.entity.Player;
@@ -29,14 +27,13 @@ public class ApprenticeSlayer implements Role {
     }
 
     @Override
-    public Component getDescription() {
+    public String getDescription() {
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int darkThreshold = config.getSlayerDarkThreshold();
         int lightThreshold = config.getSlayerLightThreshold();
         int darkHighThreshold = config.getSlayerDarkHighThreshold();
         int lightHighThreshold = config.getSlayerLightHighThreshold();
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+        return (
             "<light_purple>Vous gagnez seule en éliminant tous les autres joueurs.</light_purple>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>À chaque kill, vous récupérez les marqueurs du joueur tué (sauf les marques Maître, d'Amour et de Fil).</gray>\n\n"
             + "<bold><dark_purple>Pouvoirs cumulatifs :</dark_purple></bold>\n"
@@ -74,7 +71,7 @@ public class ApprenticeSlayer implements Role {
                 .filter(marker -> marker.getType() != MarkerType.MARQUE_MAITRE)
                 .filter(marker -> marker.getType() != MarkerType.AMOUR)
                 .filter(marker -> marker.getType() != MarkerType.FIL)
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
         manager.addMarkers(slayer.getUuid(), markers);
         return true;
     }
@@ -100,7 +97,7 @@ public class ApprenticeSlayer implements Role {
 
     // Effets passifs selon les marques portées (effets invisibles, sans particules).
     public void applyMarkerEffects(Player player, boolean night, int darkCount, int lightCount) {
-        var config = fr.vampireuhc.VampireUHC.getInstance().getConfigManager();
+        ConfigManager config = fr.vampireuhc.VampireUHC.getInstance().getConfigManager();
         boolean darkStrength = darkCount >= config.getSlayerDarkThreshold();
         boolean lightStrength = lightCount >= config.getSlayerLightThreshold();
         boolean darkRegen = darkCount >= config.getSlayerDarkHighThreshold();
@@ -108,22 +105,22 @@ public class ApprenticeSlayer implements Role {
 
         if (night) {
             if (darkRegen) {
-                player.addPotionEffect(effect(PotionEffectType.STRENGTH, 1));
+                player.addPotionEffect(effect(PotionEffectType.INCREASE_DAMAGE, 1));
                 player.addPotionEffect(effect(PotionEffectType.REGENERATION, 0));
             } else if (darkStrength) {
-                player.addPotionEffect(effect(PotionEffectType.STRENGTH, 0));
+                player.addPotionEffect(effect(PotionEffectType.INCREASE_DAMAGE, 0));
             }
         } else {
             if (lightRegen) {
-                player.addPotionEffect(effect(PotionEffectType.STRENGTH, 1));
+                player.addPotionEffect(effect(PotionEffectType.INCREASE_DAMAGE, 1));
                 player.addPotionEffect(effect(PotionEffectType.REGENERATION, 0));
             } else if (lightStrength) {
-                player.addPotionEffect(effect(PotionEffectType.STRENGTH, 0));
+                player.addPotionEffect(effect(PotionEffectType.INCREASE_DAMAGE, 0));
             }
         }
     }
 
     private PotionEffect effect(PotionEffectType type, int amplifier) {
-        return new PotionEffect(type, 20 * 95, amplifier, true, false, false);
+        return new PotionEffect(type, 20 * 95, amplifier, true, false);
     }
 }

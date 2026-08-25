@@ -1,13 +1,13 @@
 package fr.vampireuhc.roles;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import fr.vampireuhc.markers.AuraTier;
 
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.config.MessageUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class SoulweigherRole implements Role {
 
@@ -38,9 +38,8 @@ public class SoulweigherRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+    public String getDescription() {
+        return (
             "<gray>Vous pesez l'aura de deux joueurs pour déceler les différences.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Commande : <gold>/vuhc peser <joueur1> <joueur2></gold></gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>Utilisable à chaque épisode.</gray>\n\n"
@@ -62,17 +61,17 @@ public class SoulweigherRole implements Role {
         }
         // Une seule pesée par épisode (sinon brute-force des auras par paires).
         if (lastWeightEpisode == currentEpisode) {
-            var bukkitWeighter = Bukkit.getPlayer(soulWeighter.getUuid());
+            Player bukkitWeighter = Bukkit.getPlayer(soulWeighter.getUuid());
             if (bukkitWeighter != null) {
                 bukkitWeighter.sendMessage(MessageUtil.error("Vous avez déjà pesé des âmes cet épisode."));
             }
             return false;
         }
 
-        var auraOfFirstTarget = manager.computeAuraTier(targetOne.getUuid());
-        var auraOfSecondTarget = manager.computeAuraTier(targetTwo.getUuid());
+        AuraTier auraOfFirstTarget = manager.computeAuraTier(targetOne.getUuid());
+        AuraTier auraOfSecondTarget = manager.computeAuraTier(targetTwo.getUuid());
 
-        var bukkitPlayer = Bukkit.getPlayer(soulWeighter.getUuid());
+        Player bukkitPlayer = Bukkit.getPlayer(soulWeighter.getUuid());
         if (bukkitPlayer == null) {
             return false;
         }

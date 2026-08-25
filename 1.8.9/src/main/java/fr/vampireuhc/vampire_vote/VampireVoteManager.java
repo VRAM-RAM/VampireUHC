@@ -13,9 +13,8 @@ import java.util.*;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.format.TextColor;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 
 public class VampireVoteManager {
     private final VampireUHC plugin;
@@ -51,17 +50,16 @@ public class VampireVoteManager {
         }
 
         VoteResult result = resolveVote();
-        switch (result) {
-            case VoteResult.Winner w -> {
-                // Un vainqueur supersède un éventuel tie resté pendant.
-                pendingTie = null;
-                applyVampireMark(w.playerId());
-                sendVoteFeedback(w.playerId());
-            }
-            case VoteResult.Tie t -> {
-                masterResolves(t);
-                sendTieFeedback(t);
-            }
+        if (result instanceof VoteResult.Winner) {
+            // Un vainqueur supersède un éventuel tie resté pendant.
+            VoteResult.Winner w = (VoteResult.Winner) result;
+            pendingTie = null;
+            applyVampireMark(w.playerId());
+            sendVoteFeedback(w.playerId());
+        } else if (result instanceof VoteResult.Tie) {
+            VoteResult.Tie t = (VoteResult.Tie) result;
+            masterResolves(t);
+            sendTieFeedback(t);
         }
         voteByPlayer.clear();
         voters.clear();
@@ -91,9 +89,9 @@ public class VampireVoteManager {
                     List<UUID> tied = voteByPlayer.entrySet().stream()
                             .filter(e -> e.getValue().equals(max.getValue()))
                             .map(Map.Entry::getKey)
-                            .toList();
+                            .collect(java.util.stream.Collectors.toList());
                     return tied.size() == 1
-                            ? new VoteResult.Winner(tied.getFirst())
+                            ? new VoteResult.Winner(tied.get(0))
                             : new VoteResult.Tie(tied);
                 })
                 .orElseThrow(() -> new IllegalStateException("Aucun vote enregistré."));
@@ -156,10 +154,14 @@ public class VampireVoteManager {
             Player bukkit = Bukkit.getPlayer(id);
             String name = nameOf(id);
 
-            Component line = Component.text(" » ", TextColor.color(0xAAAAAA))
-                    .append(Component.text(name, TextColor.color(0xFFFF55))
-                            .clickEvent(ClickEvent.runCommand("/vuhc trancher " + (bukkit != null ? bukkit.getName() : name))));
-            master.sendMessage(line);
+            TextComponent line = new TextComponent(" » ");
+            line.setColor(net.md_5.bungee.api.ChatColor.GRAY);
+            TextComponent nameComp = new TextComponent(name);
+            nameComp.setColor(net.md_5.bungee.api.ChatColor.YELLOW);
+            nameComp.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+                    "/vuhc trancher " + (bukkit != null ? bukkit.getName() : name)));
+            line.addExtra(nameComp);
+            master.spigot().sendMessage(line);
         }
     }
 
@@ -231,7 +233,7 @@ public class VampireVoteManager {
         return markedHolders();
     }
 
-    private void broadcastToVampires(Component message) {
+    private void broadcastToVampires(String message) {
         for (VampireUHCPlayer player : plugin.getPlayerManager().getAll()) {
             if (player.getRole() instanceof VampireMinion && player.isAlive()) {
                 Player p = Bukkit.getPlayer(player.getUuid());

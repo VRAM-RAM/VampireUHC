@@ -14,14 +14,15 @@ import fr.vampireuhc.roles.WhiteLadyRole;
 
 import java.util.List;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.ChatColor;
 
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
 /**
@@ -36,6 +37,38 @@ public class PlayerDeathListener implements Listener {
         this.plugin = plugin;
     }
 
+    // Résurrection de la Dame Blanche : en 1.8, PlayerDeathEvent n'est pas
+    // annulable. On intercepte donc le coup fatal (EntityDamageEvent) juste
+    // avant la mort et on l'annule si la Dame doit se relever.
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onLethalDamage(EntityDamageEvent event) {
+        if (!(event.getEntity() instanceof Player)) {
+            return;
+        }
+        Player victim = (Player) event.getEntity();
+
+        VampireUHCPlayer vp = plugin.getPlayerManager().get(victim.getUniqueId());
+        if (vp == null || !vp.isAlive()
+                || !(vp.getRole() instanceof WhiteLadyRole)) {
+            return;
+        }
+
+        double finalHealth = victim.getHealth() - event.getFinalDamage();
+        if (finalHealth > 0) {
+            return; // coup non létal
+        }
+
+        Player killer = victim.getKiller();
+        VampireUHCPlayer killerVp = killer != null ? plugin.getPlayerManager().get(killer.getUniqueId()) : null;
+
+        WhiteLadyRole whiteLady = (WhiteLadyRole) vp.getRole();
+        if (whiteLady.onDeath(killerVp)) {
+            event.setCancelled(true);
+            victim.setHealth(victim.getMaxHealth());
+            plugin.getMapManager().teleportPlayerRandomly(victim);
+        }
+    }
+
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player victim = event.getEntity();
@@ -48,16 +81,11 @@ public class PlayerDeathListener implements Listener {
         Player killer = victim.getKiller();
         VampireUHCPlayer killerVp = killer != null ? plugin.getPlayerManager().get(killer.getUniqueId()) : null;
 
-        if (vp.getRole() instanceof WhiteLadyRole whiteLady) {
-            if (whiteLady.onDeath(killerVp)) {
-                event.setCancelled(true);
-                plugin.getMapManager().teleportPlayerRandomly(victim);
-                return;
-            }
-        }
+        // NB : la résurrection de la Dame Blanche est gérée en amont dans
+        // onLethalDamage() — PlayerDeathEvent n'est pas annulable en 1.8.
         vp.setDead();
 
-        Location location = victim.getLastDeathLocation();
+        Location location = victim.getLocation(); // pas de getLastDeathLocation en 1.8 : la mort EST la position courante
         
         MarkerManager markerManager = plugin.getMarkerManager();
 
@@ -69,17 +97,18 @@ public class PlayerDeathListener implements Listener {
         });
 
 
-        Component message = Component.text(victim.getName(), NamedTextColor.RED)
-                .append(Component.text(" est mort", NamedTextColor.GRAY));
+        String message = ChatColor.RED + victim.getName()
+                + ChatColor.GRAY + " est mort";
         if (killer != null) {
-            message = message.append(Component.text(", tué par ", NamedTextColor.GRAY))
-                    .append(Component.text(killer.getName(), NamedTextColor.GOLD));
+            message += ChatColor.GRAY + ", tué par "
+                    + ChatColor.GOLD + killer.getName();
         }
-        event.deathMessage(message);
+        event.setDeathMessage(message);
 
         if (killerVp != null) {
             // Le Paladin gagne une marque lumineuse en tuant un vampire.
-            if (killerVp.getRole() instanceof PaladinRole paladin) {
+            if (killerVp.getRole() instanceof PaladinRole) {
+                PaladinRole paladin = (PaladinRole) killerVp.getRole();
                 paladin.gainLuminousMarkerOnKill(plugin.getMarkerManager(), vp);
             }
         }
@@ -93,10 +122,12 @@ public class PlayerDeathListener implements Listener {
         // que l'Apprentie assassin ne récupère les marques, sinon ils voient un état tronqué.
         for (VampireUHCPlayer p : plugin.getPlayerManager().getAll()) {
             // En cas de mort d'un membre du couple
-            if (p.getRole() instanceof CupidonRole cupidon) {
+            if (p.getRole() instanceof CupidonRole) {
+                CupidonRole cupidon = (CupidonRole) p.getRole();
                 cupidon.onLoverDeath(plugin.getMarkerManager(), vp, killer);
             }
-            if (p.getRole() instanceof WeaverRole weaver) {
+            if (p.getRole() instanceof WeaverRole) {
+                WeaverRole weaver = (WeaverRole) p.getRole();
                 if (p.getUuid().equals(vp.getUuid())) {
                     // Le Tisseur meurt : sa toile s'effondre avec lui.
                     weaver.collapseWeb(markerManager);
@@ -106,24 +137,25 @@ public class PlayerDeathListener implements Listener {
                     weaver.tryInformMurderByNodeOfWeb(markerManager, killerVp);
                 }
             }
-            if (p.getRole() instanceof GravediggerRole graveDigger) {
+            if (p.getRole() instanceof GravediggerRole) {
+                GravediggerRole graveDigger = (GravediggerRole) p.getRole();
                 List<MarkerType> markers = markerManager.getMarkerTypesByPlayer(vp.getUuid());
                 graveDigger.spawnParticlesAtLocation(location, markers);
             }
 
-            if (p.getRole() instanceof WhiteLadyRole whiteLady) {
-                whiteLady.killedKiller(victim);
+            if (p.getRole() instanceof WhiteLadyRole) {
+                ((WhiteLadyRole) p.getRole()).killedKiller(victim);
             }
         }
 
         // à la mort du marchand de sable, tous les joueurs marqués par un marqueur sable deviennent ensommeillés.
-        if (vp.getRole() instanceof SandMerchantRole sandMerchant) {
-            sandMerchant.makePlayersSleepOnMarchantDeath(markerManager);
+        if (vp.getRole() instanceof SandMerchantRole) {
+            ((SandMerchantRole) vp.getRole()).makePlayersSleepOnMarchantDeath(markerManager);
         }
-        
+
         // L'Apprentie assassin récupère les marques (sauf Maître) du tué.
-        if (killerVp != null && killerVp.getRole() instanceof ApprenticeSlayer slayer) {
-            slayer.CopyMarkersOnKill(plugin.getMarkerManager(), vp);
+        if (killerVp != null && killerVp.getRole() instanceof ApprenticeSlayer) {
+            ((ApprenticeSlayer) killerVp.getRole()).CopyMarkersOnKill(plugin.getMarkerManager(), vp);
         }
 
         plugin.getGameManager().checkWinCondition();

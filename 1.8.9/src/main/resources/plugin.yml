@@ -1,7 +1,7 @@
 name: VampireUHC
 version: '1.0.0'
 main: fr.vampireuhc.VampireUHC
-api-version: '26.2'
+# NB : pas d'api-version en 1.8.9 (clé introduite en 1.13)
 description: UHC a mecanique de marqueurs/auras inspire du Loup-Garou UHC
 author: Olruix (VRAM-RAM on github)
 

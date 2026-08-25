@@ -72,9 +72,10 @@ public class SpectatorManager implements Listener {
         if (spectator.getGameMode() != GameMode.SPECTATOR) {
             return;
         }
-        if (!(event.getRightClicked() instanceof Player target)) {
+        if (!(event.getRightClicked() instanceof Player)) {
             return;
         }
+        Player target = (Player) event.getRightClicked();
         event.setCancelled(true);
         if (follow.containsKey(spectator.getUniqueId())
                 && follow.get(spectator.getUniqueId()).equals(target.getUniqueId())) {

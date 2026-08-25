@@ -5,8 +5,6 @@ import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class VampireMinion implements Role {
     private VampireUHCPlayer minion;
@@ -23,13 +21,12 @@ public class VampireMinion implements Role {
     }
 
     @Override
-    public Component getDescription() {
+    public String getDescription() {
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int pvpAt = config.getPvpActivationAt();
         int weaknessThreshold = config.getMarksToRemoveWeakness();
         int strengthThreshold = config.getMarksForNightStrength();
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+        return (
             "<gray>Vous êtes un sbire vampire. En début de partie, vous subissez une <red>faiblesse pendant le jour</red>.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>À <yellow>" + pvpAt + " minutes</yellow>, vous découvrez vos alliés et pouvez voter pour marquer des joueurs.</gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>Commande : <gold>/vuhc voter <joueur></gold></gray>\n\n"

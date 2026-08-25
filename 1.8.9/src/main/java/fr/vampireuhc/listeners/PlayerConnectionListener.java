@@ -2,6 +2,7 @@ package fr.vampireuhc.listeners;
 
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.MessageUtil;
+import fr.vampireuhc.game.GameManager;
 import fr.vampireuhc.game.GamePhase;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.SandMerchantRole;
@@ -12,6 +13,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -64,8 +66,8 @@ public class PlayerConnectionListener implements Listener {
         // Effets du Marchand de sable différés : l'ensablé était peut-être hors
         // ligne au moment de la mort du marchand.
         for (VampireUHCPlayer p : plugin.getPlayerManager().getAll()) {
-            if (p.getRole() instanceof SandMerchantRole merchant) {
-                merchant.deliverPendingEffects(plugin.getMarkerManager(), player.getUniqueId());
+            if (p.getRole() instanceof SandMerchantRole) {
+                ((SandMerchantRole) p.getRole()).deliverPendingEffects(plugin.getMarkerManager(), player.getUniqueId());
                 break;
             }
         }
@@ -79,7 +81,7 @@ public class PlayerConnectionListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         VampireUHCPlayer vp = plugin.getPlayerManager().get(player.getUniqueId());
-        var game = plugin.getGameManager();
+        GameManager game = plugin.getGameManager();
 
         if (vp == null || !vp.isAlive() || !game.isGameStarted()
                 || game.getPhase() == GamePhase.ENDED) {
@@ -107,7 +109,7 @@ public class PlayerConnectionListener implements Listener {
 
     // Passe un joueur en spectateur (garde la position dans la map de la partie).
     public void toSpectator(Player player) {
-        var world = plugin.getMapManager().getWorld();
+        World world = plugin.getMapManager().getWorld();
         if (world != null) {
             player.teleport(world.getSpawnLocation());
         }

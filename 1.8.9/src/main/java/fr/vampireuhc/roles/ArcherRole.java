@@ -12,8 +12,6 @@ import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.entity.Player;
 
@@ -27,9 +25,8 @@ public class ArcherRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+    public String getDescription() {
+        return (
             "<gray>Votre objectif est de gagner avec le <green>village</green>.\n\n"
             + "<gray>Pour ce faire, vous disposez, dès l'annonce des rôles, de :</gray>\n"
             + "<dark_purple>• Un livre Infinity.</dark_purple>\n"
@@ -65,7 +62,7 @@ public class ArcherRole implements Role {
             return;
         }
 
-        var bukkitArcher = Bukkit.getPlayer(player.getUuid());
+        Player bukkitArcher = Bukkit.getPlayer(player.getUuid());
         if (bukkitArcher == null || !bukkitArcher.isOnline()) {
             return;
         }
@@ -79,14 +76,14 @@ public class ArcherRole implements Role {
 
         // Infinité 
         infinitymeta.addStoredEnchant(
-                Enchantment.INFINITY,
+                Enchantment.ARROW_INFINITE,
                 1,
                 true
         );
 
         // Power II
         powertwometa.addStoredEnchant(
-            Enchantment.POWER,
+            Enchantment.ARROW_DAMAGE,
              2,
             true
         );
@@ -103,46 +100,11 @@ public class ArcherRole implements Role {
     }
 
     // Pouvoir passif : l'archer voit les ennemis qu'il touche en glowing.
+    // TODO(1.8.9) : le glow n'existe pas avant 1.9 et la lib GlowingEntities
+    // n'est pas compatible Java 8. Stub no-op en attendant le substitut retenu
+    // (piste : éclair visuel sans dégâts via strikeLightningEffect au toucher).
 
     public void setGlowOnHit(Entity target, VampireUHC plugin) {
-        if (archer == null) {
-            return;
-        }
-
-        Player bukkitArcher = Bukkit.getPlayer(archer.getUuid());
-
-        if (bukkitArcher == null) {
-            return;
-        }
-
-        setGlow(target, bukkitArcher, plugin);
-
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            removeGlow(target, bukkitArcher, plugin);
-        }, 20L * 15L);
-    }
-
-    private void setGlow(Entity target, Player viewer, VampireUHC plugin) {
-        try {
-            plugin.getGlowingEntities().setGlowing(target, viewer);
-        } catch (ReflectiveOperationException e) {
-            plugin.getLogger().log(
-                Level.SEVERE,
-                "Impossible d'appliquer le glowing",
-                e
-            );
-        }
-    }
-
-    private void removeGlow(Entity target, Player viewer, VampireUHC plugin) {
-        try {
-            plugin.getGlowingEntities().unsetGlowing(target, viewer);
-        } catch (ReflectiveOperationException e) {
-            plugin.getLogger().log(
-                Level.SEVERE,
-                "Impossible de retirer le glowing",
-                e
-            );
-        }
+        // Stub volontaire : aucun effet en 1.8.9 pour l'instant.
     }
 }

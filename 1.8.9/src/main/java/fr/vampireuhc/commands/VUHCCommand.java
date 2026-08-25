@@ -123,12 +123,13 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     private void dispatchPlayerCommand(CommandSender sender, String sub, String[] args) {
         switch (sub) {
             case "role": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                Player player = (Player) sender;
 
-                var local = playerManager.get(player);
+                VampireUHCPlayer local = playerManager.get(player);
                 if (local == null) {
                     player.sendMessage(MessageUtil.error("Vous n'êtes pas en partie."));
                     return;
@@ -152,10 +153,11 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
 
             case "exorciser": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                Player player = (Player) sender;
 
                 if (args.length < 2) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc exorciser <joueur>"));
@@ -169,9 +171,10 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 } 
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-                if (!(localPlayer != null && localPlayer.getRole() instanceof ExorcistRole exorcist)) {
+                if (!(localPlayer != null && localPlayer.getRole() instanceof ExorcistRole)) {
                     return;
                 }
+                ExorcistRole exorcist = (ExorcistRole) localPlayer.getRole();
 
                 VampireUHCPlayer targetPlayer = playerManager.get(target.getUniqueId());
 
@@ -185,15 +188,17 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
 
             case "exhumer": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                Player player = (Player) sender;
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-                if (!(localPlayer != null && localPlayer.getRole() instanceof GravediggerRole graveDigger)) {
+                if (!(localPlayer != null && localPlayer.getRole() instanceof GravediggerRole)) {
                     return;
                 }
+                GravediggerRole graveDigger = (GravediggerRole) localPlayer.getRole();
 
                 Location location = player.getLocation();
 
@@ -202,10 +207,11 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
 
             case "ensabler": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
 
                 if (args.length < 2) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc ensabler <joueur>"));
@@ -227,19 +233,23 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-                if (!(localPlayer != null && localPlayer.getRole() instanceof SandMerchantRole sandMerchant)) {
+                if (!(localPlayer != null && localPlayer.getRole() instanceof SandMerchantRole)) {
+
                     return;
+                
                 }
+                SandMerchantRole sandMerchant = (SandMerchantRole) localPlayer.getRole();
 
                 sandMerchant.sandPlayer(markerManager, targetPlayer);
                 return;
             }
 
             case "spectate": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
                 if (args.length < 2) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc spectate <joueur>"));
                     return;
@@ -254,10 +264,11 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
 
             case "tisser": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
 
                 if (args.length < 2) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc tisser <joueur>"));
@@ -278,19 +289,23 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-                if (!(localPlayer != null && localPlayer.getRole() instanceof WeaverRole weaverRole)) {
+                if (!(localPlayer != null && localPlayer.getRole() instanceof WeaverRole)) {
+
                     return;
+                
                 }
+                WeaverRole weaverRole = (WeaverRole) localPlayer.getRole();
 
                 weaverRole.weavePlayer(markerManager, targetPlayer);
                 return;
             }
 
             case "baliser": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
-                } 
+                }
+                    Player player = (Player) sender; 
                 
                 if (args.length > 1) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc baliser"));
@@ -299,19 +314,23 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
 
-                if (!(localPlayer != null && localPlayer.getRole() instanceof CartographerRole cartographerRole)) {
+                if (!(localPlayer != null && localPlayer.getRole() instanceof CartographerRole)) {
+
                     return;
+                
                 }
+                CartographerRole cartographerRole = (CartographerRole) localPlayer.getRole();
 
                 cartographerRole.placeBeacon(player, gameManager.getEpisode());
                 return;
             }
 
             case "marquer": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
                 if (args.length < 2) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc marquer <joueur>"));
                     return;
@@ -330,19 +349,23 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-                if (!(localPlayer != null && localPlayer.getRole() instanceof MasterRole masterRole)) {
+                if (!(localPlayer != null && localPlayer.getRole() instanceof MasterRole)) {
+
                     return;
+                
                 }
+                MasterRole masterRole = (MasterRole) localPlayer.getRole();
 
                 masterRole.markPlayer(markerManager, targetPlayer, gameManager.getEpisode());
                 return;
             }
 
             case "trancher": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
 
                 VoteResult.Tie pendingTie = voteManager.getPendingTie();
                 if (pendingTie == null) {
@@ -378,10 +401,11 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
 
             case "proteger": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
 
                 if (args.length < 2) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc proteger <joueur>"));
@@ -401,9 +425,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
 
                 VampireUHCPlayer localProt = playerManager.get(player.getUniqueId());
-                if (!(localProt != null && localProt.getRole() instanceof SaviorRole savior)) {
+                if (!(localProt != null && localProt.getRole() instanceof SaviorRole)) {
+
                     return;
+                
                 }
+                SaviorRole savior = (SaviorRole) localProt.getRole();
 
                 if (savior.applySalvation(markerManager, protTargetPlayer, gameManager.getEpisode())) {
                     player.sendMessage(MessageUtil.successTarget("Marque Salvation posée sur", protTargetPlayer.getLastKnownName()));
@@ -414,10 +441,11 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
 
             case "voter": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
 
                 if (args.length < 2) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc voter <joueur>"));
@@ -455,10 +483,11 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
 
             case "switch": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
 
                 if (args.length < 3) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc switch <joueur1> <joueur2>"));
@@ -486,16 +515,20 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
 
                 VampireUHCPlayer localSwitch = playerManager.get(player.getUniqueId());
-                if (!(localSwitch != null && localSwitch.getRole() instanceof GremlinRole gremlin)) {
+                if (!(localSwitch != null && localSwitch.getRole() instanceof GremlinRole)) {
+
                     return;
+                
                 }
+                GremlinRole gremlin = (GremlinRole) localSwitch.getRole();
 
                 if (gremlin.SwitchMarkers(markerManager, t1, t2, gameManager.getEpisode())) {
                     player.sendMessage(MessageUtil.successTwoTargets("Marques échangées entre", t1.getLastKnownName(), t2.getLastKnownName()));
 
                     // Si une marque Amour a changé de propriétaire, le Cupidon doit être prévenu.
                     for (VampireUHCPlayer p : playerManager.getAll()) {
-                        if (p.getRole() instanceof CupidonRole cupidon) {
+                        if (p.getRole() instanceof CupidonRole) {
+                    CupidonRole cupidon = (CupidonRole) p.getRole();
                             cupidon.notifyIfLoversMoved(markerManager);
                         }
                     }
@@ -506,18 +539,22 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
 
             case "drain": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-                if (!(localPlayer != null && localPlayer.getRole() instanceof GremlinRole gremlinRole)) {
+                if (!(localPlayer != null && localPlayer.getRole() instanceof GremlinRole)) {
+
                     return;
+                
                 }
+                GremlinRole gremlinRole = (GremlinRole) localPlayer.getRole();
 
                 if (gremlinRole.activateDrain(gameManager.getEpisode())) {
-                    player.sendActionBar(MessageUtil.actionBar("<dark_purple>Vous avez activé le <dark_green>drain</dark_green> !"));
+                    MessageUtil.sendActionBar(player, "<dark_purple>Vous avez activé le <dark_green>drain</dark_green> !");
                 } else {
                     player.sendMessage(MessageUtil.error("Vous ne pouvez pas activer votre drain pour l'instant."));
                 }
@@ -525,19 +562,23 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
 
             case "lier": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
                 if (args.length < 3) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc lier <Joueur1> <Joueur2>"));
                     return;
                 }
 
                 VampireUHCPlayer cupidon = playerManager.get(player.getUniqueId());
-                if (!(cupidon != null && cupidon.getRole() instanceof CupidonRole cupidonRole)) {
+                if (!(cupidon != null && cupidon.getRole() instanceof CupidonRole)) {
+
                     return;
+                
                 }
+                CupidonRole cupidonRole = (CupidonRole) cupidon.getRole();
 
                 Player target1 = Bukkit.getPlayer(args[1]);
                 Player target2 = Bukkit.getPlayer(args[2]);
@@ -575,19 +616,23 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
 
             case "peser": {
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
                 if (args.length < 3) {
                     player.sendMessage(MessageUtil.error("Usage: /vuhc peser <Joueur1> <Joueur2>"));
                     return;
                 }
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-                if (!(localPlayer != null && localPlayer.getRole() instanceof SoulweigherRole soulweigherRole)) {
+                if (!(localPlayer != null && localPlayer.getRole() instanceof SoulweigherRole)) {
+
                     return;
+                
                 }
+                SoulweigherRole soulweigherRole = (SoulweigherRole) localPlayer.getRole();
 
                 Player target1 = Bukkit.getPlayer(args[1]);
                 Player target2 = Bukkit.getPlayer(args[2]);
@@ -608,7 +653,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
 
                 if (!soulweigherRole.weightAura(markerManager, t1, t2, gameManager.getEpisode())) {
-                    player.sendActionBar(MessageUtil.actionBar("<red>Erreur interne."));
+                    MessageUtil.sendActionBar(player, "<red>Erreur interne.");
                 }
                 return;
             }
@@ -694,13 +739,14 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 return;
 
             case "setrole":
-                if (!(sender instanceof Player player)) {
+                if (!(sender instanceof Player)) {
                     sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
                     return;
                 }
+                    Player player = (Player) sender;
                 if (args.length >= 2) {
                     try {
-                        var type = RoleType.fromString(args[1]);
+                        RoleType type = RoleType.fromString(args[1]);
                         gameManager.setRole(player, type);
                     } catch (IllegalArgumentException e) {
                         player.sendMessage(MessageUtil.error("Type de rôle invalide."));
@@ -794,7 +840,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             case "ensabler":
                 return hasRole(sender, SandMerchantRole.class);
             case "spectate":
-                return sender instanceof Player player && player.getGameMode() == GameMode.SPECTATOR;
+                return sender instanceof Player && ((Player) sender).getGameMode() == GameMode.SPECTATOR;
             case "marquer":
             case "trancher":
                 return hasRole(sender, MasterRole.class);
@@ -834,7 +880,8 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     }
 
     private VampireUHCPlayer playerOf(CommandSender sender) {
-        if (sender instanceof Player player) {
+        if (sender instanceof Player) {
+            Player player = (Player) sender;
             return playerManager.get(player.getUniqueId());
         }
         return null;
@@ -859,7 +906,8 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         if (sender.hasPermission("vuhc.admin")) {
             return true;
         }
-        if (sender instanceof Player player) {
+        if (sender instanceof Player) {
+            Player player = (Player) sender;
             return fr.vampireuhc.VampireUHC.getInstance().getConfigManager().getAdminPlayers().contains(player.getName());
         }
         return true;

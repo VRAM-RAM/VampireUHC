@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,7 +18,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.event.world.WorldInitEvent;
 
 /**
  * Crée la map spéciale (1000x1000 centrée sur 0;0, forêt sombre au centre) et
@@ -33,7 +32,8 @@ public class MapManager implements Listener {
 
     private final VampireUHC plugin;
     private World world;
-    private BukkitTask pregenTask;
+    private UhcChunkGenerator generator;
+    private AsyncChunkManager asyncChunkManager;
 
     public MapManager(VampireUHC plugin) {
         this.plugin = plugin;
@@ -55,11 +55,11 @@ public class MapManager implements Listener {
         WorldCreator creator = new WorldCreator("vuhc_world");
         creator.seed(config.getMapSeed());
         creator.generateStructures(true);
-        creator.biomeProvider(new UhcBiomeProvider(config.getDarkForestRadius()));
-        // L'OrePopulator passe par le generator : connu avant la génération des
-        // chunks de spawn (un populator ajouté après createWorld ne s'y applique
-        // jamais).
-        creator.generator(new UhcChunkGenerator(new OrePopulator(config)));
+        // L'OrePopulator et les biomes (forêt sombre centrale) passent par le
+        // generator : connu avant la génération des chunks de spawn (un
+        // populator ajouté après createWorld ne s'y applique jamais).
+        generator = new UhcChunkGenerator(new OrePopulator(config), config.getDarkForestRadius());
+        creator.generator(generator);
 
         world = Bukkit.createWorld(creator);
         if (world == null) {
@@ -74,7 +74,8 @@ public class MapManager implements Listener {
         int y = world.getHighestBlockYAt(0, 0);
         world.setSpawnLocation(0, y, 0);
         world.setTime(1000);
-        plugin.getLogger().info("Map vuhc_world prête : " + config.getMapSize() + "x" + config.getMapSize() + " centrée sur 0;0.");
+        plugin.getLogger().info("Map vuhc_world prête : " + config.getMapSize() + "x" + config.getMapSize()
+                + " centrée sur 0;0 (seed " + world.getSeed() + ").");
         return world;
     }
 
@@ -84,10 +85,11 @@ public class MapManager implements Listener {
         loadWorld();
     }
 
-    // Pré-génère en tâche de fond les chunks du disque d'éparpillement,
-    // throttlé à map.pregen-chunks-per-tick requêtes par tick (aucun impact TPS).
+    // Pré-génère en tâche de fond les chunks du disque d'éparpillement.
+    // Workers (thread pool) calculent le terrain+caves+biomes en parallèle,
+    // le thread principal Bukkit applique les résultats sans freeze.
     public void startPregeneration() {
-        if (world == null || pregenTask != null) {
+        if (world == null || asyncChunkManager != null) {
             return;
         }
 
@@ -99,7 +101,6 @@ public class MapManager implements Listener {
         List<int[]> coords = new ArrayList<>((2 * chunkRadius + 1) * (2 * chunkRadius + 1));
         for (int x = -chunkRadius; x <= chunkRadius; x++) {
             for (int z = -chunkRadius; z <= chunkRadius; z++) {
-                // Disque plutôt que carré : on ne génère pas au-delà du nécessaire.
                 if ((long) x * x + (long) z * z <= (long) chunkRadius * chunkRadius) {
                     coords.add(new int[]{x, z});
                 }
@@ -108,33 +109,15 @@ public class MapManager implements Listener {
         // Du centre vers l'extérieur : les zones utiles en premier si interrompu.
         coords.sort(Comparator.comparingInt(c -> c[0] * c[0] + c[1] * c[1]));
 
-        int perTick = config.getPregenChunksPerTick();
-        AtomicInteger index = new AtomicInteger(0);
-        int total = coords.size();
-        plugin.getLogger().info("Pré-génération de " + total + " chunks lancée (disque d'éparpillement r=" + radius + ").");
-
-        pregenTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (world == null) {
-                cancelPregeneration();
-                return;
-            }
-            for (int i = 0; i < perTick; i++) {
-                int next = index.getAndIncrement();
-                if (next >= total) {
-                    cancelPregeneration();
-                    plugin.getLogger().info("Pré-génération des chunks terminée.");
-                    return;
-                }
-                int[] c = coords.get(next);
-                world.getChunkAtAsync(c[0], c[1]);
-            }
-        }, 1L, 1L);
+        asyncChunkManager = new AsyncChunkManager(
+                plugin, generator, world, world.getSeed(), config.getDarkForestRadius());
+        asyncChunkManager.start(coords, config.getPregenChunksPerTick());
     }
 
     public void cancelPregeneration() {
-        if (pregenTask != null) {
-            pregenTask.cancel();
-            pregenTask = null;
+        if (asyncChunkManager != null) {
+            asyncChunkManager.shutdown();
+            asyncChunkManager = null;
         }
     }
 
@@ -256,6 +239,15 @@ public class MapManager implements Listener {
         }
         if (!event.getPlayer().getWorld().equals(world)) {
             event.getPlayer().teleport(world.getSpawnLocation());
+        }
+    }
+
+    // Désactive keepSpawnInMemory avant que Bukkit.createWorld() n'exécute
+    // sa boucle de 625 chunks synchrones (skip total de la zone de spawn).
+    @EventHandler
+    public void onWorldInit(WorldInitEvent event) {
+        if ("vuhc_world".equals(event.getWorld().getName())) {
+            event.getWorld().setKeepSpawnInMemory(false);
         }
     }
 }

@@ -1,6 +1,5 @@
 package fr.vampireuhc;
 
-import fr.skytasul.glowingentities.GlowingEntities;
 import fr.vampireuhc.commands.VUHCCommand;
 import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.game.GameManager;
@@ -40,7 +39,6 @@ public class VampireUHC extends JavaPlugin {
     private PlayerConnectionListener connectionListener;
     private RulesListener rulesListener;
     private GroupsManager groupsManager;
-    private GlowingEntities glowingEntities;
 
     @Override
     public void onEnable() {
@@ -63,7 +61,6 @@ public class VampireUHC extends JavaPlugin {
         this.connectionListener = new PlayerConnectionListener(this);
         this.rulesListener = new RulesListener(this);
         this.groupsManager = new GroupsManager(this, playerManager, markerManager, configManager);
-        this.glowingEntities = new GlowingEntities(this);
 
         getServer().getPluginManager().registerEvents(new PvPListener(gameManager), this);
         getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
@@ -99,15 +96,8 @@ public class VampireUHC extends JavaPlugin {
             gameManager.stop();
         }
 
-        // Sans disable(), les listeners/packet handlers restent installés après un
-        // reload et la nouvelle instance duplique tout.
-        if (glowingEntities != null) {
-            try {
-                glowingEntities.disable();
-            } catch (Exception e) {
-                getLogger().warning("Impossible de désactiver proprement GlowingEntities : " + e.getMessage());
-            }
-        }
+        // TODO(1.8.9) : substitut du glow Archer (pas de glowing avant 1.9).
+        // Candidat : éclair visuel sans dégâts (strikeLightningEffect) au toucher.
 
         getLogger().info("VampireUHC desactivé !");
     }
@@ -118,10 +108,6 @@ public class VampireUHC extends JavaPlugin {
 
     public GroupsManager getGroupsManager() {
         return groupsManager;
-    }
-
-    public GlowingEntities getGlowingEntities() {
-        return glowingEntities;
     }
 
     public ConfigManager getConfigManager() {

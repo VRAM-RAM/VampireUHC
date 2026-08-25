@@ -26,6 +26,9 @@ Puis, pour compiler le plugin :
 ```bash
 mvn clean package
 ```
+
+Le plugin est alors compilé vers `/1.8.9/target/vampireuhc-1.0.0.jar`.
+
 ## Mode de jeu et rôles.
 
 Pour l'instant, les règles du mode de jeu sont indiquées dans le [readme](/README.md) du projet, et les rôles sont disponibles à [`/doc/ROLES.md`](/doc/ROLES.md).

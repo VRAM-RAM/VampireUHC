@@ -10,8 +10,6 @@ import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.TightAuraTier;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class BansheeRole implements Role {
     private VampireUHCPlayer banshee;
@@ -22,9 +20,8 @@ public class BansheeRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(   
+    public String getDescription() {
+        return (   
             "<gray>Vous pleurez ou criez, à chaque épisode, le nombre d'auras obscures proches de vous.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>En chaque début d'épisode, en fonction du nombre d'auras obscures présentes dans un rayon de <italic>50</italic> blocs autour de vous, un message est envoyé à tous les joueurs :</gray>\n\n"
             + "  <green>Aucun message</green>\n"
@@ -89,7 +86,8 @@ public class BansheeRole implements Role {
         // On scanne toutes les entités dans un rayon de 50 blocs
         for (Entity entity : bukkitBanshe.getNearbyEntities(50, 50, 50)) {
             // Si c'est un joueur, on poursuit
-            if (entity instanceof Player player) {
+            if (entity instanceof Player) {
+                Player player = (Player) entity;
                 // Si le joueur est en survie (donc pas un mort en spectateur ou un admin en créa), on poursuit
                 if (player.getGameMode() == GameMode.SURVIVAL) {
                     // On calcule le TightAuraTier du joueur (Obscure, Lumineuse ou Neutre)

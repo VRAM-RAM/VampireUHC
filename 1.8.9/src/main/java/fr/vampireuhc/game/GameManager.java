@@ -64,7 +64,7 @@ public class GameManager {
 
     public void setElapsedMinutes(int time) {
         this.elapsedMinutes = time;
-        var virtualStartMillis = System.currentTimeMillis() - (time * 60000);
+        long virtualStartMillis = System.currentTimeMillis() - (time * 60000);
         this.startMillis = virtualStartMillis;
     }
 
@@ -98,7 +98,7 @@ public class GameManager {
         }
 
         broadcast("<dark_purple>La partie commence dans <white>" + countdownRemaining + "</white> secondes !</dark_purple>");
-        playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+        playSoundAll(Sound.NOTE_PLING, 1f, 1f);
 
         countdownTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             countdownRemaining--;
@@ -110,7 +110,7 @@ public class GameManager {
             }
             if (countdownRemaining <= 10) {
                 broadcast("<dark_purple>La partie commence dans <white>" + countdownRemaining + "</white> secondes !</dark_purple>");
-                playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f);
+                playSoundAll(Sound.NOTE_PLING, 1f, 1f);
             }
         }, 20L, 20L);
         return true;
@@ -286,11 +286,11 @@ public class GameManager {
 
         if (elapsedMinutes == rolesAt - 5) {
             broadcast("<gold>Les rôles seront distribués dans 5 minutes !</gold>");
-            playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
+            playSoundAll(Sound.NOTE_PLING, 1f, 1.5f);
         }
         if (elapsedMinutes == rolesAt - 1) {
             broadcast("<gold>Les rôles seront distribués dans 1 minute !</gold>");
-            playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
+            playSoundAll(Sound.NOTE_PLING, 1f, 1.5f);
         }
 
         // Transitions en >= (et non ==) : un /vuhc dev setTime qui saute le seuil
@@ -302,22 +302,22 @@ public class GameManager {
             announceRoles();
             broadcast("Les rôles ont été distribués.");
             phase = GamePhase.PRE_PVP;
-            playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+            playSoundAll(Sound.LEVEL_UP, 1f, 1f);
         }
 
         if (elapsedMinutes == pvpAt - 5) {
             broadcast("<red>Le PvP sera activé dans 5 minutes !</red>");
-            playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
+            playSoundAll(Sound.NOTE_PLING, 1f, 1.5f);
         }
         if (elapsedMinutes == pvpAt - 1) {
             broadcast("<red>Le PvP sera activé dans 1 minute !</red>");
-            playSoundAll(Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1.5f);
+            playSoundAll(Sound.NOTE_PLING, 1f, 1.5f);
         }
 
         if (elapsedMinutes >= pvpAt && phase == GamePhase.PRE_PVP) {
             activatePvp();
             plugin.getVoteManager().openVote();
-            playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+            playSoundAll(Sound.LEVEL_UP, 1f, 1f);
         }
 
         int voteEvery = configManager.getVoteEveryMinutes();
@@ -334,7 +334,7 @@ public class GameManager {
         if (episodeLength > 0 && elapsedMinutes > 0 && elapsedMinutes % episodeLength == 0) {
             int newEpisode = elapsedMinutes / episodeLength + 1;
             broadcast("<dark_purple>Début de l'épisode <white>" + newEpisode + "</white> !</dark_purple>");
-            playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
+            playSoundAll(Sound.LEVEL_UP, 1f, 1.2f);
 
             // Hook générique : chaque rôle décide s'il réagit à un début
             // d'épisode (ex : le cri de la Banshee). Boucle identique à
@@ -388,14 +388,14 @@ public class GameManager {
                 winner = "Les Villageois";
             }
             broadcast("<dark_purple>" + winner + " <white>remporte la partie !</white></dark_purple>");
-            playSoundAll(Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+            playSoundAll(Sound.LEVEL_UP, 1f, 1f);
             stop();
         }
     }
 
     // Pour debug et OP seulement
     public void setRole(Player player, RoleType type) {
-        var vampirePlayer = playerManager.get(player.getUniqueId());
+        VampireUHCPlayer vampirePlayer = playerManager.get(player.getUniqueId());
         if (vampirePlayer == null) {
             player.sendMessage("Vous n'êtes pas en partie.");
             return;
@@ -404,7 +404,7 @@ public class GameManager {
         manager.setRoleFromType(vampirePlayer, type);
         announceRoles();
         broadcast("Votre rôle a été distribué. Si vous n'êtes pas en partie de devtest, alors il y a un probleme...");
-        playSoundAll(Sound.ENTITY_WITHER_DEATH, 1f, 1f);
+        playSoundAll(Sound.WITHER_DEATH, 1f, 1f);
     }
 
     
@@ -518,7 +518,7 @@ public class GameManager {
                     new ItemStack(Material.STONE_AXE),
                     new ItemStack(Material.STONE_SWORD),
                     new ItemStack(Material.COOKED_BEEF, 16),
-                    new ItemStack(Material.OAK_LOG, 8),
+                    new ItemStack(Material.LOG, 8),
                     new ItemStack(Material.TORCH, 16)
             );
         }

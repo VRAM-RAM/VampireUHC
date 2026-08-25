@@ -6,8 +6,6 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.config.MessageUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -27,9 +25,8 @@ public class WeaverRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+    public String getDescription() {
+        return (
             "<gray>Vous tissez un réseau de joueurs pour observer les événements qui s'y produisent.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Ajouter un joueur à votre réseau : <gold>/vuhc tisser <joueur></gold></gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>Le joueur doit se trouver à moins de <yellow>20 blocs</yellow>.</gray>\n"
@@ -149,9 +146,7 @@ public class WeaverRole implements Role {
         
         // La toile s'effondre
         collapseWeb(manager);
-
-        MiniMessage mm = MiniMessage.miniMessage();
-        bukkitWeaver.sendMessage(mm.deserialize(
+        bukkitWeaver.sendMessage((
             "<dark_red>Le noeud <gold>" + deadNode.getLastKnownName() + "</gold> est décédé. Son aura était <gold>" + deadNodeAura + "</gold>. Votre toîle s'effondre.</dark_red>"
         ));
     }

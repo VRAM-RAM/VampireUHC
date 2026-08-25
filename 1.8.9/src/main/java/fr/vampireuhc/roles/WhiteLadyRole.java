@@ -3,14 +3,13 @@ package fr.vampireuhc.roles;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import fr.vampireuhc.player.PlayerManager;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 
 public class WhiteLadyRole implements Role {
@@ -20,11 +19,8 @@ public class WhiteLadyRole implements Role {
     private boolean isSolo;
     private boolean killedKiller;
     private boolean killedByVampire;
-    private final MiniMessage mm = MiniMessage.miniMessage();
-
-
-    private Component getSoloDesc() {
-        return mm.deserialize(
+    private String getSoloDesc() {
+        return (
             "<dark_red>Vous avez été assassiné par un villageois !</dark_red>\n"
             + "<dark_red>Vous devez à présent gagner <gold>seule</gold>. Pour ce faire, vous bénéficiez de :</dark_red>\n\n"
             + "<dark_purple>• Un effet <gold>résistance</gold> de jour.</dark_purple>\n"
@@ -39,11 +35,11 @@ public class WhiteLadyRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
+    public String getDescription() {
         if (isSolo) {
             return getSoloDesc();
         }
-        return mm.deserialize(
+        return (
             "<gray>Votre objectif est de gagner avec le <green>village</green>.\n\n"
             + "<gray>Vous ne disposez d'aucun pouvoir. Cependant :</gray>\n\n"
             + "<dark_purple>• Si vous mourez de la main d'un <dark_red>vampire</dark_red>, vous ressuscitez et devez toujours gagner avec le village.</dark_purple>\n"
@@ -76,7 +72,7 @@ public class WhiteLadyRole implements Role {
         this.killedByVampire = killedByVampire;
         this.killedKiller = killedKiller;
         if (killerUuid != null) {
-            var playerManager = fr.vampireuhc.VampireUHC.getInstance().getPlayerManager();
+            PlayerManager playerManager = fr.vampireuhc.VampireUHC.getInstance().getPlayerManager();
             VampireUHCPlayer killerPlayer = playerManager.get(killerUuid);
             // Le tueur peut avoir été restauré après nous (ordre JSON arbitraire) :
             // dans ce cas on retente paresseusement via l'UUID stocké.
@@ -93,7 +89,7 @@ public class WhiteLadyRole implements Role {
     // après le chargement complet des joueurs).
     public void resolvePendingReferences() {
         if (pendingKillerUuid != null) {
-            var playerManager = fr.vampireuhc.VampireUHC.getInstance().getPlayerManager();
+            PlayerManager playerManager = fr.vampireuhc.VampireUHC.getInstance().getPlayerManager();
             VampireUHCPlayer killerPlayer = playerManager.get(pendingKillerUuid);
             if (killerPlayer != null) {
                 this.killer = killerPlayer;
@@ -144,15 +140,15 @@ public class WhiteLadyRole implements Role {
         }
 
         switch (camp) {
-            case Camp.VILLAGEOIS:
+            case VILLAGEOIS:
                 killedByVillager(killer);
                 return true;
         
-            case Camp.VAMPIRE:
+            case VAMPIRE:
                 killedByVampire();
                 return true;
 
-            case Camp.SOLO:
+            case SOLO:
                 return false;
             
             default:
@@ -202,9 +198,9 @@ public class WhiteLadyRole implements Role {
 
         if (isSolo) {
             if (night) {
-                player.addPotionEffect(effect(PotionEffectType.STRENGTH, 1));
+                player.addPotionEffect(effect(PotionEffectType.INCREASE_DAMAGE, 1));
             } else {
-                player.addPotionEffect(effect(PotionEffectType.RESISTANCE, 1));
+                player.addPotionEffect(effect(PotionEffectType.DAMAGE_RESISTANCE, 1));
             }
 
             if (killedKiller) {
@@ -218,6 +214,6 @@ public class WhiteLadyRole implements Role {
     }
 
     private PotionEffect effect(PotionEffectType type, int amplifier) {
-        return new PotionEffect(type, 20 * 95, amplifier, true, false, true);
+        return new PotionEffect(type, 20 * 95, amplifier, true, false);
     }
 }

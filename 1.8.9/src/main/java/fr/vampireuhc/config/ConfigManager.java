@@ -102,19 +102,24 @@ public class ConfigManager {
         return cfg().getInt("map.min-spawn-distance", 25);
     }
 
+    public int getOreCoalPerChunk() {
+        return cfg().getInt("map.ores.coal-per-chunk", 2);
+    }
+
     public int getOreIronPerChunk() {
-        // Minerais de fer supplémentaires générés dans les caves (par chunk).
-        return cfg().getInt("map.ores.iron-per-chunk", 6);
+        return cfg().getInt("map.ores.iron-per-chunk", 2);
     }
 
     public int getOreGoldPerChunk() {
-        // Minerais d'or supplémentaires générés dans les caves (par chunk).
-        return cfg().getInt("map.ores.gold-per-chunk", 4);
+        return cfg().getInt("map.ores.gold-per-chunk", 1);
+    }
+
+    public int getOreRedstonePerChunk() {
+        return cfg().getInt("map.ores.redstone-per-chunk", 1);
     }
 
     public int getOreDiamondPerChunk() {
-        // Minerais de diamant supplémentaires générés dans les caves (par chunk).
-        return cfg().getInt("map.ores.diamond-per-chunk", 2);
+        return cfg().getInt("map.ores.diamond-per-chunk", 1);
     }
 
     public int getPregenChunksPerTick() {

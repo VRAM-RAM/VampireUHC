@@ -7,8 +7,6 @@ import java.util.UUID;
 
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 
 
@@ -27,9 +25,8 @@ public class SaviorRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+    public String getDescription() {
+        return (
             "<gray>Vous protégez secrètement les villageois en semant la confusion chez les vampires.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>À chaque épisode, placez une marque <green>Salvation</green> sur un joueur : <gold>/vuhc proteger <joueur></gold></gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>La marque possède une <yellow>aura lumineuse</yellow>.</gray>\n\n"

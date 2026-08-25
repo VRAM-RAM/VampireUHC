@@ -11,9 +11,6 @@ import org.bukkit.entity.Player;
 import java.util.Random;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.attribute.Attribute;
 
 public class GremlinRole implements Role {
     private VampireUHCPlayer gremlin;
@@ -36,9 +33,8 @@ public class GremlinRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+    public String getDescription() {
+        return (
             "<light_purple>Vous êtes un rôle solitaire qui manipule les marques et vole la vie de ses adversaires.</light_purple>\n\n"
             + "<bold><dark_purple>Pouvoir 1 — Échange de marques :</dark_purple></bold>\n"
             + "  <dark_purple>▸</dark_purple> <gray>Échangez <red>toutes</red> les marques de deux joueurs : <gold>/vuhc switch <j1> <j2></gold></gray>\n"
@@ -131,15 +127,15 @@ public class GremlinRole implements Role {
 
         this.drainEpisode = current_episode; // On met à jour l'épisode.
 
-        var plugin = fr.vampireuhc.VampireUHC.getInstance();
+        fr.vampireuhc.VampireUHC plugin = fr.vampireuhc.VampireUHC.getInstance();
 
-        var player = Bukkit.getPlayer(gremlin.getUuid());
+        Player player = Bukkit.getPlayer(gremlin.getUuid());
 
         this.drainActive = true;
         this.drainTask = Bukkit.getScheduler().runTaskLater(plugin, () -> {
             this.drainActive = false;
             if (player != null && player.isOnline() && player.isValid()) {
-                player.sendActionBar(MessageUtil.actionBar("<dark_red>Votre pouvoir de <dark_purple>drain</dark_purple> est épuisé ! Vous ressentez une <green>faiblesse</green>.</dark_red>"));
+                MessageUtil.sendActionBar(player, "<dark_red>Votre pouvoir de <dark_purple>drain</dark_purple> est épuisé ! Vous ressentez une <green>faiblesse</green>.</dark_red>");
                 player.addPotionEffect(poisonEffect(1));
             }
         }, 20L * 60 * 5);
@@ -161,7 +157,7 @@ public class GremlinRole implements Role {
         // Le vol s'applique au tick suivant : on est en plein dans l'event de
         // dégâts du coup déclencheur, et toucher à la santé (voire tuer via
         // setHealth(0)) pendant sa résolution est risqué.
-        var plugin = fr.vampireuhc.VampireUHC.getInstance();
+        fr.vampireuhc.VampireUHC plugin = fr.vampireuhc.VampireUHC.getInstance();
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (!victim.isOnline() || victim.isDead()) {
                 return;
@@ -172,7 +168,7 @@ public class GremlinRole implements Role {
             }
             victim.setHealth(victim.getHealth() - stolen);
             if (player.isOnline() && !player.isDead()) {
-                double maxHealth = player.getAttribute(Attribute.MAX_HEALTH).getValue();
+                double maxHealth = player.getMaxHealth();
                 player.setHealth(Math.min(player.getHealth() + stolen, maxHealth));
             }
         });
@@ -182,6 +178,6 @@ public class GremlinRole implements Role {
     // Helper pour les effets :
     private PotionEffect poisonEffect(int amplifier) {
         // 10 secondes d'effet
-        return new PotionEffect(PotionEffectType.POISON, 20 * 10, amplifier, true, false, false);
+        return new PotionEffect(PotionEffectType.POISON, 20 * 10, amplifier, true, false);
     }
 }

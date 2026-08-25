@@ -1,5 +1,6 @@
 package fr.vampireuhc.roles;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,8 +14,6 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.config.MessageUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class SandMerchantRole implements Role {
     private VampireUHCPlayer sandMerchant;
@@ -41,9 +40,8 @@ public class SandMerchantRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+    public String getDescription() {
+        return (
             "<gray>Vous soutenez le village en ensablant discrètement des joueurs.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Ensablez un joueur : <gold>/vuhc ensabler <joueur></gold> (rayon de <yellow>10 blocs</yellow>)</gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>Vous pouvez vous ensabler vous-même, mais chaque joueur ne peut être ensablé qu'<yellow>une seule fois</yellow>.</gray>\n\n"
@@ -112,7 +110,7 @@ public class SandMerchantRole implements Role {
             return;
         }
 
-        var camp = target.getRole().getDefaultCamp();
+        Camp camp = target.getRole().getDefaultCamp();
 
         if (camp == null) {
             bukkitMerchant.sendMessage(MessageUtil.error("Le joueur que vous ciblez n'est dans aucun camp !"));
@@ -120,7 +118,7 @@ public class SandMerchantRole implements Role {
         }
 
         switch (camp) {
-            case Camp.VILLAGEOIS:
+            case VILLAGEOIS:
                 manager.addMarker(bukkitTarget.getUniqueId(), MarkerType.SABLE_LUMINEUX, bukkitMerchant.getUniqueId());
                 break;
             default:
@@ -143,8 +141,8 @@ public class SandMerchantRole implements Role {
 
         this.effectsAppliedAtMillis = System.currentTimeMillis();
 
-        var players_with_marker_neutral = manager.getPlayersThatHaveMarkerType(MarkerType.SABLE_NEUTRE);
-        var players_with_marker_light = manager.getPlayersThatHaveMarkerType(MarkerType.SABLE_LUMINEUX);
+        ArrayList<Player> players_with_marker_neutral = manager.getPlayersThatHaveMarkerType(MarkerType.SABLE_NEUTRE);
+        ArrayList<Player> players_with_marker_light = manager.getPlayersThatHaveMarkerType(MarkerType.SABLE_LUMINEUX);
 
         applyEffectsOnPlayers(players_with_marker_light);
         applyEffectsOnPlayers(players_with_marker_neutral);
@@ -173,21 +171,21 @@ public class SandMerchantRole implements Role {
 
         boolean applied = false;
         if (slownessRemaining > 0) {
-            bukkitTarget.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, slownessRemaining * 20, SLOWNESS_AMPLIFIER, true, false, true));
+            bukkitTarget.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, slownessRemaining * 20, SLOWNESS_AMPLIFIER, true, false));
             applied = true;
         }
         if (blindnessRemaining > 0) {
-            bukkitTarget.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blindnessRemaining * 20, BLINDNESS_AMPLIFIER, true, false, true));
+            bukkitTarget.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, blindnessRemaining * 20, BLINDNESS_AMPLIFIER, true, false));
             applied = true;
         }
         if (applied) {
-            bukkitTarget.sendActionBar(MessageUtil.actionBar("<gold>Vous avez été endormi par le Marchand de Sable !"));
+            MessageUtil.sendActionBar(bukkitTarget, "<gold>Vous avez été endormi par le Marchand de Sable !");
         }
     }
 
     private void applyEffectsOnPlayers(List<Player> players) {
         for (Player p: players) {
-            p.sendActionBar(MessageUtil.actionBar("<gold>Vous avez été endormi par le Marchand de Sable !"));
+            MessageUtil.sendActionBar(p, "<gold>Vous avez été endormi par le Marchand de Sable !");
             p.addPotionEffect(slowness(0));
             p.addPotionEffect(blindness(3));
         }
@@ -195,12 +193,12 @@ public class SandMerchantRole implements Role {
 
     private PotionEffect slowness(int amplifier) {
         // 180 secondes d'effet
-        return new PotionEffect(PotionEffectType.SLOWNESS, 20 * 180, amplifier, true, false, true);
+        return new PotionEffect(PotionEffectType.SLOW, 20 * 180, amplifier, true, false);
     }
 
     private PotionEffect blindness(int amplifier) {
         // 30 secondes d'effet
-        return new PotionEffect(PotionEffectType.BLINDNESS, 20 * 30, amplifier, true, false, true);
+        return new PotionEffect(PotionEffectType.BLINDNESS, 20 * 30, amplifier, true, false);
     }
 
 }

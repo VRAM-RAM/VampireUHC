@@ -98,7 +98,9 @@ public class SidebarManager {
         Objective obj = board.getObjective(OBJECTIVE_NAME);
         if (obj == null) {
             board = Bukkit.getScoreboardManager().getNewScoreboard();
-            obj = board.registerNewObjective(OBJECTIVE_NAME, "dummy", TITLE);
+            obj = board.registerNewObjective(OBJECTIVE_NAME, "dummy");
+            // Pas de displayName en ctor en 1.8 : setter dédié.
+            obj.setDisplayName(TITLE);
             obj.setDisplaySlot(DisplaySlot.SIDEBAR);
             player.setScoreboard(board);
         }

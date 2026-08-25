@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Player;
@@ -23,7 +25,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
-import org.bukkit.event.world.LootGenerateEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -37,20 +38,17 @@ public class GameplayListener implements Listener {
     private final VampireUHC plugin;
     private final Random random = new Random();
 
-    // Timer actif de clamp d'absorption par joueur : on ne crée jamais deux
-    // timers simultanés pour le même joueur (sinon ils s'empilent à chaque pomme).
-    private final Map<UUID, BukkitTask> absorptionClampTasks = new HashMap<>();
+    private static final Map<Material, ItemStack> createAutoSmeltMap() {
+        Map<Material, ItemStack> m = new HashMap<Material, ItemStack>();
+        // Les variantes deepslate/nether/netherite n'existent pas en 1.8.
+        m.put(Material.IRON_ORE, new ItemStack(Material.IRON_INGOT, 1));
+        m.put(Material.GOLD_ORE, new ItemStack(Material.GOLD_INGOT, 2));
+        m.put(Material.SAND, new ItemStack(Material.GLASS, 1));
+        m.put(Material.COBBLESTONE, new ItemStack(Material.STONE, 1));
+        return m;
+    }
 
-    private static final Map<Material, ItemStack> AUTO_SMELT = Map.of(
-            Material.IRON_ORE, new ItemStack(Material.IRON_INGOT, 1),
-            Material.DEEPSLATE_IRON_ORE, new ItemStack(Material.IRON_INGOT, 1),
-            Material.GOLD_ORE, new ItemStack(Material.GOLD_INGOT, 2),
-            Material.DEEPSLATE_GOLD_ORE, new ItemStack(Material.GOLD_INGOT, 2),
-            Material.NETHER_GOLD_ORE, new ItemStack(Material.GOLD_INGOT, 2),
-            Material.ANCIENT_DEBRIS, new ItemStack(Material.NETHERITE_SCRAP, 1),
-            Material.SAND, new ItemStack(Material.GLASS, 1),
-            Material.COBBLESTONE, new ItemStack(Material.STONE, 1)
-    );
+    private static final Map<Material, ItemStack> AUTO_SMELT = createAutoSmeltMap();
 
     public GameplayListener(VampireUHC plugin) {
         this.plugin = plugin;
@@ -65,38 +63,24 @@ public class GameplayListener implements Listener {
         if (config.isAutoSmeltEnabled()) {
             ItemStack smelted = AUTO_SMELT.get(block.getType());
             if (smelted != null) {
-                event.setDropItems(false);
-                event.setExpToDrop(3);
+                // Pas de setDropItems en 1.8 : on annule, retire le bloc et
+                // droppe nous-mêmes le résultat fondu.
+                event.setCancelled(true);
+                block.setType(Material.AIR);
                 block.getWorld().dropItemNaturally(block.getLocation(), smelted.clone());
+                event.getPlayer().giveExp(3);
                 return;
             }
         }
 
-        if (config.isBetterLootEnabled() && block.getType().name().endsWith("_LEAVES")
+        if (config.isBetterLootEnabled() && block.getType() == Material.LEAVES
                 && random.nextDouble() < config.getAppleDropChance()) {
             block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(Material.APPLE, 1));
         }
     }
 
-    // Plus d'or, de cuir et de pommes dans les coffres générés.
-    @EventHandler
-    public void onLootGenerate(LootGenerateEvent event) {
-        if (!plugin.getConfigManager().isBetterLootEnabled() || event.isPlugin()) {
-            return;
-        }
-
-        List<ItemStack> loot = new ArrayList<>(event.getLoot());
-        if (random.nextDouble() < 0.5) {
-            loot.add(new ItemStack(Material.GOLD_INGOT, 1 + random.nextInt(2)));
-        }
-        if (random.nextDouble() < 0.4) {
-            loot.add(new ItemStack(Material.LEATHER, 1 + random.nextInt(3)));
-        }
-        if (random.nextDouble() < 0.3) {
-            loot.add(new ItemStack(Material.APPLE, 1));
-        }
-        event.setLoot(loot);
-    }
+    // TODO(1.8.9) : LootGenerateEvent n'existe qu'à partir de 1.16 — l'enrichissement
+    // des coffres naturels (or/cuir/pommes) est absent de cette version.
 
     // Plus de cuir par vache tuée par un joueur.
     @EventHandler
@@ -104,8 +88,11 @@ public class GameplayListener implements Listener {
         if (!plugin.getConfigManager().isBetterLootEnabled()) {
             return;
         }
-        if (event.getEntity() instanceof Cow cow && cow.getKiller() instanceof Player) {
-            event.getDrops().add(new ItemStack(Material.LEATHER, plugin.getConfigManager().getLeatherBonus()));
+        if (event.getEntity() instanceof Cow) {
+            Cow cow = (Cow) event.getEntity();
+            if (cow.getKiller() instanceof Player) {
+                event.getDrops().add(new ItemStack(Material.LEATHER, plugin.getConfigManager().getLeatherBonus()));
+            }
         }
     }
 
@@ -114,7 +101,9 @@ public class GameplayListener implements Listener {
     @EventHandler
     public void onConsumeGoldenApple(PlayerItemConsumeEvent event) {
         Material item = event.getItem().getType();
-        if (item != Material.GOLDEN_APPLE && item != Material.ENCHANTED_GOLDEN_APPLE) {
+        // En 1.8, pomme normale et pomme dorée enchantée sont toutes deux des
+        // GOLDEN_APPLE (durabilité 0/1) : on traite les deux variantes.
+        if (item != Material.GOLDEN_APPLE) {
             return;
         }
 
@@ -129,34 +118,18 @@ public class GameplayListener implements Listener {
         }
     }
 
-    // Maintient l'absorption à 1 coeur (2 demi-coeurs) pendant 2 minutes.
+    // Pas de get/setAbsorptionAmount en 1.8 : approximation du clamp via une
+    // potion d'absorption niveau 1 (2 cœurs, durée vanilla d'une pomme). Le
+    // double-marqué plafonne ainsi au bonus d'une pomme simple.
     private void clampAbsorption(Player player) {
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            if (player.isOnline()) {
-                player.setAbsorptionAmount(2);
-            }
-        }, 1L);
-
-        UUID uuid = player.getUniqueId();
-        BukkitTask previous = absorptionClampTasks.remove(uuid);
-        if (previous != null) {
-            previous.cancel();
-        }
-
-        AtomicInteger ticks = new AtomicInteger(0);
-        absorptionClampTasks.put(uuid, new BukkitRunnable() {
+        Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
             @Override
             public void run() {
-                int elapsed = ticks.addAndGet(10);
-                if (elapsed >= 20 * 120 || !player.isOnline()) {
-                    cancel();
-                    absorptionClampTasks.remove(uuid, this);
-                    return;
-                }
-                if (player.getAbsorptionAmount() > 2) {
-                    player.setAbsorptionAmount(2);
+                if (player.isOnline()) {
+                    player.removePotionEffect(PotionEffectType.ABSORPTION);
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 20 * 120, 0, true));
                 }
             }
-        }.runTaskTimer(plugin, 10L, 10L));
+        }, 1L);
     }
 }

@@ -74,7 +74,7 @@ public class MarkerManager {
     public List<Marker> getMarkers(UUID target, MarkerType type) {
         return getMarkers(target).stream()
                 .filter(marker -> marker.getType() == type)
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public List<MarkerType> getMarkerTypeOfAura(UUID target, TightAuraTier tier) {
@@ -82,7 +82,7 @@ public class MarkerManager {
         return getMarkers(target).stream()
                 .filter(marker -> marker.getAura() == aura)
                 .map(Marker::getType)
-                .toList();        
+                .collect(java.util.stream.Collectors.toList());        
     }
 
 
@@ -106,7 +106,7 @@ public class MarkerManager {
 
     public void clearMarkersOfTypeOnAllPlayers(MarkerType type) {
         // Pour chaque joueur (id), on clear les marqueurs du type donné
-        markersByPlayer.forEach((id, _) -> clearMarkersOfType(id, type));
+        markersByPlayer.forEach((id, markers) -> clearMarkersOfType(id, type));
     }
 
     public void SwitchMarkers(UUID target_1, UUID target_2) {

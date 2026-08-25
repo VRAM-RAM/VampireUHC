@@ -8,13 +8,13 @@ public enum TightAuraTier {
 
     public Aura toAura() {
         switch (this) {
-            case TightAuraTier.OBSCURE:
+            case OBSCURE:
                 return Aura.OBSCURE;
             
-            case TightAuraTier.LUMINEUSE:
+            case LUMINEUSE:
                 return Aura.LUMINEUSE;
             
-            case TightAuraTier.NEUTRE:
+            case NEUTRE:
                 return Aura.NEUTRE;
             default:
                 return Aura.NEUTRE;

@@ -25,6 +25,7 @@ Il manque donc 3-4 rôles villageois et un rôle vampire.
   * [Archer](#archer)
   * [Baba Yaga](#baba-yaga)
   * [Banshee](#banshee)
+  * [Le Veilleur](#le-veilleur)
   * [L'Exorciste](#lexorciste)
 
 * [Solitaires](#solitaires)
@@ -279,7 +280,8 @@ La **Banshee** est un rôle villageois à info qui s'apparente au Montreur d'Our
 - 1-2 auras obscures : `La Banshee pleure...`
 - 3+ : `La Banshee pousse un cri effrayant !`
 
-### Le Veilleur
+
+### Le Veilleur
 
 Le **veilleur** est un rôle villageois à information mineure. Il peut, à chaque épisode, inspecter aléatoirement un des marqueurs que possède le joueur ciblé (se trouvant dans un rayon de 20 blocs autour de lui), à l'aide de la commande :
 \

@@ -1,7 +1,6 @@
 package fr.vampireuhc.roles;
 
 import fr.vampireuhc.player.VampireUHCPlayer;
-import net.kyori.adventure.text.Component;
 
 /**
  * Contrat minimal pour un role (Maitre, Salvateur, Cupidon, Paladin, ...).
@@ -42,5 +41,5 @@ public interface Role {
     }
 
     // Retourne la description du role.
-    public Component getDescription();
+    public String getDescription();
 }

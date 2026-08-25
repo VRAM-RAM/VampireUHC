@@ -5,8 +5,6 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -25,9 +23,8 @@ public class PaladinRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+    public String getDescription() {
+        return (
             "<gray>Votre puissance dépend de votre <yellow>aura</yellow>.</gray>\n\n"
             + "<bold><dark_purple>Effets selon l'aura :</dark_purple></bold>\n"
             + "  <dark_gray>• Très obscure →</dark_gray> <red>Perte d'un cœur + faiblesse légère.</red>\n"
@@ -71,16 +68,26 @@ public class PaladinRole implements Role {
     // ne jamais écrire setMaxHealth ici, sinon les pénalités Cupidon seraient écrasées.
     public void applyAuraEffects(Player player, AuraTier tier) {
         switch (tier) {
-            case TRES_OBSCURE -> player.addPotionEffect(effect(PotionEffectType.WEAKNESS, 1));
-            case OBSCURE -> player.addPotionEffect(effect(PotionEffectType.WEAKNESS, 0));
-            case NEUTRE -> { }
-            case LUMINEUSE -> player.addPotionEffect(effect(PotionEffectType.STRENGTH, 0));
-            case TRES_LUMINEUSE -> player.addPotionEffect(effect(PotionEffectType.STRENGTH, 1));
+            case TRES_OBSCURE:
+                player.addPotionEffect(effect(PotionEffectType.WEAKNESS, 1));
+                break;
+            case OBSCURE:
+                player.addPotionEffect(effect(PotionEffectType.WEAKNESS, 0));
+                break;
+            case NEUTRE:
+                break;
+            case LUMINEUSE:
+                // STRENGTH (moderne) = INCREASE_DAMAGE (1.8)
+                player.addPotionEffect(effect(PotionEffectType.INCREASE_DAMAGE, 0));
+                break;
+            case TRES_LUMINEUSE:
+                player.addPotionEffect(effect(PotionEffectType.INCREASE_DAMAGE, 1));
+                break;
         }
     }
 
     // Effet invisible, sans particules et sans icône.
     private PotionEffect effect(PotionEffectType type, int amplifier) {
-        return new PotionEffect(type, 20 * 95, amplifier, true, false, false);
+        return new PotionEffect(type, 20 * 95, amplifier, true, false);
     }
 }

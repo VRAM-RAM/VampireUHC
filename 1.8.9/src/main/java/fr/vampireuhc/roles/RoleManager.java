@@ -9,6 +9,7 @@ import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.PlayerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.vampire_vote.VoteResult;
+import fr.vampireuhc.vampire_vote.VampireVoteManager;
 
 import java.io.*;
 import java.util.*;
@@ -56,11 +57,11 @@ public class RoleManager {
     // Retourne la liste des rôles appartenant à un camp
     public List<RoleType> getPlayableRolesByCamp(Camp camp) {
         switch (camp) {
-            case Camp.VILLAGEOIS:
+            case VILLAGEOIS:
                 return villagerRoles;
-            case Camp.VAMPIRE:
+            case VAMPIRE:
                 return vampiresRoles;
-            case Camp.SOLO:
+            case SOLO:
                 return soloroles;
             default:
                 return new ArrayList<>();
@@ -142,52 +143,52 @@ public class RoleManager {
 
     public Role createRoleFromType(RoleType type, VampireUHCPlayer player) {
         switch (type) {
-            case RoleType.MASTER:
+            case MASTER:
                 return new MasterRole();
 
-            case RoleType.GRAVE_DIGGER:
+            case GRAVE_DIGGER:
                 return new GravediggerRole();
 
-            case RoleType.WEAVER:
+            case WEAVER:
                 return new WeaverRole(player);
 
-            case RoleType.WHITE_LADY:
+            case WHITE_LADY:
                 return new WhiteLadyRole();
 
-            case RoleType.ARCHER:
+            case ARCHER:
                 return new ArcherRole();
 
-            case RoleType.EXORCIST:
+            case EXORCIST:
                 return new ExorcistRole();
 
-            case RoleType.CARTOGRAPHER:
+            case CARTOGRAPHER:
                 return new CartographerRole(player);
 
-            case RoleType.SOUL_WEIGHTER:
+            case SOUL_WEIGHTER:
                 return new SoulweigherRole();
 
-            case RoleType.VAMPIRE_MINION:
+            case VAMPIRE_MINION:
                 return new VampireMinion(player);
             
-            case RoleType.SAVIOR:
+            case SAVIOR:
                 return new SaviorRole(player);
 
-            case RoleType.CUPIDON:
+            case CUPIDON:
                 return new CupidonRole(player);
 
-            case RoleType.PALADIN:
+            case PALADIN:
                 return new PaladinRole(player);
 
-            case RoleType.APPRENTICE_SLAYER:
+            case APPRENTICE_SLAYER:
                 return new ApprenticeSlayer(player);
 
-            case RoleType.GREMLIN:
+            case GREMLIN:
                 return new GremlinRole(player);
 
-            case RoleType.SAND_MERCHANT:
+            case SAND_MERCHANT:
                 return new SandMerchantRole(player);
 
-            case RoleType.BANSHEE:
+            case BANSHEE:
                 return new BansheeRole();
 
             default:
@@ -283,7 +284,7 @@ public class RoleManager {
         // État des votes vampires (sauvegarde pour reprise en cas de reload).
         // Les joueurs marqués ne sont pas persistés : ils se dérivent des marqueurs.
         JsonObject voteObj = new JsonObject();
-        var voteManager = fr.vampireuhc.VampireUHC.getInstance().getVoteManager();
+        VampireVoteManager voteManager = fr.vampireuhc.VampireUHC.getInstance().getVoteManager();
         voteObj.addProperty("open", voteManager.isVoteOpen());
 
         JsonObject votesObj = new JsonObject();
@@ -291,12 +292,12 @@ public class RoleManager {
         voteObj.add("votes", votesObj);
 
         JsonArray votersArray = new JsonArray();
-        voteManager.getVotersCopy().forEach(id -> votersArray.add(id.toString()));
+        voteManager.getVotersCopy().forEach(id -> votersArray.add(new com.google.gson.JsonPrimitive(id.toString())));
         voteObj.add("voters", votersArray);
 
         if (voteManager.getPendingTie() != null) {
             JsonArray tieArray = new JsonArray();
-            voteManager.getPendingTie().tiedPlayers().forEach(id -> tieArray.add(id.toString()));
+            voteManager.getPendingTie().tiedPlayers().forEach(id -> tieArray.add(new com.google.gson.JsonPrimitive(id.toString())));
             voteObj.add("pendingTie", tieArray);
         }
         gameState.add("vote", voteObj);
@@ -313,7 +314,23 @@ public class RoleManager {
     }
 
     // Résultat d'une restauration : phase et minute à reprendre.
-    public record LoadedGameState(GamePhase phase, int elapsedMinutes) {}
+    public static final class LoadedGameState {
+        private final GamePhase phase;
+        private final int elapsedMinutes;
+
+        public LoadedGameState(GamePhase phase, int elapsedMinutes) {
+            this.phase = phase;
+            this.elapsedMinutes = elapsedMinutes;
+        }
+
+        public GamePhase phase() {
+            return phase;
+        }
+
+        public int elapsedMinutes() {
+            return elapsedMinutes;
+        }
+    }
 
     /**
      * Relit game-state.json et restaure joueurs, rôles, marqueurs et votes.
@@ -326,7 +343,7 @@ public class RoleManager {
         }
 
         try (Reader reader = new FileReader(file)) {
-            JsonObject root = JsonParser.parseReader(reader).getAsJsonObject();
+            JsonObject root = new JsonParser().parse(reader).getAsJsonObject();
 
             GamePhase phase = GamePhase.valueOf(root.get("phase").getAsString());
             int elapsedMinutes = root.has("elapsedMinutes") ? root.get("elapsedMinutes").getAsInt() : 0;
@@ -411,8 +428,8 @@ public class RoleManager {
                     p.getRole().onAssign(p, true);
                 }
                 // La Dame Blanche attendait peut-être un tueur restauré après elle.
-                if (p.getRole() instanceof WhiteLadyRole whiteLady) {
-                    whiteLady.resolvePendingReferences();
+                if (p.getRole() instanceof WhiteLadyRole) {
+                    ((WhiteLadyRole) p.getRole()).resolvePendingReferences();
                 }
             }
 
@@ -423,7 +440,8 @@ public class RoleManager {
                 Map<UUID, Integer> votes = new HashMap<>();
                 if (voteObj.has("votes") && voteObj.get("votes").isJsonObject()) {
                     JsonObject votesObj = voteObj.getAsJsonObject("votes");
-                    for (String id : votesObj.keySet()) {
+                    for (Map.Entry<String, JsonElement> entry : votesObj.entrySet()) {
+                        String id = entry.getKey();
                         votes.put(UUID.fromString(id), votesObj.get(id).getAsInt());
                     }
                 }
@@ -458,20 +476,25 @@ public class RoleManager {
     // --- État spécifique aux rôles : gates "une fois par épisode" ---
 
     private void saveRoleState(JsonObject obj, Role role) {
-        if (role instanceof MasterRole masterRole) {
+        if (role instanceof MasterRole) {
+            MasterRole masterRole = (MasterRole) role;
             obj.addProperty("masterLastMarkedEpisode", masterRole.getLastMarkedEpisode());
-        } else if (role instanceof SaviorRole savior) {
+        } else if (role instanceof SaviorRole) {
+            SaviorRole savior = (SaviorRole) role;
             obj.addProperty("saviorLastEpisode", savior.getLastAppliedEpisode());
             UUID lastTarget = savior.getLastAppliedUuid();
             if (lastTarget != null) {
                 obj.addProperty("saviorLastTarget", lastTarget.toString());
             }
-        } else if (role instanceof GremlinRole gremlin) {
+        } else if (role instanceof GremlinRole) {
+            GremlinRole gremlin = (GremlinRole) role;
             obj.addProperty("gremlinSwitchEpisode", gremlin.getLastSwitchEpisode());
             obj.addProperty("gremlinDrainEpisode", gremlin.getLastDrainEpisode());
-        } else if (role instanceof SoulweigherRole soulweigher) {
+        } else if (role instanceof SoulweigherRole) {
+            SoulweigherRole soulweigher = (SoulweigherRole) role;
             obj.addProperty("soulweigherLastEpisode", soulweigher.getLastWeightEpisode());
-        } else if (role instanceof WhiteLadyRole whiteLady) {
+        } else if (role instanceof WhiteLadyRole) {
+            WhiteLadyRole whiteLady = (WhiteLadyRole) role;
             obj.addProperty("wlIsSolo", whiteLady.isSoloState());
             obj.addProperty("wlKilledByVampire", whiteLady.wasKilledByVampire());
             obj.addProperty("wlKilledKiller", whiteLady.hasKilledKiller());
@@ -479,7 +502,8 @@ public class RoleManager {
             if (killer != null) {
                 obj.addProperty("wlKillerUuid", killer.toString());
             }
-        } else if (role instanceof CartographerRole cartographer && cartographer.isBeaconApplied()) {
+        } else if (role instanceof CartographerRole && ((CartographerRole) role).isBeaconApplied()) {
+            CartographerRole cartographer = (CartographerRole) role;
             obj.addProperty("cartoBeaconApplied", true);
             obj.addProperty("cartoBeaconEpisode", cartographer.getBeaconEpisode());
             obj.addProperty("cartoBeaconWorld", cartographer.getBeaconWorld());
@@ -488,16 +512,17 @@ public class RoleManager {
             obj.addProperty("cartoBeaconZ", cartographer.getBeaconZ());
             JsonArray recorded = new JsonArray();
             for (UUID id : cartographer.getRecordedPlayers()) {
-                recorded.add(id.toString());
+                recorded.add(new com.google.gson.JsonPrimitive(id.toString()));
             }
             obj.add("cartoRecorded", recorded);
         }
     }
 
     private void restoreRoleState(JsonObject obj, Role role) {
-        if (role instanceof MasterRole masterRole) {
-            masterRole.restoreState(getInt(obj, "masterLastMarkedEpisode", -1));
-        } else if (role instanceof SaviorRole savior) {
+        if (role instanceof MasterRole) {
+            ((MasterRole) role).restoreState(getInt(obj, "masterLastMarkedEpisode", -1));
+        } else if (role instanceof SaviorRole) {
+            SaviorRole savior = (SaviorRole) role;
             UUID lastTarget = null;
             if (obj.has("saviorLastTarget") && !obj.get("saviorLastTarget").isJsonNull()) {
                 try {
@@ -507,13 +532,14 @@ public class RoleManager {
                 }
             }
             savior.restoreState(getInt(obj, "saviorLastEpisode", -1), lastTarget);
-        } else if (role instanceof GremlinRole gremlin) {
-            gremlin.restoreState(
+        } else if (role instanceof GremlinRole) {
+            ((GremlinRole) role).restoreState(
                     getInt(obj, "gremlinSwitchEpisode", -1),
                     getInt(obj, "gremlinDrainEpisode", -1));
-        } else if (role instanceof SoulweigherRole soulweigher) {
-            soulweigher.restoreState(getInt(obj, "soulweigherLastEpisode", -1));
-        } else if (role instanceof WhiteLadyRole whiteLady) {
+        } else if (role instanceof SoulweigherRole) {
+            ((SoulweigherRole) role).restoreState(getInt(obj, "soulweigherLastEpisode", -1));
+        } else if (role instanceof WhiteLadyRole) {
+            WhiteLadyRole whiteLady = (WhiteLadyRole) role;
             UUID killer = null;
             if (obj.has("wlKillerUuid") && !obj.get("wlKillerUuid").isJsonNull()) {
                 try {
@@ -527,7 +553,8 @@ public class RoleManager {
                     getBool(obj, "wlKilledByVampire", false),
                     getBool(obj, "wlKilledKiller", false),
                     killer);
-        } else if (role instanceof CartographerRole cartographer && getBool(obj, "cartoBeaconApplied", false)) {
+        } else if (role instanceof CartographerRole && getBool(obj, "cartoBeaconApplied", false)) {
+            CartographerRole cartographer = (CartographerRole) role;
             Set<UUID> recorded = new HashSet<>();
             if (obj.has("cartoRecorded") && obj.get("cartoRecorded").isJsonArray()) {
                 for (JsonElement idEl : obj.getAsJsonArray("cartoRecorded")) {

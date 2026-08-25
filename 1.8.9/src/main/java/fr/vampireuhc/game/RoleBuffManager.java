@@ -99,11 +99,17 @@ public class RoleBuffManager {
         int delta = 0;
         if (vp.getRole() instanceof PaladinRole) {
             AuraTier tier = plugin.getMarkerManager().computeAuraTier(vp.getUuid());
-            delta = switch (tier) {
-                case TRES_OBSCURE -> -1;
-                case TRES_LUMINEUSE -> 2;
-                default -> 0;
-            };
+            switch (tier) {
+                case TRES_OBSCURE:
+                    delta = -1;
+                    break;
+                case TRES_LUMINEUSE:
+                    delta = 2;
+                    break;
+                default:
+                    delta = 0;
+                    break;
+            }
         }
 
         int penalty = heartPenalties.getOrDefault(vp.getUuid(), 0);
@@ -123,16 +129,19 @@ public class RoleBuffManager {
     private void applyRoleBuffs(Player p, VampireUHCPlayer vp) {
         MarkerManager markers = plugin.getMarkerManager();
 
-        if (vp.getRole() instanceof PaladinRole paladin) {
+        if (vp.getRole() instanceof PaladinRole) {
+            PaladinRole paladin = (PaladinRole) vp.getRole();
             AuraTier tier = markers.computeAuraTier(vp.getUuid());
             paladin.applyAuraEffects(p, tier);
-        } else if (vp.getRole() instanceof ApprenticeSlayer slayer) {
-            boolean night = !p.getWorld().isDayTime();
+        } else if (vp.getRole() instanceof ApprenticeSlayer) {
+            ApprenticeSlayer slayer = (ApprenticeSlayer) vp.getRole();
+            boolean night = p.getWorld().getTime() >= 12300;
             slayer.applyMarkerEffects(p, night,
                     slayer.countDarkMarkers(markers),
                     slayer.countLightMarkers(markers));
-        } else if (vp.getRole() instanceof WhiteLadyRole whiteLady) {
-            boolean night = !p.getWorld().isDayTime();
+        } else if (vp.getRole() instanceof WhiteLadyRole) {
+            WhiteLadyRole whiteLady = (WhiteLadyRole) vp.getRole();
+            boolean night = p.getWorld().getTime() >= 12300;
             whiteLady.applyEffects(p, night);
         }
     }
@@ -142,10 +151,10 @@ public class RoleBuffManager {
             return;
         }
 
-        var config = plugin.getConfigManager();
+        ConfigManager config = plugin.getConfigManager();
         int markedCount = plugin.getVoteManager().getMarkedPlayerCount();
 
-        boolean day = p.getWorld().isDayTime();
+        boolean day = p.getWorld().getTime() < 12300; // pas d'isDayTime() en 1.8
         boolean weakness = config.isDayWeaknessEnabled() && day
                 && markedCount < config.getMarksToRemoveWeakness();
         boolean strength = !day && markedCount >= config.getMarksForNightStrength();
@@ -157,13 +166,13 @@ public class RoleBuffManager {
         }
 
         if (strength) {
-            p.addPotionEffect(effect(PotionEffectType.STRENGTH, 0));
+            p.addPotionEffect(effect(PotionEffectType.INCREASE_DAMAGE, 0));
         } else {
-            p.removePotionEffect(PotionEffectType.STRENGTH);
+            p.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
         }
     }
 
     private PotionEffect effect(PotionEffectType type, int amplifier) {
-        return new PotionEffect(type, 20 * 95, amplifier, true, false, false);
+        return new PotionEffect(type, 20 * 95, amplifier, true, false);
     }
 }

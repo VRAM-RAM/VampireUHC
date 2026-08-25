@@ -4,7 +4,6 @@ import fr.vampireuhc.markers.TightAuraTier;
 import fr.vampireuhc.markers.Aura;
 
 import fr.vampireuhc.roles.Role;
-import net.kyori.adventure.text.Component;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +13,6 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.config.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import fr.vampireuhc.player.Camp;
 
 public class ExorcistRole implements Role {
@@ -38,9 +36,8 @@ public class ExorcistRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(   
+    public String getDescription() {
+        return (   
             "<gray>Vous devez gagner avec le <green>village</green>. Pour ce faire, vous disposez de la capacité d'exorciser un joueur.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>À chaque épisode, à l'aide de la commande <gold>/vuhc exorciser <joueur></gold>, vous pouvez exorciser un joueur, ce qui aura pour effets :</gray>\n\n"
             + "  <gray>→ De supprimer <gold>l'ensemble</gold> des marqueurs <dark_red>obscurs</dark_red> que portait le joueur.</gray>\n"
@@ -76,15 +73,13 @@ public class ExorcistRole implements Role {
 
         List<MarkerType> markers = markerManager.getMarkerTypeOfAura(target.getUuid(), TightAuraTier.OBSCURE);
         markerManager.clearMarkersOfAura(target.getUuid(), Aura.OBSCURE);
-
-        MiniMessage mm = MiniMessage.miniMessage();
-        Component message = mm.deserialize("<dark_purple>Vous avez exorcisé <gold>" + target.getLastKnownName() + "</gold>. Vous ressentez la présence des marqueurs suivants :\n\n");
+        String message = "<dark_purple>Vous avez exorcisé <gold>" + target.getLastKnownName() + "</gold>. Vous ressentez la présence des marqueurs suivants :\n\n";
 
         for (MarkerType marker: markers) {
-            message = message.append(marker.toComponent());
+            message += marker.toLegacy();
         }
 
-        bukkitExorcist.sendMessage(message);
+        bukkitExorcist.sendMessage(MessageUtil.serialize(message));
     }
 
 }

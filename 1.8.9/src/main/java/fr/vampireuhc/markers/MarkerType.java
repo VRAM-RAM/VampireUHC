@@ -1,7 +1,6 @@
 package fr.vampireuhc.markers;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.ChatColor;
 
 /* Enum des types de marqueurs */
 public enum MarkerType {    
@@ -52,22 +51,22 @@ public enum MarkerType {
         }
     } 
 
-    private static final MiniMessage mm = MiniMessage.miniMessage();
-
-
-    public Component toComponent() {
-        return switch (this) {
-            case MARQUE_MAITRE, MARQUE_VAMPIRE ->
-                mm.deserialize("<dark_red>" + this + "</dark_red>\n");
-
-            case LUMINEUX, SALVATION ->
-                mm.deserialize("<yellow>" + this + "</yellow>\n");
-
-            case SABLE_LUMINEUX, SABLE_NEUTRE, FIL ->
-                mm.deserialize("<gray>" + this + "</gray>\n");
-
-            case AMOUR ->
-                mm.deserialize("<purple>" + this + "</purple>\n");
-        };
+    public String toLegacy() {
+        switch (this) {
+            case MARQUE_MAITRE:
+            case MARQUE_VAMPIRE:
+                return ChatColor.DARK_RED.toString() + this + "\n";
+            case LUMINEUX:
+            case SALVATION:
+                return ChatColor.YELLOW.toString() + this + "\n";
+            case SABLE_LUMINEUX:
+            case SABLE_NEUTRE:
+            case FIL:
+                return ChatColor.GRAY.toString() + this + "\n";
+            case AMOUR:
+                // purple (moderne) = LIGHT_PURPLE (1.8)
+                return ChatColor.LIGHT_PURPLE.toString() + this + "\n";
+        }
+        return "Marque inconnue\n";
     }
 }

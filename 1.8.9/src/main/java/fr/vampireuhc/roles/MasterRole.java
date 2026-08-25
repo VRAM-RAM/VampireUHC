@@ -7,8 +7,6 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.player.Camp;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.UUID;
 
@@ -33,12 +31,11 @@ public class MasterRole implements Role {
 
     // Sa description :
     @Override
-    public Component getDescription() {
+    public String getDescription() {
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int episodeLength = config.getEpisodeLength();
         int toInfect = config.getMarksToInfect();
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+        return (
             "<gray>Vous êtes le chef des vampires. Vous avez <yellow>" + (8) + " coeurs</yellow> au lieu de 10.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Toutes les <yellow>" + episodeLength + " minutes</yellow>, vous pouvez poser une marque Maître sur un joueur non-vampire.</gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>Vous ne votez pas pour les marques vampires, mais tranchez en cas d'égalité.</gray>\n\n"
@@ -102,7 +99,7 @@ public class MasterRole implements Role {
 
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
 
-        var bukkitMaster = Bukkit.getPlayer(master.getUuid());
+        Player bukkitMaster = Bukkit.getPlayer(master.getUuid());
         if (bukkitMaster != null) {
             bukkitMaster.sendMessage(MessageUtil.successTarget("Marque Maître posée sur", target.getLastKnownName()));
         }
@@ -123,7 +120,7 @@ public class MasterRole implements Role {
 
         // Notification au Maitre
         if (master != null) {
-            var bukkitMaster = Bukkit.getPlayer(master.getUuid());
+            Player bukkitMaster = Bukkit.getPlayer(master.getUuid());
             if (bukkitMaster != null) {
                 bukkitMaster.sendMessage(MessageUtil.successTarget("Le joueur", target.getLastKnownName() + " a été infecté !"));
             }

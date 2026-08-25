@@ -6,15 +6,13 @@ import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Particle;
+import org.bukkit.Effect;
 import org.bukkit.entity.Player;
 
 import fr.vampireuhc.config.MessageUtil;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class GravediggerRole implements Role {
     private VampireUHCPlayer gravedigger;
@@ -46,9 +44,8 @@ public class GravediggerRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+    public String getDescription() {
+        return (
             "<gray>Vous avez le pouvoir d'exhumer les cadavres afin de connaître leurs marqueurs au moment de leur mort.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Vous distinguez les cadavres à l'aide des particules qu'ils émettent.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Lorsque vous vous trouvez à la position exacte du cadavre, executez <gold>/vuhc exhumer</gold> pour exhumer le cadavre.</gray>\n"
@@ -73,16 +70,9 @@ public class GravediggerRole implements Role {
             return;
         }
 
-        // On crée les particules
-        bukkitGraveDigger.spawnParticle(
-            Particle.FLAME,
-            location,
-            20,
-            0.2,
-            0.2,
-            0.2,
-            0
-        );
+        // On crée les particules (pas d'API particules en 1.8 : effet MOBFLAME)
+        location.getWorld().playEffect(location, Effect.MOBSPAWNER_FLAMES, 0);
+        location.getWorld().playEffect(location.clone().add(0.3, 0.1, 0.2), Effect.MOBSPAWNER_FLAMES, 0);
 
         this.markersByKey.put(corpseKey(location), markers);
     }
@@ -100,26 +90,24 @@ public class GravediggerRole implements Role {
         if (gravedigger == null || location == null || location.getWorld() == null) {
             return;
         }
-        var bukkitGraveDigger = Bukkit.getPlayer(gravedigger.getUuid());
+        Player bukkitGraveDigger = Bukkit.getPlayer(gravedigger.getUuid());
 
         if (bukkitGraveDigger == null || !bukkitGraveDigger.isOnline()) {
             return;
         }
 
-        var markers = markersByKey.remove(corpseKey(location));
+        List<MarkerType> markers = markersByKey.remove(corpseKey(location));
 
         if (markers == null) {
             bukkitGraveDigger.sendMessage(MessageUtil.warn("Vous ne trouvez aucun cadavre à exhumer."));
             return;
         }
-
-        MiniMessage mm = MiniMessage.miniMessage();
-        Component message = mm.deserialize("<dark_purple>Vous exhumez un cadavre. Vous y trouvez :</dark_purple>\n\n");
+        String message = "<dark_purple>Vous exhumez un cadavre. Vous y trouvez :</dark_purple>\n\n";
 
         for (MarkerType marker: markers) {
-            message = message.append(marker.toComponent());
+            message += marker.toLegacy();
         }
 
-        bukkitGraveDigger.sendMessage(message);
+        bukkitGraveDigger.sendMessage(MessageUtil.serialize(message));
     }
 }

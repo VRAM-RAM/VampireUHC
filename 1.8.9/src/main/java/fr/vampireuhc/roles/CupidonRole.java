@@ -14,8 +14,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import fr.vampireuhc.player.Camp;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,12 +48,11 @@ public class CupidonRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
+    public String getDescription() {
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int heartsLost = config.getAmourHeartsLost();
         int penaltyMinutes = config.getAmourPenaltyDurationSeconds() / 60;
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+        return (
             "<gray>Vous liez deux joueurs par un lien d'amour invisible.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Au début de la partie, liez deux joueurs : <gold>/vuhc lier <j1> <j2></gold></gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>Les joueurs liés ne le savent pas.</gray>\n\n"
@@ -143,7 +140,7 @@ public class CupidonRole implements Role {
         List<VampireUHCPlayer> candidates = VampireUHC.getInstance().getPlayerManager().getAll().stream()
                 .filter(p -> !p.getUuid().equals(cupidon.getUuid()))
                 .filter(VampireUHCPlayer::isAlive) // jamais de lien avec un mort/spectateur
-                .toList();
+                .collect(java.util.stream.Collectors.toList());
 
         if (candidates.size() < 2) {
             return;
@@ -153,7 +150,7 @@ public class CupidonRole implements Role {
         UUID second = candidates.stream()
                 .filter(p -> !p.getUuid().equals(first))
                 .findAny()
-                .orElseThrow()
+                .get() // équivalent orElseThrow() sans argument (Java 10+)
                 .getUuid();
 
         applyLoveMarks(manager, first, second);
@@ -196,7 +193,7 @@ public class CupidonRole implements Role {
         }
         applyLoveMarks(manager, target_1.getUuid(), target_2.getUuid());
 
-        var bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
+        Player bukkitCupidon = Bukkit.getPlayer(cupidon.getUuid());
         if (bukkitCupidon != null) {
             bukkitCupidon.sendMessage(MessageUtil.successTwoTargets("Joueurs marqués :", target_1.getLastKnownName(), target_2.getLastKnownName()));
         }
@@ -209,7 +206,7 @@ public class CupidonRole implements Role {
             return;
         }
 
-        var victimMarkers = manager.getMarkers(victim.getUuid(), MarkerType.AMOUR);
+        List<Marker> victimMarkers = manager.getMarkers(victim.getUuid(), MarkerType.AMOUR);
         if (victimMarkers.isEmpty()) {
             return;
         }
@@ -238,10 +235,9 @@ public class CupidonRole implements Role {
         buffs.registerHeartPenalty(partner.getUuid(), heartsLost);
 
         String killerName = killer != null ? killer.getName() : "inconnu";
-        MiniMessage mm = MiniMessage.miniMessage();
         Player bukkitPartner = Bukkit.getPlayer(partner.getUuid());
         if (bukkitPartner != null) {
-            bukkitPartner.sendMessage(mm.deserialize(
+            bukkitPartner.sendMessage((
                 "<red>Votre amoureux est mort ! Vous perdez <gold>" + heartsLost + " coeurs</gold> pendant <gold>" + durationSeconds + " secondes</gold>. Son tueur était : <gold>" + killerName + "</gold></red>"
             ));
         }

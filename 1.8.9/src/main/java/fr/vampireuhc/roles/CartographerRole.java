@@ -9,13 +9,12 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.config.MessageUtil;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 
 public class CartographerRole implements Role {
     private static final double BEACON_RADIUS = 20.0;
@@ -41,9 +40,8 @@ public class CartographerRole implements Role {
     }
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(
+    public String getDescription() {
+        return (
             "<gray>Vous cartographiez discrètement les déplacements des joueurs.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Placez une balise : <gold>/vuhc baliser</gold></gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>La balise enregistre le passage des joueurs dans un rayon de <yellow>20 blocs</yellow>.</gray>\n\n"
@@ -154,12 +152,12 @@ public class CartographerRole implements Role {
         if (beaconWorld == null) {
             return null;
         }
-        var world = Bukkit.getWorld(beaconWorld);
+        World world = Bukkit.getWorld(beaconWorld);
         return world == null ? null : new Location(world, beaconX, beaconY, beaconZ);
     }
 
     private void startScanTask() {
-        var plugin = fr.vampireuhc.VampireUHC.getInstance();
+        fr.vampireuhc.VampireUHC plugin = fr.vampireuhc.VampireUHC.getInstance();
 
         // Scan périodique (1 fois/seconde) : enregistre les passages puis révèle
         // la liste en fin de vie. Beaucoup plus léger qu'un PlayerMoveEvent.

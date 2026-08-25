@@ -1,6 +1,7 @@
 package fr.vampireuhc.player;
 
 import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.roles.Role;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -25,7 +26,7 @@ public class PlayerManager {
         // On itere sur l'ensemble des joueurs
         for (VampireUHCPlayer player : players.values()) {
             // Si le joueur est vampire ou infect, on incremente.
-            var role = player.getRole();
+            Role role = player.getRole();
             if (role != null) {
                 if (role.getDefaultCamp() == Camp.VAMPIRE || player.isInfected()) {
                     result++;
