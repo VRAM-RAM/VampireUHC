@@ -16,6 +16,8 @@ import org.bukkit.entity.Player;
 import fr.vampireuhc.player.Camp;
 
 public class ExorcistRole implements Role {
+    // Gates "une fois par épisode" : l'épisode de dernière utilisation (-1 = jamais).
+    private int lastExorcisedEpisode = -1;
 
     private VampireUHCPlayer exorcist;
     private final List<UUID> alreadyExorcised = new ArrayList<>();
@@ -53,7 +55,7 @@ public class ExorcistRole implements Role {
 
     // Pouvoir spécifique à l'exorciste :
 
-    public void exorcisePlayer(VampireUHCPlayer target, MarkerManager markerManager) {
+    public void exorcisePlayer(VampireUHCPlayer target, MarkerManager markerManager, int current_episode) {
         if (exorcist == null || target == null) {
             return;
         }
@@ -61,6 +63,11 @@ public class ExorcistRole implements Role {
         Player bukkitExorcist = Bukkit.getPlayer(exorcist.getUuid());
 
         if (bukkitExorcist == null) {
+            return;
+        }
+
+        if (current_episode == lastExorcisedEpisode) {
+            bukkitExorcist.sendMessage(MessageUtil.error("Vous ne pouvez exorciser un joueur qu'une seule fois par épisode !"));
             return;
         }
 
@@ -79,6 +86,7 @@ public class ExorcistRole implements Role {
             message += marker.toLegacy();
         }
 
+        this.lastExorcisedEpisode = current_episode;
         bukkitExorcist.sendMessage(MessageUtil.serialize(message));
     }
 

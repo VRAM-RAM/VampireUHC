@@ -16,6 +16,7 @@ public enum RoleType {
     WHITE_LADY, // Dame Blanche
     BANSHEE, // Banshee
     EXORCIST, // L'Exorciste
+    WATCHMAN, // Le Veilleur
     GREMLIN; //Le Gremlin
     
     public static RoleType fromString(String value) {

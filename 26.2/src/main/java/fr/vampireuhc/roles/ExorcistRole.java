@@ -3,7 +3,6 @@ package fr.vampireuhc.roles;
 import fr.vampireuhc.markers.TightAuraTier;
 import fr.vampireuhc.markers.Aura;
 
-import fr.vampireuhc.roles.Role;
 import net.kyori.adventure.text.Component;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import java.util.ArrayList;
@@ -18,7 +17,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import fr.vampireuhc.player.Camp;
 
 public class ExorcistRole implements Role {
-
+    private int lastExorcisedEpisode;
     private VampireUHCPlayer exorcist;
     private final List<UUID> alreadyExorcised = new ArrayList<>();
 
@@ -56,7 +55,7 @@ public class ExorcistRole implements Role {
 
     // Pouvoir spécifique à l'exorciste :
 
-    public void exorcisePlayer(VampireUHCPlayer target, MarkerManager markerManager) {
+    public void exorcisePlayer(VampireUHCPlayer target, MarkerManager markerManager, int current_episode) {
         if (exorcist == null || target == null) {
             return;
         }
@@ -64,6 +63,11 @@ public class ExorcistRole implements Role {
         Player bukkitExorcist = Bukkit.getPlayer(exorcist.getUuid());
 
         if (bukkitExorcist == null) {
+            return;
+        }
+
+        if (current_episode == lastExorcisedEpisode) {
+            bukkitExorcist.sendMessage(MessageUtil.error("Vous ne pouvez exorciser un joueur qu'une seule fois par épisode !"));
             return;
         }
 
@@ -84,6 +88,7 @@ public class ExorcistRole implements Role {
             message = message.append(marker.toComponent());
         }
 
+        this.lastExorcisedEpisode = current_episode;
         bukkitExorcist.sendMessage(message);
     }
 

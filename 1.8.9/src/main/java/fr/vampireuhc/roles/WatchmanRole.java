@@ -1,6 +1,5 @@
 package fr.vampireuhc.roles;
 
-import net.kyori.adventure.text.Component;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import java.util.UUID;
 import fr.vampireuhc.markers.MarkerManager;
@@ -8,7 +7,6 @@ import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.config.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import fr.vampireuhc.player.Camp;
 
 public class WatchmanRole implements Role {
@@ -33,14 +31,13 @@ public class WatchmanRole implements Role {
     } 
 
     @Override
-    public Component getDescription() {
-        MiniMessage mm = MiniMessage.miniMessage();
-        return mm.deserialize(   
+    public String getDescription() {
+        return   
             "<gray>Vous devez gagner avec le <green>village</green>. Pour ce faire, vous disposez de la capacité de veiller, à chaque épisode, sur un joueur.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>À chaque épisode, à l'aide de la commande <gold>/vuhc veiller <joueur></gold>, vous pouvez veiller sur un joueur situé à moins de 20 blocs de vous, ce qui aura pour effet :</gray>\n\n"
             + "  <gray>→ De vous informer du nom d'<gold>un</gold> des marqueurs que porte le joueur.</gray>\n"
             + "<red>⚠ Ce pouvoir n'est pas utilisable sur le même joueur deux fois de suite !</red>"
-        );
+        ;
     }
 
     @Override
@@ -95,13 +92,15 @@ public class WatchmanRole implements Role {
             return;
         }
 
-        MiniMessage mm = MiniMessage.miniMessage();
-        Component message = mm.deserialize("<dark_purple>Vous avez veillé sur <gold>" + target.getLastKnownName() + "</gold>. Vous observez la présence du marqueur : " + marker.toString());
+        String message = MessageUtil.serialize(
+                "<dark_purple>Vous avez veillé sur <gold>" + target.getLastKnownName()
+                + "</gold>. Vous observez la présence du marqueur :\n")
+                + marker.toLegacy();
         bukkitWatchman.sendMessage(message);
         this.lastWatchEpisode = current_episode;
     }
 
-    // Helper pour savoir si le joueur se trouve dans le rayon du veilleur
+    // Helper pour savoir si le joueur se trouve dans le rayon du tisseur
     private boolean isWithinRadius(Player player1, Player player2, double radius) {
         return player1.getLocation().distanceSquared(player2.getLocation()) <= radius * radius;
     }

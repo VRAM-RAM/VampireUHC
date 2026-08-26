@@ -17,6 +17,8 @@ import fr.vampireuhc.config.MessageUtil;
 
 public class SandMerchantRole implements Role {
     private VampireUHCPlayer sandMerchant;
+    // Gates "une fois par épisode" : l'épisode de dernière utilisation (-1 = jamais).
+    private int lastSandEpisode = -1;
 
     // Fenêtre des effets de mort (durées partagées par l'application directe et
     // la livraison différée aux ensablés qui reviennent).
@@ -75,13 +77,19 @@ public class SandMerchantRole implements Role {
 
     // Pouvoir spécial : ensablage
 
-    public void sandPlayer(MarkerManager manager, VampireUHCPlayer target) {
+    public void sandPlayer(MarkerManager manager, VampireUHCPlayer target, int current_episode) {
         if (sandMerchant == null) {
             return;
         }
 
         // On cast le marchand pour pouvoir envoyer des messages
         Player bukkitMerchant = Bukkit.getPlayer(sandMerchant.getUuid());
+
+        // Une seule fois par épisode.
+        if (lastSandEpisode == current_episode) {
+            bukkitMerchant.sendMessage(MessageUtil.error("Vous ne pouvez ensabler qu'un joueur par épisode !"));
+            return;
+        }
 
         // Si la cible a déjà un marqueur sable (ici lumineux), impossible de poser un autre marqueur
         if (manager.hasMarker(target.getUuid(), MarkerType.SABLE_LUMINEUX)) {
@@ -127,6 +135,7 @@ public class SandMerchantRole implements Role {
 
         bukkitMerchant.sendMessage(MessageUtil.successTarget("Le joueur", target.getLastKnownName() + " a été ensablé !"));
 
+        this.lastSandEpisode = current_episode;
     }
     
     // Helper pour savoir si le joueur se trouve dans le rayon du tisseur

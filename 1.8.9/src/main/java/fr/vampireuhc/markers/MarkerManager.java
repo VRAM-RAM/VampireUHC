@@ -12,6 +12,7 @@ public class MarkerManager {
     
     private final VampireUHC plugin;
     private final Map<UUID, List<Marker>> markersByPlayer = new HashMap<>();
+    private final Random random = new Random();
 
     public MarkerManager(VampireUHC plugin) {
         this.plugin = plugin;
@@ -28,6 +29,16 @@ public class MarkerManager {
             result.add(m.getType());
         }
         return result;
+    }
+
+    public MarkerType getRandomMarkertypeofPlayer(UUID target) {
+        List<MarkerType> markerTypes = getMarkerTypesByPlayer(target);
+        if (markerTypes.size() == 0) {
+            return null;
+        }
+        int rand_num = random.nextInt(101);
+        int index = rand_num % markerTypes.size();
+        return markerTypes.get(index);
     }
 
 

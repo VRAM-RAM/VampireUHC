@@ -1,11 +1,6 @@
 package fr.vampireuhc.markers;
-
-import fr.vampireuhc.markers.TightAuraTier;
 import fr.vampireuhc.VampireUHC;
-
 import java.util.*;
-
-import fr.vampireuhc.markers.Marker;
 import org.bukkit.entity.Player;
 
 public class MarkerManager {
@@ -32,10 +27,13 @@ public class MarkerManager {
     }
 
     public MarkerType getRandomMarkertypeofPlayer(UUID target) {
-        var markerTypes = getMarkerTypesByPlayer(UUID);
+        var markerTypes = getMarkerTypesByPlayer(target);
+        if (markerTypes.size() == 0) {
+            return null;
+        }
         var rand_num = random.nextInt(101);
-        var index = rand_num % markerTypes.length()
-        return markerTypes[index];
+        var index = rand_num % markerTypes.size();
+        return markerTypes.get(index);
     }
 
     public Marker addMarker(UUID target, MarkerType type, UUID source, long placedAtMillis) {

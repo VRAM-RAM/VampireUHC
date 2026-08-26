@@ -35,6 +35,7 @@ public class RoleManager {
         RoleType.GRAVE_DIGGER,
         RoleType.WHITE_LADY,
         RoleType.BANSHEE,
+        RoleType.WATCHMAN,
         RoleType.EXORCIST,
         RoleType.ARCHER
     );
@@ -184,6 +185,9 @@ public class RoleManager {
 
             case GREMLIN:
                 return new GremlinRole(player);
+
+            case WATCHMAN:
+                return new WatchmanRole();
 
             case SAND_MERCHANT:
                 return new SandMerchantRole(player);
@@ -605,6 +609,7 @@ public class RoleManager {
             case "Dame Blanche": return RoleType.WHITE_LADY;
             case "Banshee": return RoleType.BANSHEE;
             case "Exorciste": return RoleType.EXORCIST;
+            case "Veilleur": return RoleType.WATCHMAN;
             default: return null;
         }
     }

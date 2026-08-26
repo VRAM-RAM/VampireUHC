@@ -20,7 +20,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 public class CartographerRole implements Role {
     private static final double BEACON_RADIUS = 20.0;
     private static final long SCAN_INTERVAL_TICKS = 20L; // 1 seconde
-
+    
     private VampireUHCPlayer cartographer;
     // Balise stockée en primitives (monde + coordonnées) : sérialisable tel quel
     // et résoluble même si le monde n'est pas encore chargé au moment du restore.

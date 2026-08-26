@@ -8,6 +8,8 @@ import org.bukkit.entity.Player;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +71,7 @@ public final class MessageUtil {
         }
         StringBuilder out = new StringBuilder(mini.length() + 16);
         Matcher m = TAG.matcher(mini);
-        String lastColor = null;
+        Deque<String> colorStack = new ArrayDeque<>();
         int copied = 0;
         while (m.find()) {
             String name = m.group(1);
@@ -84,18 +86,24 @@ public final class MessageUtil {
                     && "0123456789abcdef".indexOf(code.charAt(1)) >= 0;
             if (!closing) {
                 if (isColor) {
-                    lastColor = code;
+                    colorStack.push(code);
                 }
                 out.append(code);
-            } else if (!isColor && !"§r".equals(code)) {
+            } else if (isColor) {
+                // Fermeture d'une couleur : reset + restaure la couleur précédente
+                colorStack.pop();
+                out.append('§').append('r');
+                if (!colorStack.isEmpty()) {
+                    out.append(colorStack.peek());
+                }
+            } else if (!"§r".equals(code)) {
                 // Fermeture d'une décoration : on repart du code couleur courant,
                 // car tout code couleur reset les décorations en 1.8.
                 out.append('§').append('r');
-                if (lastColor != null) {
-                    out.append(lastColor);
+                if (!colorStack.isEmpty()) {
+                    out.append(colorStack.peek());
                 }
             }
-            // Fermeture d'une couleur : rien à faire (la prochaine couleur prendra le relais).
         }
         appendRaw(out, mini, copied, mini.length());
         return out.toString();
