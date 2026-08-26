@@ -9,6 +9,7 @@ import fr.vampireuhc.markers.Marker;
 import org.bukkit.entity.Player;
 
 public class MarkerManager {
+    private final Random random = new Random();
     
     private final VampireUHC plugin;
     private final Map<UUID, List<Marker>> markersByPlayer = new HashMap<>();
@@ -30,6 +31,12 @@ public class MarkerManager {
         return result;
     }
 
+    public MarkerType getRandomMarkertypeofPlayer(UUID target) {
+        var markerTypes = getMarkerTypesByPlayer(UUID);
+        var rand_num = random.nextInt(101);
+        var index = rand_num % markerTypes.length()
+        return markerTypes[index];
+    }
 
     public Marker addMarker(UUID target, MarkerType type, UUID source, long placedAtMillis) {
         Marker marker = new Marker(type, source, placedAtMillis);
