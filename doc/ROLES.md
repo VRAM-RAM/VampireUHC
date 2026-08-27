@@ -4,8 +4,8 @@ Les rôles ne doivent pas simplement révéler des informations directes.
 
 Le but est l'interprétation.
 
-Progression : ~70 % (15 rôles villageois, 3 rôles vampire soit 6 joueurs vampires, 2 rôles solitaires, et un rôle hybride => 23 joueurs).
-Il manque donc 1 rôle villageois, et un rôle solitaire.
+Progression : ~70 % (15 rôles villageois, 3 rôles vampire soit 6 joueurs vampires, 3 rôles solitaires, et un rôle hybride => 24 joueurs).
+Il manque donc 1 rôle villageois.
 
 ## Sommaire
 
@@ -34,6 +34,7 @@ Il manque donc 1 rôle villageois, et un rôle solitaire.
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)
   * [Gremlin](#gremlin)
+  * [Doppelganger](#doppelganger)
 
 * [Hybrides](#hybrides)
   * [Dame Blanche](#dame-blanche)
@@ -361,6 +362,48 @@ Ce pouvoir est activable pendant 5 minutes à chaque épisode, à l'aide de la c
 
 À la fin des 5 minutes, il subit un malus temporaire léger (poison léger et court).
 
+### Doppelganger
+
+Le Doppelganger est un rôle solitaire. Son but ? Gagner seul, en empruntant la force des autres — et en punissant sévèrement quiconque lui prend sa nouvelle identité.
+
+Entre 20 et 60 minutes de jeu, il peut, une seule fois, exécuter la commande :
+```mc
+/vuhc usurper <joueur>
+```
+
+Il copie alors l'ensemble des pouvoirs actifs et passifs du joueur ciblé, et ce jusqu'à la mort de ce dernier.
+
+#### Fonctionnement de l'usurpation
+
+Le Doppelganger dispose de son propre pool d'usages, totalement indépendant de celui du joueur copié : il ne consomme pas les charges de l'original, et l'original conserve les siennes intactes.
+
+Quelques précisions selon le rôle copié :
+
+- **Rôle avec objet unique** (Archer, Bourreau...) : le Doppelganger reçoit uniquement l'effet passif du rôle (glowing au tir, bonus de dégâts au premier coup...), jamais l'objet physique associé (arc, livre...).
+- **Maître Vampire** : le Doppelganger peut poser ses propres marqueurs Maître (aura obscure, pénalité d'absorption à 2 marqueurs), mais ces marqueurs n'entraînent jamais d'infection, quel que soit leur nombre. Il ne bénéficie pas non plus du malus de vie du Maître (~8 coeurs).
+- **Sbire Vampire** : le Doppelganger peut voter pour la marque vampire, mais ne reçoit jamais la liste des alliés vampires à 45 minutes.
+- **Cupidon** : le Doppelganger ne connaît pas les couples déjà formés par le Cupidon original, mais s'il se produit un changement de marqueur Amour après son usurpation (switch, etc.), il en est notifié comme le serait le vrai Cupidon.
+- **Tisseur** : le Doppelganger doit tisser son propre réseau depuis zéro ; il n'hérite pas de celui du Tisseur original.
+- **Banshee** : le message de la Banshee copiée n'est envoyé qu'au Doppelganger, jamais à l'original ni à qui que ce soit d'autre.
+
+En résumé : le Doppelganger copie le *pouvoir*, jamais l'*état* ou les *informations déjà accumulées* du joueur usurpé.
+
+#### Mort du joueur usurpé
+
+Si le joueur usurpé meurt :
+
+- Le Doppelganger perd immédiatement tous les pouvoirs copiés, ainsi que tous les marqueurs qu'il a lui-même posés en tant que ce rôle.
+- Il reçoit l'identité du tueur.
+- Les dégâts qu'il inflige à ce tueur sont augmentés de **50%**, de façon permanente, jusqu'à la fin de la partie.
+- S'il parvient à tuer ce tueur, il gagne un effet **force + speed permanent**.
+
+S'il ne parvient jamais à atteindre ou identifier le tueur (mort avant lui, par exemple), le bonus de dégâts reste acquis mais n'aura simplement jamais d'occasion de s'exprimer — tant pis pour lui.
+
+#### Exemple
+
+À 35 minutes, le Doppelganger usurpe Alice, qui est Prêtre. Il peut désormais percevoir l'aura des joueurs comme elle le ferait, avec son propre pool d'usages.
+
+À 1h20, Alice se fait tuer par Bob. Le Doppelganger perd instantanément son pouvoir de perception et tous les marqueurs qu'il avait lui-même posés en tant que Prêtre usurpé, mais reçoit l'identité de Bob comme tueur. Dès lors, tous ses coups portés contre Bob infligent 50% de dégâts supplémentaires. S'il parvient à l'achever, il gagne un effet de force et de vitesse pour le reste de la partie.
 ## Hybrides
 
 ### Dame Blanche
