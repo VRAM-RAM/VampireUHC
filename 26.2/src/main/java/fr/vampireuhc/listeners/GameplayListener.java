@@ -4,6 +4,7 @@ import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.roles.BabaYagaRole;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -124,9 +125,27 @@ public class GameplayListener implements Listener {
             return;
         }
 
+        // La malédiction de la Baba Yaga retire toute absorption, même si le
+        // joueur porte par ailleurs 2 marques Maître (curse > clamp).
+        if (isCursedByBabaYaga(player.getUniqueId())) {
+            Bukkit.getScheduler().runTask(plugin, () -> player.setAbsorptionAmount(0));
+            return;
+        }
+
         if (plugin.getMarkerManager().countMarkers(vp.getUuid(), MarkerType.MARQUE_MAITRE) == 2) {
             clampAbsorption(player);
         }
+    }
+
+    // Un joueur est maudit si un Baba Yaga en partie a une malédiction active
+    // sur lui.
+    private boolean isCursedByBabaYaga(UUID uuid) {
+        for (VampireUHCPlayer p : plugin.getPlayerManager().getAll()) {
+            if (p.getRole() instanceof BabaYagaRole babaYaga && babaYaga.isCurseActive(uuid)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Maintient l'absorption à 1 coeur (2 demi-coeurs) pendant 2 minutes.

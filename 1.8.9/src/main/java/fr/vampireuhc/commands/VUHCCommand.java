@@ -34,6 +34,7 @@ import fr.vampireuhc.roles.SoulweigherRole;
 import fr.vampireuhc.roles.VampireMinion;
 import fr.vampireuhc.roles.WeaverRole;
 import fr.vampireuhc.roles.ExorcistRole;
+import fr.vampireuhc.roles.BabaYagaRole;
 import fr.vampireuhc.roles.WatchmanRole;
 
 
@@ -78,7 +79,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> PLAYER_SUBCOMMANDS = Arrays.asList(
             "role", "spectate", "marquer", "trancher", "proteger", "voter",
-            "switch", "drain", "lier", "peser", "tisser", "baliser", "ensabler", "exhumer", "exorciser", "veiller");
+            "switch", "drain", "lier", "peser", "tisser", "baliser", "ensabler", "exhumer", "exorciser", "veiller", "maudire", "ressusciter");
     private static final List<String> ADMIN_SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "status");
     private static final List<String> DEV_SUBCOMMANDS = Arrays.asList("setTime", "setRole", "who", "aura");
 
@@ -248,6 +249,59 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 int current_episode = gameManager.getEpisode();
 
                 sandMerchant.sandPlayer(markerManager, targetPlayer, current_episode);
+                return;
+            }
+
+            case "maudire": {
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
+                    return;
+                }
+                Player player = (Player) sender;
+
+                if (args.length < 2) {
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc maudire <joueur>"));
+                    return;
+                }
+
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
+                    return;
+                }
+
+                VampireUHCPlayer targetPlayer = playerManager.get(target.getUniqueId());
+                if (targetPlayer == null) {
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
+                    return;
+                }
+
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+                if (!(localPlayer != null && localPlayer.getRole() instanceof BabaYagaRole)) {
+                    return;
+                }
+                BabaYagaRole babaYaga = (BabaYagaRole) localPlayer.getRole();
+
+                if (!babaYaga.cursePlayer(targetPlayer)) {
+                    player.sendMessage(MessageUtil.error("Vous avez déjà utilisé votre malédiction."));
+                }
+                return;
+            }
+
+            case "ressusciter": {
+                if (!(sender instanceof Player)) {
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
+                    return;
+                }
+                Player player = (Player) sender;
+
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+                if (!(localPlayer != null && localPlayer.getRole() instanceof BabaYagaRole)) {
+                    return;
+                }
+                BabaYagaRole babaYaga = (BabaYagaRole) localPlayer.getRole();
+
+                babaYaga.resurrect();
                 return;
             }
 
@@ -856,7 +910,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
             if ((sub.equals("marquer") || sub.equals("proteger") || sub.equals("voter")
                     || sub.equals("switch") || sub.equals("lier") || sub.equals("peser")
-                    || sub.equals("tisser") || sub.equals("spectate") || sub.equals("ensabler") || sub.equals("veiller")) || sub.equals("exorciser") && hasAccess(sender, sub)) {
+                    || sub.equals("tisser") || sub.equals("spectate") || sub.equals("ensabler") || sub.equals("veiller")) || sub.equals("exorciser") || sub.equals("maudire") && hasAccess(sender, sub)) {
                 return playersStartingWith(args[1]);
             }
             return new ArrayList<>();
@@ -885,6 +939,9 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 return hasRole(sender, WatchmanRole.class);
             case "exorciser":
                 return hasRole(sender, ExorcistRole.class);
+            case "maudire":
+            case "ressusciter":
+                return hasRole(sender, BabaYagaRole.class);
             case "exhumer":
                 return hasRole(sender, GravediggerRole.class);
             case "ensabler":
@@ -1010,6 +1067,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         }
         if (hasAccess(sender, "exhumer")) {
             sender.sendMessage(MessageUtil.helpEntry("/vuhc exhumer", "Tenter d'exhumer le cadavre d'un défunt à votre position."));
+        }
+        if (hasAccess(sender, "maudire")) {
+            sender.sendMessage(MessageUtil.helpEntry("/vuhc maudire <joueur>", "Maudire un joueur (Baba Yaga)"));
+        }
+        if (hasAccess(sender, "ressusciter")) {
+            sender.sendMessage(MessageUtil.helpEntry("/vuhc ressusciter", "Ressusciter le joueur proposé (Baba Yaga)"));
         }
         if (hasAccess(sender, "spectate")) {
             sender.sendMessage(MessageUtil.helpEntry("/vuhc spectate <joueur>", "Suivre un joueur vivant"));

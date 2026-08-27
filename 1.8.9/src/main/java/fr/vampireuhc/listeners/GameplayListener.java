@@ -4,6 +4,7 @@ import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.roles.BabaYagaRole;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -113,9 +114,39 @@ public class GameplayListener implements Listener {
             return;
         }
 
+        // La malédiction de la Baba Yaga retire toute absorption, même si le
+        // joueur porte par ailleurs 2 marques Maître (curse > clamp).
+        if (isCursedByBabaYaga(player.getUniqueId())) {
+            removeAbsorption(player);
+            return;
+        }
+
         if (plugin.getMarkerManager().countMarkers(vp.getUuid(), MarkerType.MARQUE_MAITRE) == 2) {
             clampAbsorption(player);
         }
+    }
+
+    // Un joueur est maudit si un Baba Yaga en partie a une malédiction active
+    // sur lui.
+    private boolean isCursedByBabaYaga(UUID uuid) {
+        for (VampireUHCPlayer p : plugin.getPlayerManager().getAll()) {
+            if (p.getRole() instanceof BabaYagaRole
+                    && ((BabaYagaRole) p.getRole()).isCurseActive(uuid)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void removeAbsorption(Player player) {
+        Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+            @Override
+            public void run() {
+                if (player.isOnline()) {
+                    player.removePotionEffect(PotionEffectType.ABSORPTION);
+                }
+            }
+        }, 1L);
     }
 
     // Pas de get/setAbsorptionAmount en 1.8 : approximation du clamp via une

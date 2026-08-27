@@ -4,8 +4,8 @@ Les rôles ne doivent pas simplement révéler des informations directes.
 
 Le but est l'interprétation.
 
-Progression : ~70 % (12 rôles villageois, 2 rôles vampire soit 5 joueurs vampires, 2 rôles solitaires, et un rôle hybride => 19 joueurs).
-Il manque donc 3-4 rôles villageois et un rôle vampire.
+Progression : ~70 % (13 rôles villageois, 2 rôles vampire soit 5 joueurs vampires, 2 rôles solitaires, et un rôle hybride => 19 joueurs).
+Il manque donc 2-3 rôles villageois, un rôle vampire et un rôle solitaire.
 
 ## Sommaire
 
@@ -264,7 +264,7 @@ Lorsqu'un joueur meurt, elle reçoit un message cliquable qui lui permet de le r
 Si elle le fait, le joueur ressuscite avec tous ses pouvoirs et doit toujours gagner avec son camp, mais :
 
 - s'il était un vampire : Baba Yaga subit un effet léger (et invisible à ses yeux) de faiblesse permanente
-- si Baba Yaga meurt, la personne qu'elle a ressuscité meurt également (sauf s'il est solitaire !)
+- si Baba Yaga meurt, la personne qu'elle a ressuscité meurt également (quel que soit son camp), sauf si c'est elle qui l'a tuée !
 
 \
 *Malédiction (à usage unique)* :
@@ -294,6 +294,18 @@ Il ne peut pas *veiller* le même joueur deux fois de suite, et peut se *veiller
 ### L'Exorciste
 
 L'**Exorciste** est un rôle villageois puissant. A chaque épisode, à l'aide de la commande `/vuhc exorciser <Joueur>`, il peut supprimer l'ensemble des marqueurs obscurs d'un joueur, et connaître l'ensemble des marqueurs obscurs que possédait le joueur (utilisable une seule fois par joueur au cours de la partie).
+
+### Le Prêtre
+
+Le **prêtre** est un rôle villageois à info majeur. À chaque épisode, il peut exécuter la commande `/vuhc percevoir <joueur>`, qui lui révèle l'aura exacte du joueur ciblé. (utilisable plusieurs fois sur le même joueurs, mais pas deux fois de suite sur le même joueur).
+\
+Attention cependant : plus l'aura du **Prêtre** est obscure, plus la probabilité que sa perception soit fausse augmente :
+
+- aura très lumineuse : 0 %
+- aura lumineuse : 5 %
+- aura neutre : 10 % 
+- aura obscure : 25 %
+- aura très obscure : 50 %
 
 ## Solitaires
 

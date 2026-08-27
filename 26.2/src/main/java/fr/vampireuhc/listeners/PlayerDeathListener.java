@@ -5,6 +5,7 @@ import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.ApprenticeSlayer;
+import fr.vampireuhc.roles.BabaYagaRole;
 import fr.vampireuhc.roles.CupidonRole;
 import fr.vampireuhc.roles.GravediggerRole;
 import fr.vampireuhc.roles.PaladinRole;
@@ -111,9 +112,21 @@ public class PlayerDeathListener implements Listener {
                 graveDigger.spawnParticlesAtLocation(location, markers);
             }
 
+            // La Baba Yaga vivante reçoit la proposition de résurrection du défunt.
+            if (p.getRole() instanceof BabaYagaRole babaYaga
+                    && p.isAlive()
+                    && !p.getUuid().equals(vp.getUuid())) {
+                babaYaga.offerResurrection(vp);
+            }
+
             if (p.getRole() instanceof WhiteLadyRole whiteLady) {
                 whiteLady.killedKiller(victim);
             }
+        }
+
+        // La mort de la Baba Yaga active le lien de mort de son ressuscité.
+        if (vp.getRole() instanceof BabaYagaRole babaYaga) {
+            babaYaga.onBabaYagaDeath(killer != null ? killer.getUniqueId() : null);
         }
 
         // à la mort du marchand de sable, tous les joueurs marqués par un marqueur sable deviennent ensommeillés.

@@ -7,6 +7,7 @@ import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.ApprenticeSlayer;
+import fr.vampireuhc.roles.BabaYagaRole;
 import fr.vampireuhc.roles.MasterRole;
 import fr.vampireuhc.roles.PaladinRole;
 import fr.vampireuhc.roles.WhiteLadyRole;
@@ -134,6 +135,8 @@ public class RoleBuffManager {
         } else if (vp.getRole() instanceof WhiteLadyRole whiteLady) {
             boolean night = !p.getWorld().isDayTime();
             whiteLady.applyEffects(p, night);
+        } else if (vp.getRole() instanceof BabaYagaRole babaYaga) {
+            babaYaga.applyEffects(p);
         }
     }
 

@@ -53,6 +53,15 @@ public class VampireUHCPlayer {
         this.canVoteVampireMark = false;
     }
 
+    // Remet le joueur en vie (résurrection). Les vampires retrouvent le droit de
+    // voter pour la marque.
+    public void setAlive() {
+        this.alive = true;
+        if (camp == Camp.VAMPIRE) {
+            this.canVoteVampireMark = true;
+        }
+    }
+
     public void setRole(Role role) {
         this.role = role;
     }

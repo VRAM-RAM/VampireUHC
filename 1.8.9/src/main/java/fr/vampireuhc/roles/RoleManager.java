@@ -34,6 +34,7 @@ public class RoleManager {
         RoleType.SAND_MERCHANT,
         RoleType.GRAVE_DIGGER,
         RoleType.WHITE_LADY,
+        RoleType.BABA_YAGA,
         RoleType.BANSHEE,
         RoleType.WATCHMAN,
         RoleType.EXORCIST,
@@ -155,6 +156,9 @@ public class RoleManager {
 
             case WHITE_LADY:
                 return new WhiteLadyRole();
+
+            case BABA_YAGA:
+                return new BabaYagaRole();
 
             case ARCHER:
                 return new ArcherRole();
@@ -506,6 +510,18 @@ public class RoleManager {
             if (killer != null) {
                 obj.addProperty("wlKillerUuid", killer.toString());
             }
+        } else if (role instanceof BabaYagaRole) {
+            BabaYagaRole babaYaga = (BabaYagaRole) role;
+            obj.addProperty("byResurrectionUsed", babaYaga.hasUsedResurrection());
+            if (babaYaga.getLinkedResurrected() != null) {
+                obj.addProperty("byLinkedResurrected", babaYaga.getLinkedResurrected().toString());
+            }
+            obj.addProperty("byVampirePenalty", babaYaga.hasVampirePenalty());
+            obj.addProperty("byCurseUsed", babaYaga.hasUsedCurse());
+            if (babaYaga.getCursedPlayer() != null) {
+                obj.addProperty("byCursedPlayer", babaYaga.getCursedPlayer().toString());
+            }
+            obj.addProperty("byCurseExpiry", babaYaga.getCurseExpiry());
         } else if (role instanceof CartographerRole && ((CartographerRole) role).isBeaconApplied()) {
             CartographerRole cartographer = (CartographerRole) role;
             obj.addProperty("cartoBeaconApplied", true);
@@ -557,6 +573,17 @@ public class RoleManager {
                     getBool(obj, "wlKilledByVampire", false),
                     getBool(obj, "wlKilledKiller", false),
                     killer);
+        } else if (role instanceof BabaYagaRole) {
+            BabaYagaRole babaYaga = (BabaYagaRole) role;
+            UUID linked = parseUuidOrNull(obj, "byLinkedResurrected");
+            UUID cursed = parseUuidOrNull(obj, "byCursedPlayer");
+            babaYaga.restoreState(
+                    getBool(obj, "byResurrectionUsed", false),
+                    linked,
+                    getBool(obj, "byVampirePenalty", false),
+                    getBool(obj, "byCurseUsed", false),
+                    cursed,
+                    obj.has("byCurseExpiry") ? obj.get("byCurseExpiry").getAsLong() : 0);
         } else if (role instanceof CartographerRole && getBool(obj, "cartoBeaconApplied", false)) {
             CartographerRole cartographer = (CartographerRole) role;
             Set<UUID> recorded = new HashSet<>();
@@ -591,6 +618,17 @@ public class RoleManager {
         return obj.has(key) && !obj.get(key).isJsonNull() ? obj.get(key).getAsInt() : def;
     }
 
+    private static UUID parseUuidOrNull(JsonObject obj, String key) {
+        if (!obj.has(key) || obj.get(key).isJsonNull()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(obj.get(key).getAsString());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     private RoleType roleTypeFromName(String name) {
         switch (name) {
             case "Maître": return RoleType.MASTER;
@@ -607,6 +645,7 @@ public class RoleManager {
             case "Archer": return RoleType.ARCHER;
             case "Fossoyeur": return RoleType.GRAVE_DIGGER;
             case "Dame Blanche": return RoleType.WHITE_LADY;
+            case "Baba Yaga": return RoleType.BABA_YAGA;
             case "Banshee": return RoleType.BANSHEE;
             case "Exorciste": return RoleType.EXORCIST;
             case "Veilleur": return RoleType.WATCHMAN;

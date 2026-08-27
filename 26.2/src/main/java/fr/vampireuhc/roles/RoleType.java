@@ -14,6 +14,7 @@ public enum RoleType {
     ARCHER, // Archer
     GRAVE_DIGGER, // Fossoyeur
     WHITE_LADY, // Dame Blanche
+    BABA_YAGA, // Baba Yaga
     BANSHEE, // Banshee
     EXORCIST, // L'Exorciste
     WATCHMAN, // Le Veilleur
