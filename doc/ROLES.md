@@ -4,14 +4,15 @@ Les rôles ne doivent pas simplement révéler des informations directes.
 
 Le but est l'interprétation.
 
-Progression : ~70 % (13 rôles villageois, 2 rôles vampire soit 5 joueurs vampires, 2 rôles solitaires, et un rôle hybride => 19 joueurs).
-Il manque donc 2-3 rôles villageois, un rôle vampire et un rôle solitaire.
+Progression : ~70 % (15 rôles villageois, 3 rôles vampire soit 6 joueurs vampires, 2 rôles solitaires, et un rôle hybride => 23 joueurs).
+Il manque donc 1 rôle villageois, et un rôle solitaire.
 
 ## Sommaire
 
 * [Vampires](#vampires)
   * [Maître Vampire](#maître-vampire)
   * [Sbire Vampire](#sbire-vampire)
+  * [Le Comte](#le-comte)
 
 * [Villageois](#villageois)
   * [Salvateur](#salvateur)
@@ -27,6 +28,8 @@ Il manque donc 2-3 rôles villageois, un rôle vampire et un rôle solitaire.
   * [Banshee](#banshee)
   * [Le Veilleur](#le-veilleur)
   * [L'Exorciste](#lexorciste)
+  * [Le Prêtre](#le-prêtre)
+  * [Le Bourreau](#le-bourreau)
 
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)
@@ -99,6 +102,12 @@ Vous avez marqué <Joueur> !
 ```
 
 Ils ne savent pas si le marquage a fonctionné ou pas (salvateur?) et si les marques changent de propriétaire ou pas.
+
+### Le Comte
+
+Le **Comte** est un vampire puissant.
+Il vote, comme les sbires, pour attribuer la marque vampire.
+À chaque debut d'épisode, il reçoit le nombre de personnes ayant une aura lumineuse proche de lui (dans un rayon de 50 blocs autour de lui).
 
 ## Villageois
 
@@ -306,6 +315,12 @@ Attention cependant : plus l'aura du **Prêtre** est obscure, plus la probabilit
 - aura neutre : 10 % 
 - aura obscure : 25 %
 - aura très obscure : 50 %
+
+### Le Bourreau
+
+Le **bourreau** est un rôle villageois mineur, pvp pur (à la manière de l'archer). 
+À l'annonce des rôles, il reçoit un livre *sharpness II*. 
+À chaque épisode, le premier coup qu'il met à un joueur inflige 50% de dégats en plus.
 
 ## Solitaires
 
