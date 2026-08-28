@@ -339,8 +339,8 @@ L'apprentie assassin est l'un des rôles solitaire. Son but ? Gagner seule, en �
 2. En fonction des marques qu'elle possède, ses pouvoirs varient (et sont cumulatifs) :
     - Plus de X marqueurs obscurs --> Force légère la nuit
     - Plus de X marqueurs lumineux --> Force légère le jour
-    - Plus de nX marqueurs obscurs --> Force légère la nuit & Régénération naturelle d'un demi-coeur par minute la nuit.
-    - Plus de nX marqueurs lumineux --> Force légère le jour & Régénération naturelle d'un demi-coeur par minute le jour.
+    - Plus de nX marqueurs obscurs --> Force la nuit & Régénération naturelle d'un demi-coeur par minute la nuit.
+    - Plus de nX marqueurs lumineux --> Force le jour & Régénération naturelle d'un demi-coeur par minute le jour.
     
 Donc en fin de game, potentiellement T4 + Force perma + regen lente.
 
@@ -413,6 +413,9 @@ S'il ne parvient jamais à atteindre ou identifier le tueur (mort avant lui, par
 À 35 minutes, le Doppelganger usurpe Alice, qui est Prêtre. Il peut désormais percevoir l'aura des joueurs comme elle le ferait, avec son propre pool d'usages.
 
 À 1h20, Alice se fait tuer par Bob. Le Doppelganger perd instantanément son pouvoir de perception et tous les marqueurs qu'il avait lui-même posés en tant que Prêtre usurpé, mais reçoit l'identité de Bob comme tueur. Dès lors, tous ses coups portés contre Bob infligent 50% de dégâts supplémentaires. S'il parvient à l'achever, il gagne un effet de force et de vitesse pour le reste de la partie.
+\
+\
+Pour plus d'informations à propos de l'usurpation, vous pouvez consulter [la doc du doppelganger](./Doppelganger.md).
 
 ## Hybrides
 
