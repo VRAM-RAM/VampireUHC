@@ -53,7 +53,7 @@ Il possède des marqueurs spécifiques : les marqueurs Maître.
 
 Les marqueurs Maître ont une aura obscure.
 
-À chaque épisode, le Maître peut placer un marqueur Maître sur un joueur non-vampire. (peut etre plus frequemment, on verra pour l'équilibrage).
+À chaque début d'épisode, le Maître peut placer un marqueur Maître sur un joueur non-vampire qu'il a croisé durant l'épisode précédent. (peut etre plus frequemment, on verra pour l'équilibrage).
 
 Effets :
 - 1 marqueur Maître :
@@ -82,6 +82,8 @@ Ils votent pour une marque à l'aide de :
 ```mc
 /vuhc voter <Joueur>
 ```
+
+Pour pouvoir voter pour un joueur, ils doivent l'avoir croisé durant l'épisode précédent.
 
 Leurs pouvoirs augmentent par nombre de personne marquées :
 
@@ -251,11 +253,13 @@ La balise, après avoir passé 2 épisodes au même endroit, disparaît automati
 Le Marchand de Sable est un rôle de soutien léger.
 Chaque épisode, il peut, à l'aide de la commande `/vuhc ensabler <joueur>`, déposer un marqueur **sable** sur un joueur de son choix qui se trouve dans un rayon de 10 blocs autour de lui. Si le joueur ciblé est villageois, le marqueur prendra une aura lumineuse. Sinon, il prendra une aura neutre.
 
-> [!NOTE] Le Marchand de sable peut s'ensabler lui-même, mais ne peut ensabler un joueur qu'une seule fois dans la partie.
+> [!NOTE]
+>  Le Marchand de sable peut s'ensabler lui-même, mais ne peut ensabler un joueur qu'une seule fois dans la partie.
 
 À la mort du Marchand de Sable, toutes les personnes possédant un marqueur sable subissent un effet de blindness pendant 30 secondes, et un effet de lenteur pendant 3 minutes.
 
-> [!WARN] L'aura d'un marqueur est fixe. Si, par exemple, Bob place un marqueur Sable sur Alice qui est villageoise, le marqueur prendra une aura lumineuse. Si le gremlin switch les marqueurs d'Alice et Majory, qui est vampire, ce dernier recevra le marqueur sable avec une aura lumineuse et non neutre.
+> [!WARNING]
+> L'aura d'un marqueur est fixe. Si, par exemple, Bob place un marqueur Sable sur Alice qui est villageoise, le marqueur prendra une aura lumineuse. Si le gremlin switch les marqueurs d'Alice et Majory, qui est vampire, ce dernier recevra le marqueur sable avec une aura lumineuse et non neutre.
 
 ### Archer
 
@@ -279,7 +283,7 @@ Si elle le fait, le joueur ressuscite avec tous ses pouvoirs et doit toujours ga
 \
 *Malédiction (à usage unique)* :
 \
-À l'aide la commande `/vuhc maudire <joueur>`, Baba Yaga peut maudire un joueur. Ce dernier voit ses pommes d'or ne lui conférer aucun coeur d'absorption pendant 10 minutes.
+À l'aide la commande `/vuhc maudire <joueur>`, Baba Yaga peut maudire un joueur. Ce dernier voit ses pommes d'or ne lui conférer aucun coeur d'absorption pendant *3* minutes.
 
 ### Banshee
 
@@ -315,7 +319,7 @@ Attention cependant : plus l'aura du **Prêtre** est obscure, plus la probabilit
 - aura lumineuse : 5 %
 - aura neutre : 10 % 
 - aura obscure : 25 %
-- aura très obscure : 50 %
+- aura très obscure : 40 %
 
 ### Le Bourreau
 
@@ -356,6 +360,7 @@ En revanche, le cupidon est notifié si une marque d'amour change de propriétai
 
 Son second pouvoir est de voler, en plein combat, la vie du joueur qu'il frappe : à chaque coup porté, X % de chance qu'il gagne un demi-coeur. 
 Ce pouvoir est activable pendant 5 minutes à chaque épisode, à l'aide de la commande :
+
 ```mc
 /vuhc drain
 ```
@@ -367,6 +372,7 @@ Ce pouvoir est activable pendant 5 minutes à chaque épisode, à l'aide de la c
 Le Doppelganger est un rôle solitaire. Son but ? Gagner seul, en empruntant la force des autres — et en punissant sévèrement quiconque lui prend sa nouvelle identité.
 
 Entre 20 et 60 minutes de jeu, il peut, une seule fois, exécuter la commande :
+
 ```mc
 /vuhc usurper <joueur>
 ```
@@ -388,6 +394,9 @@ Quelques précisions selon le rôle copié :
 
 En résumé : le Doppelganger copie le *pouvoir*, jamais l'*état* ou les *informations déjà accumulées* du joueur usurpé.
 
+> [!NOTE]
+> Le pouvoir copié est parfois **nerf** par rapport au pouvoir original, pour éviter que le **Doppelganger** devienne un rôle beaucoup trop puissant.
+
 #### Mort du joueur usurpé
 
 Si le joueur usurpé meurt :
@@ -404,6 +413,7 @@ S'il ne parvient jamais à atteindre ou identifier le tueur (mort avant lui, par
 À 35 minutes, le Doppelganger usurpe Alice, qui est Prêtre. Il peut désormais percevoir l'aura des joueurs comme elle le ferait, avec son propre pool d'usages.
 
 À 1h20, Alice se fait tuer par Bob. Le Doppelganger perd instantanément son pouvoir de perception et tous les marqueurs qu'il avait lui-même posés en tant que Prêtre usurpé, mais reçoit l'identité de Bob comme tueur. Dès lors, tous ses coups portés contre Bob infligent 50% de dégâts supplémentaires. S'il parvient à l'achever, il gagne un effet de force et de vitesse pour le reste de la partie.
+
 ## Hybrides
 
 ### Dame Blanche
