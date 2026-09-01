@@ -4,8 +4,9 @@ Les rôles ne doivent pas simplement révéler des informations directes.
 
 Le but est l'interprétation.
 
-Progression : ~98 % (15 rôles villageois, 3 rôles vampire soit 6 joueurs vampires, 3 rôles solitaires, et un rôle hybride => 24 joueurs).
-Il manque donc 1 rôle villageois.
+Progression : 100 % (16 rôles villageois, 3 rôles vampire soit 6 joueurs vampires, 3 rôles solitaires, et un rôle hybride => 25 joueurs).
+
+À terme, on ajoutera des rôles pour pouvoir faire des compos diversifiées (variante de l'Exorciste, du Paladin...) mais pour l'instant, on a suffisament de rôles pour jouer une vrai game.
 
 ## Sommaire
 
@@ -30,6 +31,7 @@ Il manque donc 1 rôle villageois.
   * [L'Exorciste](#lexorciste)
   * [Le Prêtre](#le-prêtre)
   * [Le Bourreau](#le-bourreau)
+  * [Le Chasseur de Fantômes](#chasseur-de-fantômes)
 
 * [Solitaires](#solitaires)
   * [Apprentie assassin](#apprentie-assassin)
@@ -326,6 +328,23 @@ Attention cependant : plus l'aura du **Prêtre** est obscure, plus la probabilit
 Le **bourreau** est un rôle villageois mineur, pvp pur (à la manière de l'archer). 
 À l'annonce des rôles, il reçoit un livre *sharpness II*. 
 À chaque épisode, le premier coup qu'il met à un joueur inflige 50% de dégats en plus.
+
+### Chasseur de Fantômes 
+
+Le **Chasseur de Fantômes** est un rôle villageois à informations qui peut être très puissant.
+\
+À chaque épisode, il peut utiliser la commande `/vuhc traquer <joueur>`.
+\
+Pendant les *20* prochaines minutes, le nombre de joueurs non-villageois que le joueur ciblé croise est compté. 
+\
+À la fin de ces *20* minutes, en fonction de ce nombre, le **Chasseur de Fantômes** reçoit un message :
+- 0 joueurs non-villageois : `Vous n'avez enregistré aucune présence spectrale.`
+- 1-2 joueurs non-villageois : `Vous avez enregistré une présence spectrale.`
+- 3+ joueurs non-villageois : `Vous avez enregistré la présence de nombreux spectres !`
+
+Le joueur ciblé, s'il est **non-villageois**, compte dans les joueurs **non-villageois** qu'il croise.
+\
+**Le Chasseur de fantôme ne peut pas cibler le même joueur plusieurs fois dans la partie, ni se cibler lui-même.**
 
 ## Solitaires
 
