@@ -13,7 +13,6 @@ import fr.vampireuhc.roles.SandMerchantRole;
 import fr.vampireuhc.roles.WatchmanRole;
 import fr.vampireuhc.vampire_vote.VampireVoteManager;
 import fr.vampireuhc.vampire_vote.VoteResult;
-import fr.vampireuhc.config.MessageUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -64,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import fr.vampireuhc.config.MessageUtil;
 
 /**
  * Commandes joueur (visibles uniquement par ceux qui peuvent les utiliser) :
@@ -1181,7 +1181,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 for (Map.Entry<UUID, String> entry : gameManager.getRoster().entrySet()) {
                     Player online = Bukkit.getPlayer(entry.getKey());
                     String state = online != null ? "<green>en ligne</green>" : "<red>hors ligne</red>";
-                    sender.sendMessage("- <white>" + entry.getValue() + " <gray>(" + state + ")</gray>");
+                    sender.sendMessage(MessageUtil.info("- <white>" + entry.getValue() + " <gray>(" + state + ")</gray>"));
                 }
                 return;
             }
