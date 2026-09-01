@@ -95,6 +95,23 @@ markers:
 messages:
   prefix: "&5&lVampireUHC &8» &r"   # Préfixe utilisé dans tous les messages
 
+# Annonce de la mort : probabilités (en %) de révéler, pour chaque observateur
+# selon son camp, le nom / le rôle / l'aura du mort. Solitaire : nom et aura
+# toujours visibles (100), seul le rôle est soumis à la chance.
+mort:
+  villageois:
+    nom: 60
+    role: 25
+    aura: 40
+  solitaire:
+    nom: 100
+    role: 50
+    aura: 100
+  vampire:
+    nom: 80
+    role: 55
+    aura: 70
+
 # Administrateurs autorisés à lancer, arrêter ou réinitialiser la partie
 admins:
   players:

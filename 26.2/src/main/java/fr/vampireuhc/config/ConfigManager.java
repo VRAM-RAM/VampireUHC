@@ -239,7 +239,13 @@ public class ConfigManager {
     public int getAmourPenaltyDurationSeconds() {
         // Elle perd 5 coeurs pendant 10 minutes
         return cfg().getInt("markers.amour-death.duration-seconds", 600);
-    } 
+    }
+
+    // Probabilités (en %) de révéler le nom / le rôle / l'aura d'un mort,
+    // selon le camp de l'observateur. Structure : mort.<camp>.<nom|role|aura>.
+    public int getDeathAnnounceChance(String camp, String field) {
+        return cfg().getInt("mort." + camp + "." + field, 0);
+    }
 
     /* Helper pour messages */
 

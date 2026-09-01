@@ -1,8 +1,10 @@
 package fr.vampireuhc.listeners;
 
 import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.announce.DeathAnnounce;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
+import fr.vampireuhc.markers.TightAuraTier;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.ApprenticeSlayer;
 import fr.vampireuhc.roles.BabaYagaRole;
@@ -134,6 +136,10 @@ public class PlayerDeathListener implements Listener {
                     + ChatColor.GOLD + killer.getName();
         }
         event.setDeathMessage(message);
+
+        // Annonce de la mort, personnalisée pour chaque observateur vivant selon
+        // ses probabilités (nom / rôle / aura du mort).
+        announceDeath(vp, markerManager);
 
         if (killerVp != null) {
             // Le Paladin gagne une marque lumineuse en tuant un vampire.
@@ -269,5 +275,21 @@ public class PlayerDeathListener implements Listener {
         }
 
         plugin.getGameManager().checkWinCondition();
+    }
+
+    /**
+     * Diffuse la mort de <code>dead</code> à tous les joueurs en partie (morts
+     * inclus). Chacun reçoit une version personnalisée selon ses propres
+     * probabilités (nom / rôle / aura), fonction de son camp.
+     */
+    private void announceDeath(VampireUHCPlayer dead, MarkerManager markerManager) {
+        TightAuraTier aura = markerManager.computeAuraTier(dead.getUuid()).getTight();
+        for (VampireUHCPlayer observer : plugin.getPlayerManager().getAll()) {
+            Player bukkitObserver = plugin.getServer().getPlayer(observer.getUuid());
+            if (bukkitObserver == null || !bukkitObserver.isOnline()) {
+                continue;
+            }
+            bukkitObserver.sendMessage(DeathAnnounce.build(dead, aura, observer));
+        }
     }
 }
