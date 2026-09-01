@@ -26,9 +26,6 @@ import fr.vampireuhc.roles.usurped.UsurpedSandMerchant;
 
 import java.util.List;
 
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -91,13 +88,10 @@ public class PlayerDeathListener implements Listener {
         });
 
 
-        Component message = Component.text(victim.getName(), NamedTextColor.RED)
-                .append(Component.text(" est mort", NamedTextColor.GRAY));
-        if (killer != null) {
-            message = message.append(Component.text(", tué par ", NamedTextColor.GRAY))
-                    .append(Component.text(killer.getName(), NamedTextColor.GOLD));
-        }
-        event.deathMessage(message);
+        // L'annonce classique de mort (vanilla) est masquée : la seule information
+        // vient de l'annonce personnalisée ci-dessous, soumise aux probabilités
+        // (nom / rôle / aura) de chaque observateur.
+        event.deathMessage(null);
 
         // Annonce de la mort, personnalisée pour chaque observateur vivant selon
         // ses probabilités (nom / rôle / aura du mort).

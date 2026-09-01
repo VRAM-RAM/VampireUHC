@@ -47,11 +47,8 @@ public class DeathAnnounce {
                 ? auraLabel(aura) : obfuscated(auraLabel(aura));
 
         String mini = MessageUtil.prefix()
-                + "<gray>======================="
                 + "<white>\nLe joueur <yellow>" + name + " <gray>est mort. Il était "
-                + "<yellow>" + role + "<gray>, et avait une aura <yellow>" + auraLabel
-                + "<gray>\n=======================";
-
+                + "<yellow>" + role + "<gray>, et avait une aura <yellow>" + auraLabel;
         return MessageUtil.serialize(mini);
     }
 

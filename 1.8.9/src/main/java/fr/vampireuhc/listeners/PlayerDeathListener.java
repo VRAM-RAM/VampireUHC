@@ -26,8 +26,6 @@ import fr.vampireuhc.roles.usurped.UsurpedWhiteLady;
 
 import java.util.List;
 
-import org.bukkit.ChatColor;
-
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -129,13 +127,10 @@ public class PlayerDeathListener implements Listener {
         });
 
 
-        String message = ChatColor.RED + victim.getName()
-                + ChatColor.GRAY + " est mort";
-        if (killer != null) {
-            message += ChatColor.GRAY + ", tué par "
-                    + ChatColor.GOLD + killer.getName();
-        }
-        event.setDeathMessage(message);
+        // L'annonce classique de mort (vanilla) est masquée : la seule information
+        // vient de l'annonce personnalisée ci-dessous, soumise aux probabilités
+        // (nom / rôle / aura) de chaque observateur.
+        event.setDeathMessage(null);
 
         // Annonce de la mort, personnalisée pour chaque observateur vivant selon
         // ses probabilités (nom / rôle / aura du mort).

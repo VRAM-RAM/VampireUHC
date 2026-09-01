@@ -44,11 +44,8 @@ public class DeathAnnounce {
         String auraLabel = roll(config.getDeathAnnounceChance(camp, "aura"))
                 ? auraLabel(aura) : obfuscated(auraLabel(aura));
 
-        String mini = "<gray>======================="
-                + "<white>\nLe joueur <yellow>" + name + " <gray>est mort. Il était "
-                + "<yellow>" + role + "<gray>, et avait une aura <yellow>" + auraLabel
-                + "<gray>\n=======================";
-
+        String mini = "<white>\nLe joueur <yellow>" + name + " <gray>est mort. Il était "
+                + "<yellow>" + role + "<gray>, et avait une aura <yellow>" + auraLabel;
         return MessageUtil.prefix().append(MessageUtil.serialize(mini));
     }
 
