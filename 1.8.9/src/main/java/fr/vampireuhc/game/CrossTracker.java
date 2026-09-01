@@ -25,6 +25,10 @@ import org.bukkit.scheduler.BukkitTask;
  * vote vampire et la marque Maître (« un joueur qu'ils ont croisé durant
  * l'épisode précédent »).
  *
+ * Des fenêtres de suivi temps réel (Chasseur de Fantômes) peuvent accumuler
+ * les croisements d'une cible sur une durée fixe (20 minutes), en survolant
+ * les frontières d'épisode : see {@link #startTracking(UUID)}.
+ *
  * Non persisté en JSON : après un redémarrage, aucune rencontre éligible tant
  * qu'un épisode entier n'a pas été re-scanné.
  */
@@ -41,6 +45,11 @@ public class CrossTracker {
     private final Map<UUID, Set<UUID>> currentCrossings = new HashMap<>();
     // Croisements de l'épisode précédent : c'est la fenêtre éligible.
     private final Map<UUID, Set<UUID>> eligibleCrossings = new HashMap<>();
+
+    // Fenêtres de suivi temps réel : cible -> joueurs croisés depuis startTracking
+    // (accumulation qui survit aux frontières d'épisode, utilisée par le
+    // Chasseur de Fantômes pendant ses 20 minutes de traque).
+    private final Map<UUID, Set<UUID>> trackedWindows = new HashMap<>();
 
     private BukkitTask scanTask;
 
@@ -64,6 +73,7 @@ public class CrossTracker {
         }
         currentCrossings.clear();
         eligibleCrossings.clear();
+        trackedWindows.clear();
     }
 
     // Frontière d'épisode : les croisements de l'épisode qui vient de s'écouler
@@ -78,6 +88,23 @@ public class CrossTracker {
     public boolean hasCrossed(UUID a, UUID b) {
         Set<UUID> crossed = eligibleCrossings.get(a);
         return crossed != null && crossed.contains(b);
+    }
+
+    // Démarre une fenêtre de suivi temps réel sur une cible (Chasseur de
+    // Fantômes) : chaque scan met à jour l'ensemble des joueurs croisés par la
+    // cible depuis cet appel, sans être effacé aux frontières d'épisode.
+    public void startTracking(UUID target) {
+        if (target == null) {
+            return;
+        }
+        trackedWindows.computeIfAbsent(target, k -> new HashSet<>());
+    }
+
+    // Stoppe la fenêtre de suivi et renvoie les joueurs croisés depuis son
+    // démarrage (ensemble vide si aucune traque en cours).
+    public Set<UUID> stopTracking(UUID target) {
+        Set<UUID> tracked = trackedWindows.remove(target);
+        return tracked != null ? tracked : new HashSet<>();
     }
 
     // Scan périodique des positions des joueurs vivants.
@@ -111,6 +138,14 @@ public class CrossTracker {
                 if (p.getLocation().distanceSquared(otherPlayer.getLocation()) <= CROSS_RADIUS * CROSS_RADIUS) {
                     currentCrossings.computeIfAbsent(p.getUniqueId(), k -> new HashSet<>()).add(other);
                 }
+            }
+        }
+
+        // Met à jour les fenêtres de suivi temps réel (Chasseur de Fantômes).
+        for (Map.Entry<UUID, Set<UUID>> window : trackedWindows.entrySet()) {
+            Set<UUID> crossedNow = currentCrossings.get(window.getKey());
+            if (crossedNow != null) {
+                window.getValue().addAll(crossedNow);
             }
         }
     }

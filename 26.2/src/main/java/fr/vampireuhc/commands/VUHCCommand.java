@@ -32,6 +32,7 @@ import fr.vampireuhc.roles.SaviorRole;
 import fr.vampireuhc.roles.SoulweigherRole;
 import fr.vampireuhc.roles.VampireMinion;
 import fr.vampireuhc.roles.WatchmanRole;
+import fr.vampireuhc.roles.GhostHunterRole;
 import fr.vampireuhc.roles.WeaverRole;
 import fr.vampireuhc.roles.ExorcistRole;
 import fr.vampireuhc.roles.BabaYagaRole;
@@ -54,6 +55,7 @@ import fr.vampireuhc.roles.usurped.UsurpedWeaver;
 import fr.vampireuhc.roles.usurped.UsurpedSandMerchant;
 import fr.vampireuhc.roles.usurped.UsurpedBabaYaga;
 import fr.vampireuhc.roles.usurped.UsurpedWatchman;
+import fr.vampireuhc.roles.usurped.UsurpedGhostHunter;
 
 import fr.vampireuhc.VampireUHC;
 
@@ -81,6 +83,7 @@ import java.util.stream.Collectors;
  *  * /vuhc ensabler <joueur> -> Le Marchand de sable pose un marqueur sable sur un joueur
  *  * /vuhc exhumer           -> Le Fossoyeur exhume un cadavre.
  *  * /vuhc veiller <joueur>  -> Le Veilleur veille sur un joueur
+ *  * /vuhc traquer <joueur>  -> Le Chasseur de Fantômes traque un joueur
  *  * /vuhc exorciser <j>     -> L'Exorciste exorcise un joueur
  *  * /vuhc usurper <joueur>  -> Le Doppelganger (Sosie) copie les pouvoirs d'un joueur
  * 
@@ -104,7 +107,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> PLAYER_SUBCOMMANDS = Arrays.asList(
             "role", "spectate", "marquer", "trancher", "proteger", "voter",
-            "switch", "drain", "lier", "peser", "tisser", "baliser", "ensabler", "exhumer", "exorciser", "veiller", "maudire", "ressusciter", "percevoir", "usurper");
+            "switch", "drain", "lier", "peser", "tisser", "baliser", "ensabler", "exhumer", "exorciser", "veiller", "maudire", "ressusciter", "percevoir", "usurper", "traquer");
     private static final List<String> ADMIN_SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "status", "roster");
     private static final List<String> ROSTER_SUBCOMMANDS = Arrays.asList("list", "add", "remove", "clear", "fill");
     private static final List<String> DEV_SUBCOMMANDS = Arrays.asList("setTime", "setRole", "who", "aura");
@@ -225,6 +228,44 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 int current_episode = gameManager.getEpisode();
 
                 watchman.watchPlayer(targetPlayer, markerManager, current_episode);
+                return;
+            }
+
+            case "traquer": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
+                    return;
+                }
+
+                if (args.length < 2) {
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc traquer <joueur>"));
+                    return;
+                }
+
+                Player target = Bukkit.getPlayer(args[1]);
+                if (target == null) {
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
+                    return;
+                }
+
+                VampireUHCPlayer targetPlayer = playerManager.get(target.getUniqueId());
+                if (targetPlayer == null) {
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
+                    return;
+                }
+
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+                if (!(localPlayer != null && localPlayer.getRole() instanceof GhostHunterRole ghostHunter)) {
+                    if (localPlayer != null && localPlayer.getRole() instanceof DoppelgangerRole doppelgangerH
+                            && doppelgangerH.getActivePower() instanceof UsurpedGhostHunter usurpedGhostHunter) {
+                        // Chasseur de Fantômes copié par le Sosie : copie exacte, compteurs propres.
+                        usurpedGhostHunter.traque(targetPlayer, gameManager.getEpisode());
+                        return;
+                    }
+                    return;
+                }
+
+                ghostHunter.traque(targetPlayer, gameManager.getEpisode());
                 return;
             }
 
@@ -1229,7 +1270,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
             if ((sub.equals("marquer") || sub.equals("proteger") || sub.equals("voter")
                     || sub.equals("switch") || sub.equals("lier") || sub.equals("peser")
-                    || sub.equals("tisser") || sub.equals("spectate") || sub.equals("ensabler") || sub.equals("veiller")) || sub.equals("exorciser") || sub.equals("maudire") || sub.equals("percevoir") || sub.equals("usurper") && hasAccess(sender, sub)) {
+                    || sub.equals("tisser") || sub.equals("spectate") || sub.equals("ensabler") || sub.equals("veiller") || sub.equals("traquer")) || sub.equals("exorciser") || sub.equals("maudire") || sub.equals("percevoir") || sub.equals("usurper") && hasAccess(sender, sub)) {
                 return playersStartingWith(args[1]);
             }
             return new ArrayList<>();
@@ -1290,6 +1331,8 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 return hasRole(sender, DoppelgangerRole.class);
             case "veiller":
                 return hasRole(sender, WatchmanRole.class) || hasActiveUsurpedPower(sender, UsurpedWatchman.class);
+            case "traquer":
+                return hasRole(sender, GhostHunterRole.class) || hasActiveUsurpedPower(sender, UsurpedGhostHunter.class);
             case "admin":
             case "dev":
             case "start":
@@ -1401,6 +1444,10 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
         if (hasAccess(sender, "veiller")) {
             sender.sendMessage(MessageUtil.helpEntry("/vuhc veiller <joueur>", "Veiller sur un joueur (Veilleur)"));
+        }
+
+        if (hasAccess(sender, "traquer")) {
+            sender.sendMessage(MessageUtil.helpEntry("/vuhc traquer <joueur>", "Traquer un joueur (Chasseur de Fantômes)"));
         }
 
         if (hasAccess(sender, "ensabler")) {

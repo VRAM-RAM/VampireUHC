@@ -22,6 +22,7 @@ import fr.vampireuhc.roles.usurped.UsurpedArcher;
 import fr.vampireuhc.roles.usurped.UsurpedBourreau;
 import fr.vampireuhc.roles.usurped.UsurpedCartographer;
 import fr.vampireuhc.roles.usurped.UsurpedWatchman;
+import fr.vampireuhc.roles.usurped.UsurpedGhostHunter;
 import fr.vampireuhc.roles.usurped.UsurpedCupidon;
 import fr.vampireuhc.roles.usurped.UsurpedWeaver;
 import fr.vampireuhc.roles.usurped.UsurpedSandMerchant;
@@ -193,6 +194,9 @@ public class DoppelgangerRole implements Role {
         }
         if (role instanceof WatchmanRole) {
             return new UsurpedWatchman();
+        }
+        if (role instanceof GhostHunterRole) {
+            return new UsurpedGhostHunter();
         }
         if (role instanceof CupidonRole) {
             return new UsurpedCupidon();

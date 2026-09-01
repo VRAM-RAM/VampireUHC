@@ -38,7 +38,7 @@ Cependant, le mode de jeu est exactement le même, la config est également trè
 
 Si vous êtes intéressé par la version `26.2`, en voici le [readme](/26.2/README.md).
 \
-Si vous êtes intéressé par la version `1.8.9`, en voici la [readme](/1.8.9/README.md)..
+Si vous êtes intéressé par la version `1.8.9`, en voici le [readme](/1.8.9/README.md).
 
 ## Concept
 

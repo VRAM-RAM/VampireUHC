@@ -11,7 +11,7 @@ timeline:
 # Tous les rôles sont uniques (0 ou 1 occurrence), SAUF VAMPIRE_MINION qui peut être répété.
 # Les clés sont les noms des enums de RoleType (MASTER, COMTE, VAMPIRE_MINION, PALADIN...).
 compo:
-  joueurs: 25                    # Nombre de joueurs : DOIT être égal à la somme des rôles
+  joueurs: 26                    # Nombre de joueurs : DOIT être égal à la somme des rôles
   vampires:
     MASTER: 1                    # Le Maître Vampire
     COMTE: 1                     # Le Comte
@@ -33,6 +33,7 @@ compo:
     WATCHMAN: 1
     BOURREAU: 1
     PRIEST: 1
+    GHOST_HUNTER: 1              # Le Chasseur de Fantômes
   solitaires:
     APPRENTICE_SLAYER: 1        # L'Apprentie Assassin
     GREMLIN: 1                   # Le Gremlin

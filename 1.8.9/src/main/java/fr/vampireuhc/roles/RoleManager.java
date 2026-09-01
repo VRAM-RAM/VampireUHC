@@ -114,6 +114,9 @@ public class RoleManager {
             case DOPPELGANGER:
                 return new DoppelgangerRole(player);
 
+            case GHOST_HUNTER:
+                return new GhostHunterRole();
+
             default:
                 plugin.getLogger().warning("Rôle inconnu : " + type);
                 return null;
@@ -461,6 +464,14 @@ public class RoleManager {
             obj.addProperty("bourreauLastFirstHitEpisode", bourreau.getLastFirstHitEpisode());
         } else if (role instanceof DoppelgangerRole) {
             ((DoppelgangerRole) role).saveState(obj);
+        } else if (role instanceof GhostHunterRole) {
+            GhostHunterRole ghostHunter = (GhostHunterRole) role;
+            obj.addProperty("ghostHunterLastEpisode", ghostHunter.getLastTraqueEpisode());
+            JsonArray tracked = new JsonArray();
+            for (UUID id : ghostHunter.getTrackedPlayers()) {
+                tracked.add(new com.google.gson.JsonPrimitive(id.toString()));
+            }
+            obj.add("ghostHunterTracked", tracked);
         }
     }
 
@@ -543,6 +554,19 @@ public class RoleManager {
             bourreau.restoreState(getInt(obj, "bourreauLastFirstHitEpisode", -1));
         } else if (role instanceof DoppelgangerRole) {
             ((DoppelgangerRole) role).restoreState(obj, playerManager);
+        } else if (role instanceof GhostHunterRole) {
+            GhostHunterRole ghostHunter = (GhostHunterRole) role;
+            Set<UUID> tracked = new HashSet<>();
+            if (obj.has("ghostHunterTracked") && obj.get("ghostHunterTracked").isJsonArray()) {
+                for (JsonElement idEl : obj.getAsJsonArray("ghostHunterTracked")) {
+                    try {
+                        tracked.add(UUID.fromString(idEl.getAsString()));
+                    } catch (IllegalArgumentException ignored) {
+                        // Entrée invalide : on saute ce joueur.
+                    }
+                }
+            }
+            ghostHunter.restoreState(getInt(obj, "ghostHunterLastEpisode", -1), tracked);
         }
     }
 
@@ -589,6 +613,7 @@ public class RoleManager {
             case "Prêtre": return RoleType.PRIEST;
             case "Comte": return RoleType.COMTE;
             case "Doppelganger": return RoleType.DOPPELGANGER;
+            case "Chasseur de Fantômes": return RoleType.GHOST_HUNTER;
             default: return null;
         }
     }

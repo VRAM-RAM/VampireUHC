@@ -4,7 +4,7 @@ Les rôles ne doivent pas simplement révéler des informations directes.
 
 Le but est l'interprétation.
 
-Progression : 100 % (16 rôles villageois, 3 rôles vampire soit 6 joueurs vampires, 3 rôles solitaires, et un rôle hybride => 25 joueurs).
+Progression : 100 % (16 rôles villageois, 3 rôles vampire soit 6 joueurs vampires, 3 rôles solitaires, et un rôle hybride => 26 joueurs).
 
 À terme, on ajoutera des rôles pour pouvoir faire des compos diversifiées (variante de l'Exorciste, du Paladin...) mais pour l'instant, on a suffisament de rôles pour jouer une vrai game.
 

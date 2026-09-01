@@ -10,7 +10,7 @@ timeline:
 # Chaque rôle est UNIQUE (0 ou 1) sauf VAMPIRE_MINION (les Sbires, plusieurs possibles).
 # 'joueurs' doit être égal à la somme de tous les rôles : le lancement exige ce nombre exact.
 compo:
-  joueurs: 25                   # Nombre de joueurs requis pour /vuhc start (= somme des rôles)
+  joueurs: 26                   # Nombre de joueurs requis pour /vuhc start (= somme des rôles)
   vampires:                     # Nombre de joueurs par rôle vampire
     MASTER: 1                   # Le Maître (unique)
     COMTE: 1                    # Le Comte (unique)
@@ -32,6 +32,7 @@ compo:
     ARCHER: 1
     BOURREAU: 1
     PRIEST: 1
+    GHOST_HUNTER: 1              # Le Chasseur de Fantômes
   solitaires:                   # 3 rôles, un de chaque
     APPRENTICE_SLAYER: 1
     GREMLIN: 1

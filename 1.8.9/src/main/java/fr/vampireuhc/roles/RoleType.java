@@ -22,7 +22,8 @@ public enum RoleType {
     BOURREAU, // Le Bourreau
     PRIEST, // Le Prêtre
     COMTE, // Le Comte
-    DOPPELGANGER; //Le Doppelganger (Sosie)
+    DOPPELGANGER, //Le Doppelganger (Sosie)
+    GHOST_HUNTER; // Le Chasseur de Fantômes
     
     public static RoleType fromString(String value) {
         return valueOf(value.toUpperCase());
