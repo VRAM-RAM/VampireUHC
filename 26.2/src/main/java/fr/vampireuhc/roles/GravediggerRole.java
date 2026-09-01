@@ -1,8 +1,10 @@
 package fr.vampireuhc.roles;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -21,6 +23,11 @@ public class GravediggerRole implements Role {
 
     // Cadavres indexés par clé stable : monde + bloc (ignore yaw/pitch).
     private final Map<String, List<MarkerType>> markersByKey = new HashMap<>();
+
+    // Cadavres déjà exhumés : consulté uniquement par le Sosie (UsurpedGravedigger)
+    // pour lui interdire un cadavre déjà exhumé par le vrai Fossoyeur (ou par
+    // lui-même). Le vrai Fossoyeur n'est jamais bloqué. Remis à zéro en fin de partie.
+    private static final Set<String> EXHUMED_CORPSES = new HashSet<>();
 
     @Override
     public Camp getDefaultCamp() {
@@ -43,6 +50,7 @@ public class GravediggerRole implements Role {
         // autre terrain, ces cadavres seraient inexhumables. Pas de persistance
         // volontaire (décision) : une partie = une map.
         markersByKey.clear();
+        EXHUMED_CORPSES.clear();
     }
 
     @Override
@@ -88,9 +96,19 @@ public class GravediggerRole implements Role {
     }
 
     // Clé stable d'un cadavre : monde + coordonnées de bloc.
-    private static String corpseKey(Location location) {
+    public static String corpseKey(Location location) {
         return location.getWorld().getName() + ":"
                 + location.getBlockX() + "," + location.getBlockY() + "," + location.getBlockZ();
+    }
+
+    // Registre des exhumations déjà réalisées : écrit par les deux Fossoyeurs
+    // (vrai + Sosie), lu uniquement par le Sosie pour son blocage.
+    public static boolean isCorpseExhumed(String key) {
+        return EXHUMED_CORPSES.contains(key);
+    }
+
+    public static boolean markCorpseExhumed(String key) {
+        return EXHUMED_CORPSES.add(key);
     }
 
 
@@ -106,12 +124,18 @@ public class GravediggerRole implements Role {
             return;
         }
 
-        var markers = markersByKey.remove(corpseKey(location));
+        String key = corpseKey(location);
+
+        // Le vrai Fossoyeur n'est jamais bloqué : il peut exhumer un cadavre
+        // même si le Sosie (copie du pouvoir) l'a déjà exhumé. Une même
+        // exhumation reste unique grâce au retrait de markersByKey ci-dessous.
+        var markers = markersByKey.remove(key);
 
         if (markers == null) {
             bukkitGraveDigger.sendMessage(MessageUtil.warn("Vous ne trouvez aucun cadavre à exhumer."));
             return;
         }
+        markCorpseExhumed(key);
 
         MiniMessage mm = MiniMessage.miniMessage();
         Component message = mm.deserialize("<dark_purple>Vous exhumez un cadavre. Vous y trouvez :</dark_purple>\n\n");

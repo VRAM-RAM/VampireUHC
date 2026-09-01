@@ -4,7 +4,7 @@ Les rôles ne doivent pas simplement révéler des informations directes.
 
 Le but est l'interprétation.
 
-Progression : ~70 % (15 rôles villageois, 3 rôles vampire soit 6 joueurs vampires, 3 rôles solitaires, et un rôle hybride => 24 joueurs).
+Progression : ~98 % (15 rôles villageois, 3 rôles vampire soit 6 joueurs vampires, 3 rôles solitaires, et un rôle hybride => 24 joueurs).
 Il manque donc 1 rôle villageois.
 
 ## Sommaire
@@ -350,7 +350,7 @@ En revanche, l'assassin est vulnérable aux marqueurs maître qu'elle reçoit du
 
 Le Gremlin est un autre rôle solitaire. Il a pour pouvoir de manipuler les marques et de voler la vie des ses adversaires.
 
-Son premier pouvoir est donc, à chaque épisode, de pouvoir `switch` (échanger) l'ensemble des marques de deux joueurs, via la commande :
+Son premier pouvoir est donc, à chaque épisode, de pouvoir `switch` (échanger) l'ensemble des marques de deux joueurs dont l'un se trouve à moins de 20 blocs du **Gremlin**, via la commande :
 ```mc
 /vuhc switch <joueur1> <joueur2>
 ```

@@ -28,15 +28,15 @@ import org.bukkit.scheduler.BukkitTask;
  * une faiblesse permanente (invisible). La personne ressuscitée meurt 5s après
  * Baba Yaga — sauf si c'est elle qui l'a tuée.
  *
- * Malédiction : /vuhc maudire <joueur> retire pendant 10 minutes toute
+ * Malédiction : /vuhc maudire <joueur> retire pendant 3 minutes toute
  * absorption aux pommes d'or de la cible.
  */
 public class BabaYagaRole implements Role {
 
     // Fenêtre de clic de résurrection : 10 secondes.
     private static final long RESURRECTION_WINDOW_MS = 10_000;
-    // Durée de la malédiction : 10 minutes.
-    private static final long CURSE_DURATION_MS = 600_000;
+    // Durée de la malédiction : 3 minutes.
+    private static final long CURSE_DURATION_MS = 180_000;
     // Lien de mort : le ressuscité meurt 5s après Baba Yaga.
     private static final long DEATH_LINK_DELAY_TICKS = 100;
 
@@ -75,7 +75,7 @@ public class BabaYagaRole implements Role {
             "<gray>Votre objectif est de gagner avec le <green>village</green>.\n\n"
             + "Vous disposez de deux pouvoirs <gold>à usage unique</gold> :\n"
             + "<dark_purple>• <gold>Résurrection</gold> : lorsqu'un joueur meurt, un message cliquable vous est envoyé pendant <gold>10 secondes</gold>. Cliquez pour le ressusciter avec <gold>tous ses pouvoirs</gold> (20 coeurs, position aléatoire).</dark_purple>\n"
-            + "<dark_purple>• <gold>Malédiction</gold> : <gray>/vuhc maudire <joueur></gray> retire toute absorption des pommes d'or de ce joueur pendant 10 minutes.</dark_purple>\n\n"
+            + "<dark_purple>• <gold>Malédiction</gold> : <gray>/vuhc maudire <joueur></gray> retire toute absorption des pommes d'or de ce joueur pendant 3 minutes.</dark_purple>\n\n"
             + "<gray>Si vous ressuscitez un <dark_red>vampire</dark_red>, vous subissez une <dark_red>faiblesse</dark_red> permanente (invisible à vos yeux).\n"
             + "Si <gold>vous mourez</gold>, la personne ressuscitée meurt également 5 secondes plus tard — <gold>sauf si c'est elle qui vous a tuée</gold> !</gray>"
         );
@@ -256,11 +256,11 @@ public class BabaYagaRole implements Role {
         Player baba = Bukkit.getPlayer(babaYaga.getUuid());
         if (baba != null) {
             baba.sendMessage(MessageUtil.successTarget("Vous avez maudit", target.getLastKnownName())
-                    .append(Component.text(" pendant 10 minutes !", NamedTextColor.GREEN)));
+                    .append(Component.text(" pendant 3 minutes !", NamedTextColor.GREEN)));
         }
         Player bukkitTarget = Bukkit.getPlayer(target.getUuid());
         if (bukkitTarget != null) {
-            bukkitTarget.sendMessage(MessageUtil.error("Vous avez été maudit par la Baba Yaga : vos pommes d'or ne vous donneront plus d'absorption pendant 10 minutes !"));
+            bukkitTarget.sendMessage(MessageUtil.error("Vous avez été maudit par la Baba Yaga : vos pommes d'or ne vous donneront plus d'absorption pendant 3 minutes !"));
         }
         return true;
     }

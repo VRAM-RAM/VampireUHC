@@ -18,7 +18,11 @@ public enum RoleType {
     BANSHEE, // Banshee
     EXORCIST, // L'Exorciste
     WATCHMAN, // Le Veilleur
-    GREMLIN; //Le Gremlin
+    GREMLIN, //Le Gremlin
+    BOURREAU, // Le Bourreau
+    PRIEST, // Le Prêtre
+    COMTE, // Le Comte
+    DOPPELGANGER; // Le Doppelganger (Sosie)
     
     public static RoleType fromString(String value) {
         return valueOf(value.toUpperCase());

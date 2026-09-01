@@ -11,8 +11,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 public class VampireMinion implements Role {
     private VampireUHCPlayer minion;
 
-    
-
     public VampireMinion(VampireUHCPlayer player) {
         this.minion = player;
     }

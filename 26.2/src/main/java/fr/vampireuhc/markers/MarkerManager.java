@@ -57,12 +57,25 @@ public class MarkerManager {
      * Si la cible porte une marque SALVATION et que le type est une marque
      * vampire ou maitre, la marque Salvation est consommée et la marque n'est
      * PAS appliquée (l'appelant peut tout de même annoncer un succès).
+     *
+     * Pour le Sauveur copié par le Sosie, le blocage n'est que partiel (50%) :
+     * si la cible porte une salvation Doppelganger, la marque hostile passe
+     * une fois sur deux ; dans ce cas la marque passe, la salvation est conservée.
      */
     public boolean tryApplyMark(UUID target, MarkerType type, UUID source) {
         boolean hostile = type == MarkerType.MARQUE_VAMPIRE || type == MarkerType.MARQUE_MAITRE;
         if (hostile && hasMarker(target, MarkerType.SALVATION)) {
             clearMarkersOfType(target, MarkerType.SALVATION);
             return false;
+        }
+        // Blocage partiel du Sosie : 50% de chance que la marque passe malgré la
+        // salvation Doppelganger (qui est alors conservée).
+        if (hostile && hasMarker(target, MarkerType.SALVATION_DOPPELGANGER)) {
+            if (random.nextBoolean()) {
+                clearMarkersOfType(target, MarkerType.SALVATION_DOPPELGANGER);
+                return false;
+            }
+            // Échec du blocage : la marque passe, la salvation reste.
         }
         addMarker(target, type, source);
         return true;
@@ -167,6 +180,19 @@ public class MarkerManager {
         clearMarkersOfType(target, type);
     }
 
+    /**
+     * Retire tous les marqueurs posés par un émetteur donné (source).
+     * Utilisé par le Doppelganger : à la mort de sa cible, les marqueurs
+     * qu'il a lui-même posés (variantes DOPPELGANGER) s'estompent.
+     */
+    public void removeMarkersBySource(UUID source) {
+        markersByPlayer.forEach((target, markers) -> {
+            if (markers != null) {
+                markers.removeIf(marker -> source.equals(marker.getSource()));
+            }
+        });
+    }
+
     public void clearMarkers(UUID target) {
         markersByPlayer.remove(target);
     }
@@ -186,6 +212,11 @@ public class MarkerManager {
 
     /* Renvoie le score d'aura */
     public AuraTier computeAuraTier(UUID target) {
+        // 2 marques Maître du Sosie (neutres) → l'aura du ciblé s'obscurcit.
+        if (countMarkers(target, MarkerType.MARQUE_MAITRE_DOPPELGANGER) >= 2) {
+            return AuraTier.OBSCURE;
+        }
+
         int score = computeAuraScore(target);
         if (score <= -3) return AuraTier.TRES_OBSCURE;
         if (score < 0) return AuraTier.OBSCURE;

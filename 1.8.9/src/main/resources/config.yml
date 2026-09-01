@@ -3,14 +3,39 @@ timeline:
   role-assignment-at: 20        # Rôles distribués à 20 minutes
   pvp-activation-at: 45         # PVP activé à 45 minutes
   episode-length: 20            # Durée d'un épisode (20 min)
+  usurp-window-start-min: 20    # Début de la fenêtre d'usurpation du Doppelganger (min)
+  usurp-window-end-min: 60      # Fin de la fenêtre d'usurpation du Doppelganger (min)
 
 # Composition configuration
+# Chaque rôle est UNIQUE (0 ou 1) sauf VAMPIRE_MINION (les Sbires, plusieurs possibles).
+# 'joueurs' doit être égal à la somme de tous les rôles : le lancement exige ce nombre exact.
 compo:
-  reference-player-count: 28    # Nombre de joueurs de référence pour le calcul des camps
-  vampire-min: 6                # Minimum de vampires
-  vampire-max: 8                # Maximum de vampires
-  solo-min: 1                   # Minimum de rôles solitaires
-  solo-max: 2                   # Maximum de rôles solitaires
+  joueurs: 25                   # Nombre de joueurs requis pour /vuhc start (= somme des rôles)
+  vampires:                     # Nombre de joueurs par rôle vampire
+    MASTER: 1                   # Le Maître (unique)
+    COMTE: 1                    # Le Comte (unique)
+    VAMPIRE_MINION: 4           # Les Sbires (seul rôle répétable)
+  villageois:                   # 16 rôles, un de chaque
+    PALADIN: 1
+    CUPIDON: 1
+    SAVIOR: 1
+    SOUL_WEIGHTER: 1
+    WEAVER: 1
+    CARTOGRAPHER: 1
+    SAND_MERCHANT: 1
+    GRAVE_DIGGER: 1
+    WHITE_LADY: 1
+    BABA_YAGA: 1
+    BANSHEE: 1
+    WATCHMAN: 1
+    EXORCIST: 1
+    ARCHER: 1
+    BOURREAU: 1
+    PRIEST: 1
+  solitaires:                   # 3 rôles, un de chaque
+    APPRENTICE_SLAYER: 1
+    GREMLIN: 1
+    DOPPELGANGER: 1
   vote-every-minutes: 10        # Les vampires votent pour une marque toutes les X minutes
 
 # Map configuration

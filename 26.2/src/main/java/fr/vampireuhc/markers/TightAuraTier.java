@@ -1,5 +1,4 @@
 package fr.vampireuhc.markers;
-import fr.vampireuhc.markers.Aura;
 
 public enum TightAuraTier {
     OBSCURE,

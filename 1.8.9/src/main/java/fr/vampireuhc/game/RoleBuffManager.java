@@ -8,9 +8,15 @@ import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.ApprenticeSlayer;
 import fr.vampireuhc.roles.BabaYagaRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
 import fr.vampireuhc.roles.MasterRole;
 import fr.vampireuhc.roles.PaladinRole;
 import fr.vampireuhc.roles.WhiteLadyRole;
+import fr.vampireuhc.roles.usurped.UsurpedPaladin;
+import fr.vampireuhc.roles.usurped.UsurpedPower;
+import fr.vampireuhc.roles.usurped.UsurpedSlayer;
+import fr.vampireuhc.roles.usurped.UsurpedVampire;
+import fr.vampireuhc.roles.usurped.UsurpedWhiteLady;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -111,6 +117,15 @@ public class RoleBuffManager {
                     delta = 0;
                     break;
             }
+        } else if (vp.getRole() instanceof DoppelgangerRole) {
+            // Paladin usurpé : très lumineuse → +1 cœur (vs +2 du vrai Paladin).
+            UsurpedPower power = ((DoppelgangerRole) vp.getRole()).getActivePower();
+            if (power instanceof UsurpedPaladin) {
+                AuraTier tier = plugin.getMarkerManager().computeAuraTier(vp.getUuid());
+                if (tier == AuraTier.TRES_LUMINEUSE) {
+                    delta = 1;
+                }
+            }
         }
 
         int penalty = heartPenalties.getOrDefault(vp.getUuid(), 0);
@@ -147,6 +162,31 @@ public class RoleBuffManager {
         } else if (vp.getRole() instanceof BabaYagaRole) {
             BabaYagaRole babaYaga = (BabaYagaRole) vp.getRole();
             babaYaga.applyEffects(p);
+        } else if (vp.getRole() instanceof DoppelgangerRole) {
+            // Pouvoir copié : on ré-applique les effets passifs du rôle usurpé.
+            UsurpedPower power = ((DoppelgangerRole) vp.getRole()).getActivePower();
+            if (power instanceof UsurpedPaladin) {
+                AuraTier tier = markers.computeAuraTier(vp.getUuid());
+                ((UsurpedPaladin) power).applyAuraEffects(p, tier);
+            } else if (power instanceof UsurpedSlayer) {
+                boolean night = p.getWorld().getTime() >= 12300;
+                ((UsurpedSlayer) power).applyMarkerEffects(p, night,
+                        ((UsurpedSlayer) power).countDarkMarkers(markers),
+                        ((UsurpedSlayer) power).countLightMarkers(markers));
+            } else if (power instanceof UsurpedVampire) {
+                ((UsurpedVampire) power).applyBuffs(p);
+            } else if (power instanceof UsurpedWhiteLady) {
+                boolean night = p.getWorld().getTime() >= 12300;
+                ((UsurpedWhiteLady) power).applyEffects(p, night);
+            }
+
+            // Le Sosie qui a tué le tueur de sa cible usurpée gagne une
+            // force + speed permanentes (réappliquées à chaque cycle).
+            DoppelgangerRole doppelganger = (DoppelgangerRole) vp.getRole();
+            if (doppelganger.hasKilledKiller()) {
+                p.addPotionEffect(effect(PotionEffectType.INCREASE_DAMAGE, 0));
+                p.addPotionEffect(effect(PotionEffectType.SPEED, 0));
+            }
         }
     }
 

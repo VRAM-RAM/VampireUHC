@@ -5,6 +5,8 @@ import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.BabaYagaRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
+import fr.vampireuhc.roles.usurped.UsurpedBabaYaga;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -135,6 +137,13 @@ public class GameplayListener implements Listener {
         if (plugin.getMarkerManager().countMarkers(vp.getUuid(), MarkerType.MARQUE_MAITRE) == 2) {
             clampAbsorption(player);
         }
+
+        // Même clamp pour le Sosie lorsque sa copie du Maître a posé 3 marques
+        // Maître Doppelganger (les clamps se cumulent sans ambiguité : c'est un
+        // simple maintenir à 1 coeur, donc aucune cascade à gérer).
+        if (plugin.getMarkerManager().countMarkers(vp.getUuid(), MarkerType.MARQUE_MAITRE_DOPPELGANGER) == 3) {
+            clampAbsorption(player);
+        }
     }
 
     // Un joueur est maudit si un Baba Yaga en partie a une malédiction active
@@ -142,6 +151,12 @@ public class GameplayListener implements Listener {
     private boolean isCursedByBabaYaga(UUID uuid) {
         for (VampireUHCPlayer p : plugin.getPlayerManager().getAll()) {
             if (p.getRole() instanceof BabaYagaRole babaYaga && babaYaga.isCurseActive(uuid)) {
+                return true;
+            }
+            // Baba Yaga copiée par le Sosie : malédiction seule, même effet.
+            if (p.getRole() instanceof DoppelgangerRole doppelgangerBaba
+                    && doppelgangerBaba.getActivePower() instanceof UsurpedBabaYaga usurpedBabaYaga
+                    && usurpedBabaYaga.isCurseActive(uuid)) {
                 return true;
             }
         }

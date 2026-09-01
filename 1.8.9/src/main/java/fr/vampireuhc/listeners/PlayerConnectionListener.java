@@ -6,6 +6,8 @@ import fr.vampireuhc.game.GameManager;
 import fr.vampireuhc.game.GamePhase;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.SandMerchantRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
+import fr.vampireuhc.roles.usurped.UsurpedSandMerchant;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -69,6 +71,14 @@ public class PlayerConnectionListener implements Listener {
             if (p.getRole() instanceof SandMerchantRole) {
                 ((SandMerchantRole) p.getRole()).deliverPendingEffects(plugin.getMarkerManager(), player.getUniqueId());
                 break;
+            }
+            // Sosie consumant le Marchand de Sable : même livraison différée.
+            if (p.getRole() instanceof DoppelgangerRole) {
+                fr.vampireuhc.roles.usurped.UsurpedPower power = ((DoppelgangerRole) p.getRole()).getActivePower();
+                if (power instanceof UsurpedSandMerchant) {
+                    ((UsurpedSandMerchant) power).deliverPendingEffects(plugin.getMarkerManager(), player.getUniqueId());
+                    break;
+                }
             }
         }
 

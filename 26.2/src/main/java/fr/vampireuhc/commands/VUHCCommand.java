@@ -35,11 +35,34 @@ import fr.vampireuhc.roles.WatchmanRole;
 import fr.vampireuhc.roles.WeaverRole;
 import fr.vampireuhc.roles.ExorcistRole;
 import fr.vampireuhc.roles.BabaYagaRole;
+import fr.vampireuhc.roles.ComteRole;
+import fr.vampireuhc.roles.PriestRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
+import fr.vampireuhc.roles.usurped.UsurpedPower;
+import fr.vampireuhc.roles.usurped.UsurpedPriest;
+import fr.vampireuhc.roles.usurped.UsurpedSoulweigher;
+import fr.vampireuhc.roles.usurped.UsurpedMaster;
+import fr.vampireuhc.roles.usurped.UsurpedVampire;
+import fr.vampireuhc.roles.usurped.UsurpedGravedigger;
+import fr.vampireuhc.roles.usurped.UsurpedExorcist;
+import fr.vampireuhc.roles.usurped.UsurpedGremlin;
+import fr.vampireuhc.roles.usurped.UsurpedSavior;
+import fr.vampireuhc.roles.usurped.UsurpedBourreau;
+import fr.vampireuhc.roles.usurped.UsurpedCartographer;
+import fr.vampireuhc.roles.usurped.UsurpedCupidon;
+import fr.vampireuhc.roles.usurped.UsurpedWeaver;
+import fr.vampireuhc.roles.usurped.UsurpedSandMerchant;
+import fr.vampireuhc.roles.usurped.UsurpedBabaYaga;
+import fr.vampireuhc.roles.usurped.UsurpedWatchman;
+
+import fr.vampireuhc.VampireUHC;
 
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -59,6 +82,7 @@ import java.util.stream.Collectors;
  *  * /vuhc exhumer           -> Le Fossoyeur exhume un cadavre.
  *  * /vuhc veiller <joueur>  -> Le Veilleur veille sur un joueur
  *  * /vuhc exorciser <j>     -> L'Exorciste exorcise un joueur
+ *  * /vuhc usurper <joueur>  -> Le Doppelganger (Sosie) copie les pouvoirs d'un joueur
  * 
  * Commandes admin (perm vuhc.admin) :
  *  * /vuhc admin <start [sec]|stop|reset|status>
@@ -70,6 +94,7 @@ import java.util.stream.Collectors;
  * peut l'utiliser. Toute commande inaccessible répond "Sous-commande inconnue."
  */
 public class VUHCCommand implements CommandExecutor, TabCompleter {
+    private final VampireUHC plugin;
     private final GameManager gameManager;
     private final PlayerManager playerManager;
     private final MarkerManager markerManager;
@@ -79,11 +104,13 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> PLAYER_SUBCOMMANDS = Arrays.asList(
             "role", "spectate", "marquer", "trancher", "proteger", "voter",
-            "switch", "drain", "lier", "peser", "tisser", "baliser", "ensabler", "exhumer", "exorciser", "veiller", "maudire", "ressusciter");
-    private static final List<String> ADMIN_SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "status");
+            "switch", "drain", "lier", "peser", "tisser", "baliser", "ensabler", "exhumer", "exorciser", "veiller", "maudire", "ressusciter", "percevoir", "usurper");
+    private static final List<String> ADMIN_SUBCOMMANDS = Arrays.asList("start", "stop", "reset", "status", "roster");
+    private static final List<String> ROSTER_SUBCOMMANDS = Arrays.asList("list", "add", "remove", "clear", "fill");
     private static final List<String> DEV_SUBCOMMANDS = Arrays.asList("setTime", "setRole", "who", "aura");
 
     public VUHCCommand(GameManager gameManager, PlayerManager playerManager, MarkerManager markerManager, RoleManager roleManager, VampireVoteManager voteManager, SpectatorManager spectatorManager) {
+        this.plugin = VampireUHC.getInstance();
         this.gameManager = gameManager;
         this.playerManager = playerManager;
         this.markerManager = markerManager;
@@ -174,6 +201,17 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
                 if (!(localPlayer != null && localPlayer.getRole() instanceof WatchmanRole watchman)) {
+                    if (localPlayer != null && localPlayer.getRole() instanceof DoppelgangerRole doppelgangerW
+                            && doppelgangerW.getActivePower() instanceof UsurpedWatchman usurpedWatchman) {
+                        // Veilleur copié par le Sosie : pouvoir exact, compteurs propres.
+                        VampireUHCPlayer watchTargetPlayer = playerManager.get(target.getUniqueId());
+                        if (watchTargetPlayer == null) {
+                            player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
+                            return;
+                        }
+                        usurpedWatchman.watchPlayer(watchTargetPlayer, markerManager, gameManager.getEpisode());
+                        return;
+                    }
                     return;
                 }
 
@@ -207,11 +245,6 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     return;                
                 } 
 
-                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-                if (!(localPlayer != null && localPlayer.getRole() instanceof ExorcistRole exorcist)) {
-                    return;
-                }
-
                 VampireUHCPlayer targetPlayer = playerManager.get(target.getUniqueId());
 
                 if (targetPlayer == null) {
@@ -219,9 +252,19 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     return;
                 }
 
-                int current_episode = gameManager.getEpisode();
-
-                exorcist.exorcisePlayer(targetPlayer, markerManager, current_episode);
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+                if (localPlayer != null && localPlayer.getRole() instanceof ExorcistRole exorcist) {
+                    int current_episode = gameManager.getEpisode();
+                    exorcist.exorcisePlayer(targetPlayer, markerManager, current_episode);
+                    return;
+                }
+                if (localPlayer != null && localPlayer.getRole() instanceof DoppelgangerRole doppelganger1
+                        && doppelganger1.getActivePower() instanceof UsurpedExorcist usurpedExorcist) {
+                    // Exorciste copié par le Sosie : un seul marqueur obscur retiré,
+                    // seul le nombre de marqueurs obscurs est révélé.
+                    usurpedExorcist.exorcisePlayer(targetPlayer, markerManager, gameManager.getEpisode());
+                    return;
+                }
                 return;
             }
 
@@ -233,6 +276,13 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
                 if (!(localPlayer != null && localPlayer.getRole() instanceof GravediggerRole graveDigger)) {
+                    if (localPlayer != null && localPlayer.getRole() instanceof DoppelgangerRole doppelgangerD
+                            && doppelgangerD.getActivePower() instanceof UsurpedGravedigger usurpedGraveDigger) {
+                        // Fossoyeur copié par le Sosie : exhumation partagée (un cadavre
+                        // ne se donne qu'une seule fois, vrai Fossoyeur ou sosie).
+                        usurpedGraveDigger.exhum(player.getLocation());
+                        return;
+                    }
                     return;
                 }
 
@@ -269,6 +319,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
                 if (!(localPlayer != null && localPlayer.getRole() instanceof SandMerchantRole sandMerchant)) {
+                    if (localPlayer != null && localPlayer.getRole() instanceof DoppelgangerRole doppelgangerSM
+                            && doppelgangerSM.getActivePower() instanceof UsurpedSandMerchant usurpedSandMerchant) {
+                        // Marchand de Sable copié par le Sosie : lenteur réduite (1 min).
+                        usurpedSandMerchant.sandPlayer(markerManager, targetPlayer, gameManager.getEpisode());
+                        return;
+                    }
                     return;
                 }
 
@@ -303,6 +359,14 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
                 if (!(localPlayer != null && localPlayer.getRole() instanceof BabaYagaRole babaYaga)) {
+                    if (localPlayer != null && localPlayer.getRole() instanceof DoppelgangerRole doppelgangerBY
+                            && doppelgangerBY.getActivePower() instanceof UsurpedBabaYaga usurpedBabaYaga) {
+                        // Baba Yaga copiée par le Sosie : malédiction seule, sans résurrection.
+                        if (!usurpedBabaYaga.cursePlayer(targetPlayer)) {
+                            player.sendMessage(MessageUtil.error("Vous avez déjà utilisé votre malédiction."));
+                        }
+                        return;
+                    }
                     return;
                 }
 
@@ -371,6 +435,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
                 if (!(localPlayer != null && localPlayer.getRole() instanceof WeaverRole weaverRole)) {
+                    if (localPlayer != null && localPlayer.getRole() instanceof DoppelgangerRole doppelgangerWeaver
+                            && doppelgangerWeaver.getActivePower() instanceof UsurpedWeaver usurpedWeaver) {
+                        // Tisseur copié par le Sosie : réseau FIL_DOPPELGANGER, rayon 5 blocs.
+                        usurpedWeaver.weavePlayer(markerManager, targetPlayer);
+                        return;
+                    }
                     return;
                 }
 
@@ -392,6 +462,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
 
                 if (!(localPlayer != null && localPlayer.getRole() instanceof CartographerRole cartographerRole)) {
+                    if (localPlayer != null && localPlayer.getRole() instanceof DoppelgangerRole doppelgangerCarto
+                            && doppelgangerCarto.getActivePower() instanceof UsurpedCartographer usurpedCartographer) {
+                        // Cartographe copié par le Sosie : balise exacte (clés JSON propres).
+                        usurpedCartographer.placeBeacon(player, gameManager.getEpisode());
+                        return;
+                    }
                     return;
                 }
 
@@ -422,11 +498,30 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-                if (!(localPlayer != null && localPlayer.getRole() instanceof MasterRole masterRole)) {
+                if (localPlayer == null) {
                     return;
                 }
 
-                masterRole.markPlayer(markerManager, targetPlayer, gameManager.getEpisode());
+                // Le Maître (comme le Sosie qui le copie) ne peut marquer qu'un
+                // joueur croisé durant l'épisode précédent.
+                if (!plugin.getCrossTracker().hasCrossed(player.getUniqueId(), targetPlayer.getUuid())) {
+                    player.sendMessage(MessageUtil.error("Vous n'avez pas croisé ce joueur durant l'épisode précédent."));
+                    return;
+                }
+
+                // Pouvoir copié : le Sosie marque comme le Maître, mais pose sa
+                // propre marque neutre (MARQUE_MAITRE_DOPPELGANGER).
+                if (localPlayer.getRole() instanceof DoppelgangerRole doppelgangerM
+                        && doppelgangerM.getActivePower() instanceof UsurpedMaster usurpedMaster) {
+                    if (!usurpedMaster.markPlayer(markerManager, targetPlayer, gameManager.getEpisode())) {
+                        player.sendMessage(MessageUtil.error("Vous avez déjà marqué ce joueur avec votre marque."));
+                    }
+                    return;
+                }
+
+                if (localPlayer.getRole() instanceof MasterRole masterRole) {
+                    masterRole.markPlayer(markerManager, targetPlayer, gameManager.getEpisode());
+                }
                 return;
             }
 
@@ -494,6 +589,16 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 VampireUHCPlayer localProt = playerManager.get(player.getUniqueId());
                 if (!(localProt != null && localProt.getRole() instanceof SaviorRole savior)) {
+                    if (localProt != null && localProt.getRole() instanceof DoppelgangerRole doppelgangerSav
+                            && doppelgangerSav.getActivePower() instanceof UsurpedSavior usurpedSavior) {
+                        // Salvateur copié par le Sosie : blocage 50% (MarkerManager).
+                        if (usurpedSavior.applySalvation(markerManager, protTargetPlayer, gameManager.getEpisode())) {
+                            player.sendMessage(MessageUtil.successTarget("Marque Salvation posée sur", protTargetPlayer.getLastKnownName()));
+                        } else {
+                            player.sendMessage(MessageUtil.error("Vous ne pouvez pas protéger ce joueur pour l'instant."));
+                        }
+                        return;
+                    }
                     return;
                 }
 
@@ -502,6 +607,68 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 } else {
                     player.sendMessage(MessageUtil.error("Vous ne pouvez pas protéger ce joueur pour l'instant."));
                 }
+                return;
+            }
+
+            case "usurper": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
+                    return;
+                }
+
+                if (args.length < 2) {
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc usurper <joueur>"));
+                    return;
+                }
+
+                Player susTarget = Bukkit.getPlayer(args[1]);
+                if (susTarget == null) {
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
+                    return;
+                }
+
+                VampireUHCPlayer localUsurp = playerManager.get(player.getUniqueId());
+                if (!(localUsurp != null && localUsurp.getRole() instanceof DoppelgangerRole doppelganger)) {
+                    return;
+                }
+
+                VampireUHCPlayer targetUsurp = playerManager.get(susTarget.getUniqueId());
+                if (targetUsurp == null) {
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
+                    return;
+                }
+                if (targetUsurp.getUuid().equals(localUsurp.getUuid())) {
+                    player.sendMessage(MessageUtil.error("Vous ne pouvez pas vous copier vous-même."));
+                    return;
+                }
+                if (!targetUsurp.isAlive()) {
+                    player.sendMessage(MessageUtil.error("Ce joueur est mort, vous ne pouvez pas copier ses pouvoirs."));
+                    return;
+                }
+                if (targetUsurp.getRole() instanceof DoppelgangerRole) {
+                    player.sendMessage(MessageUtil.error("Vous ne pouvez pas copier les pouvoirs d'un autre Sosie."));
+                    return;
+                }
+                if (!doppelganger.canUsurp(gameManager.getElapsedSeconds())) {
+                    if (doppelganger.hasUsed()) {
+                        player.sendMessage(MessageUtil.error("Vous avez déjà copié les pouvoirs d'un joueur, une seule fois."));
+                    } else {
+                        player.sendMessage(MessageUtil.error("L'usurpation n'est possible qu'entre "
+                                + VampireUHC.getInstance().getConfigManager().getUsurpWindowStartMin()
+                                + " et "
+                                + VampireUHC.getInstance().getConfigManager().getUsurpWindowEndMin()
+                                + " minutes de jeu."));
+                    }
+                    return;
+                }
+
+                var copied = doppelganger.usurp(targetUsurp);
+                if (copied == null) {
+                    player.sendMessage(MessageUtil.error("Vous n'êtes pas parvenu à copier les pouvoirs de ce joueur."));
+                    return;
+                }
+                player.sendMessage(MessageUtil.successTarget("Vous copiez les pouvoirs de", targetUsurp.getLastKnownName())
+                        .append(MessageUtil.info(" (\"" + copied.getName() + "\").")));
                 return;
             }
 
@@ -535,6 +702,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 if (!voteManager.isVoteOpen()) {
                     player.sendMessage(MessageUtil.error("Aucun vote n'est en cours."));
+                    return;
+                }
+
+                // Un vampire ne peut voter qu'un joueur croisé durant l'épisode précédent.
+                if (!plugin.getCrossTracker().hasCrossed(player.getUniqueId(), voteTargetPlayer.getUuid())) {
+                    player.sendMessage(MessageUtil.error("Vous n'avez pas croisé ce joueur durant l'épisode précédent."));
                     return;
                 }
 
@@ -579,6 +752,47 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 VampireUHCPlayer localSwitch = playerManager.get(player.getUniqueId());
                 if (!(localSwitch != null && localSwitch.getRole() instanceof GremlinRole gremlin)) {
+                    if (localSwitch != null && localSwitch.getRole() instanceof DoppelgangerRole doppelgangerS
+                            && doppelgangerS.getActivePower() instanceof UsurpedGremlin usurpedGremlin) {
+                        // Gremlin copié par le Sosie : switch imparfait (un seul marqueur
+                        // aléatoire de chaque joueur), draineur à distance nulle inclus.
+                        boolean nearS1 = sameWorld(player, switchTarget1)
+                                && player.getLocation().distanceSquared(switchTarget1.getLocation()) <= 20 * 20;
+                        boolean nearS2 = sameWorld(player, switchTarget2)
+                                && player.getLocation().distanceSquared(switchTarget2.getLocation()) <= 20 * 20;
+                        if (!nearS1 && !nearS2) {
+                            player.sendMessage(MessageUtil.error("L'une des deux cibles doit se trouver à moins de 20 blocs de vous."));
+                            return;
+                        }
+
+                        if (usurpedGremlin.switchMarkers(markerManager, t1, t2, gameManager.getEpisode())) {
+                            player.sendMessage(MessageUtil.successTwoTargets("Marques échangées entre", t1.getLastKnownName(), t2.getLastKnownName()));
+
+                            for (VampireUHCPlayer p : playerManager.getAll()) {
+                                if (p.getRole() instanceof CupidonRole cupidon) {
+                                    cupidon.notifyIfLoversMoved(markerManager);
+                                } else if (p.getRole() instanceof DoppelgangerRole doppelgangerNotify2
+                                        && doppelgangerNotify2.getActivePower() instanceof UsurpedCupidon usurpedCupidon2) {
+                                    // Cupidon copié par le Sosie : même surveillance des swaps.
+                                    usurpedCupidon2.notifyIfLoversMoved(markerManager);
+                                }
+                            }
+                        } else {
+                            player.sendMessage(MessageUtil.error("Vous avez déjà utilisé votre switch cet épisode."));
+                        }
+                        return;
+                    }
+                    return;
+                }
+
+                // Au moins une des deux cibles doit se trouver à moins de 20 blocs
+                // du Gremlin (auto-switch : distance nulle, donc toujours valide).
+                boolean near1 = sameWorld(player, switchTarget1)
+                        && player.getLocation().distanceSquared(switchTarget1.getLocation()) <= 20 * 20;
+                boolean near2 = sameWorld(player, switchTarget2)
+                        && player.getLocation().distanceSquared(switchTarget2.getLocation()) <= 20 * 20;
+                if (!near1 && !near2) {
+                    player.sendMessage(MessageUtil.error("L'une des deux cibles doit se trouver à moins de 20 blocs de vous."));
                     return;
                 }
 
@@ -589,6 +803,10 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     for (VampireUHCPlayer p : playerManager.getAll()) {
                         if (p.getRole() instanceof CupidonRole cupidon) {
                             cupidon.notifyIfLoversMoved(markerManager);
+                        } else if (p.getRole() instanceof DoppelgangerRole doppelgangerNotify
+                                && doppelgangerNotify.getActivePower() instanceof UsurpedCupidon usurpedCupidon) {
+                            // Cupidon copié par le Sosie : même surveillance des swaps.
+                            usurpedCupidon.notifyIfLoversMoved(markerManager);
                         }
                     }
                 } else {
@@ -605,6 +823,16 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
                 if (!(localPlayer != null && localPlayer.getRole() instanceof GremlinRole gremlinRole)) {
+                    if (localPlayer != null && localPlayer.getRole() instanceof DoppelgangerRole doppelgangerDrain
+                            && doppelgangerDrain.getActivePower() instanceof UsurpedGremlin usurpedGremlin) {
+                        // Drain du Sosie : même activation, compteurs propres.
+                        if (usurpedGremlin.activateDrain(gameManager.getEpisode())) {
+                            player.sendActionBar(MessageUtil.actionBar("<dark_purple>Vous avez activé le <dark_green>drain</dark_green> !"));
+                        } else {
+                            player.sendMessage(MessageUtil.error("Vous ne pouvez pas activer votre drain pour l'instant."));
+                        }
+                        return;
+                    }
                     return;
                 }
 
@@ -677,7 +905,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 }
 
                 VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
-                if (!(localPlayer != null && localPlayer.getRole() instanceof SoulweigherRole soulweigherRole)) {
+                if (localPlayer == null) {
                     return;
                 }
 
@@ -699,8 +927,63 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     return;
                 }
 
-                if (!soulweigherRole.weightAura(markerManager, t1, t2, gameManager.getEpisode())) {
-                    player.sendActionBar(MessageUtil.actionBar("<red>Erreur interne."));
+                if (localPlayer.getRole() instanceof SoulweigherRole soulweigherRole) {
+                    if (!soulweigherRole.weightAura(markerManager, t1, t2, gameManager.getEpisode())) {
+                        player.sendActionBar(MessageUtil.actionBar("<red>Erreur interne."));
+                    }
+                } else if (localPlayer.getRole() instanceof DoppelgangerRole doppelganger2
+                        && doppelganger2.getActivePower() instanceof UsurpedSoulweigher usurpedSoulweigher) {
+                    // Peseuse d'âmes copiée par le Sosie : pouvoir exact, compteurs propres.
+                    if (!usurpedSoulweigher.weightAura(markerManager, t1, t2, gameManager.getEpisode())) {
+                        player.sendMessage(MessageUtil.error("Erreur interne."));
+                    }
+                }
+                return;
+            }
+
+            case "percevoir": {
+                if (!(sender instanceof Player player)) {
+                    sender.sendMessage(MessageUtil.error("Cette commande doit être exécutée par un joueur."));
+                    return;
+                }
+                if (args.length < 2) {
+                    player.sendMessage(MessageUtil.error("Usage: /vuhc percevoir <joueur>"));
+                    return;
+                }
+
+                VampireUHCPlayer localPlayer = playerManager.get(player.getUniqueId());
+                if (localPlayer == null) {
+                    return;
+                }
+
+                Player perceiveTarget = Bukkit.getPlayer(args[1]);
+                if (perceiveTarget == null) {
+                    player.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne."));
+                    return;
+                }
+
+                VampireUHCPlayer targetPlayer = playerManager.get(perceiveTarget.getUniqueId());
+                if (targetPlayer == null) {
+                    player.sendMessage(MessageUtil.error("Ce joueur n'est pas en partie."));
+                    return;
+                }
+
+                if (localPlayer.getRole() instanceof PriestRole priest) {
+                    int code = priest.perceive(markerManager, targetPlayer, gameManager.getEpisode());
+                    if (code == 1) {
+                        player.sendMessage(MessageUtil.error("Vous avez déjà perçu une aura cet épisode."));
+                    } else if (code == 2) {
+                        player.sendMessage(MessageUtil.error("Vous ne pouvez pas percevoir deux épisodes de suite le même joueur."));
+                    }
+                } else if (localPlayer.getRole() instanceof DoppelgangerRole doppelganger3
+                        && doppelganger3.getActivePower() instanceof UsurpedPriest usurpedPriest) {
+                    // Prêtre copié par le Sosie : perception imparfaite, compteurs propres.
+                    int code = usurpedPriest.perceive(markerManager, targetPlayer, gameManager.getEpisode());
+                    if (code == 1) {
+                        player.sendMessage(MessageUtil.error("Vous avez déjà perçu une aura cet épisode."));
+                    } else if (code == 2) {
+                        player.sendMessage(MessageUtil.error("Vous ne pouvez pas percevoir deux épisodes de suite le même joueur."));
+                    }
                 }
                 return;
             }
@@ -717,12 +1000,17 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 0) {
-            sender.sendMessage(MessageUtil.error("Usage: /vuhc admin <start [sec]|stop|reset|status>"));
+            sender.sendMessage(MessageUtil.error("Usage: /vuhc admin <start [sec]|stop|reset|status|roster <list|add|remove|clear|fill>>"));
             return;
         }
 
         switch (args[0].toLowerCase()) {
             case "start":
+                String validationError = gameManager.preStartValidation();
+                if (validationError != null) {
+                    sender.sendMessage(MessageUtil.error(validationError));
+                    return;
+                }
                 int seconds = gameManager.getDefaultCountdownSeconds();
                 if (args.length >= 2) {
                     try {
@@ -753,9 +1041,85 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(MessageUtil.warn("Phase: " + gameManager.getPhase() + " | Minute: " + gameManager.getElapsedMinutes()));
                 return;
 
+            case "roster":
+                if (args.length < 2) {
+                    sender.sendMessage(MessageUtil.error("Usage: /vuhc admin roster <list|add <pseudo>|remove <pseudo>|clear|fill>"));
+                    return;
+                }
+                handleRoster(sender, Arrays.copyOfRange(args, 1, args.length));
+                return;
+
             default:
                 sender.sendMessage(MessageUtil.error("Sous-commande inconnue."));
-                sender.sendMessage(MessageUtil.error("Usage: /vuhc admin <start [sec]|stop|reset|status>"));
+                sender.sendMessage(MessageUtil.error("Usage: /vuhc admin <start [sec]|stop|reset|status|roster <list|add|remove|clear|fill>>"));
+        }
+    }
+
+    private void handleRoster(CommandSender sender, String[] args) {
+        switch (args[0].toLowerCase()) {
+            case "list":
+                sender.sendMessage(MessageUtil.warn("Roster : " + gameManager.getRosterSize() + "/" + plugin.getConfigManager().getComposition().getRequiredPlayers() + " joueurs"));
+                if (gameManager.getRoster().isEmpty()) {
+                    sender.sendMessage(MessageUtil.warn("Aucun joueur sélectionné."));
+                    return;
+                }
+                for (Map.Entry<UUID, String> entry : gameManager.getRoster().entrySet()) {
+                    boolean online = Bukkit.getPlayer(entry.getKey()) != null;
+                    sender.sendMessage(MessageUtil.info("- " + entry.getValue() + (online ? "" : " (hors ligne)")));
+                }
+                return;
+
+            case "add":
+                if (args.length < 2) {
+                    sender.sendMessage(MessageUtil.error("Usage: /vuhc admin roster add <pseudo>"));
+                    return;
+                }
+                Player toAdd = Bukkit.getPlayerExact(args[1]);
+                if (toAdd == null) {
+                    sender.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne : " + args[1]));
+                    return;
+                }
+                if (gameManager.isGameStarted()) {
+                    sender.sendMessage(MessageUtil.error("Impossible de modifier le roster, la partie a commencé."));
+                    return;
+                }
+                if (gameManager.addToRoster(toAdd)) {
+                    sender.sendMessage(MessageUtil.success(toAdd.getName() + " sélectionné. Roster : " + gameManager.getRosterSize() + "/" + plugin.getConfigManager().getComposition().getRequiredPlayers()));
+                } else {
+                    sender.sendMessage(MessageUtil.error(toAdd.getName() + " est déjà sélectionné."));
+                }
+                return;
+
+            case "remove":
+                if (args.length < 2) {
+                    sender.sendMessage(MessageUtil.error("Usage: /vuhc admin roster remove <pseudo>"));
+                    return;
+                }
+                Player toRemove = Bukkit.getPlayerExact(args[1]);
+                if (gameManager.removeFromRoster(toRemove)) {
+                    sender.sendMessage(MessageUtil.success(toRemove.getName() + " retiré de la sélection. Roster : " + gameManager.getRosterSize() + "/" + plugin.getConfigManager().getComposition().getRequiredPlayers()));
+                } else {
+                    sender.sendMessage(MessageUtil.error(toRemove.getName() + " n'est pas sélectionné."));
+                }
+                return;
+
+            case "clear":
+                gameManager.clearRoster();
+                sender.sendMessage(MessageUtil.success("Roster vidé (0/" + plugin.getConfigManager().getComposition().getRequiredPlayers() + ")."));
+                return;
+
+            case "fill":
+                int added = gameManager.fillRoster();
+                if (added == 0) {
+                    sender.sendMessage(MessageUtil.warn("Aucun joueur en ligne supplémentaire à sélectionner (roster " + gameManager.getRosterSize() + "/" + plugin.getConfigManager().getComposition().getRequiredPlayers() + ")."));
+                } else {
+                    sender.sendMessage(MessageUtil.success(added + " joueur(s) sélectionné(s). Roster : " + gameManager.getRosterSize() + "/" + plugin.getConfigManager().getComposition().getRequiredPlayers()));
+                }
+                return;
+
+            default:
+                sender.sendMessage(MessageUtil.error("Sous-commande inconnue."));
+                sender.sendMessage(MessageUtil.error("Usage: /vuhc admin roster <list|add <pseudo>|remove <pseudo>|clear|fill>"));
         }
     }
 
@@ -841,7 +1205,18 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         String sub = args[0].toLowerCase();
 
         if (sub.equals("admin") && hasAccess(sender, "admin")) {
-            return filterStartsWith(ADMIN_SUBCOMMANDS, args[1]);
+            if (args.length == 2) {
+                return filterStartsWith(ADMIN_SUBCOMMANDS, args[1]);
+            }
+            if (args.length >= 3 && args[1].equalsIgnoreCase("roster")) {
+                if (args.length == 3) {
+                    return filterStartsWith(ROSTER_SUBCOMMANDS, args[2]);
+                }
+                if (args.length == 4 && (args[2].equalsIgnoreCase("add") || args[2].equalsIgnoreCase("remove"))) {
+                    return playersStartingWith(args[3]);
+                }
+            }
+            return new ArrayList<>();
         }
 
         if (sub.equals("dev") && hasAccess(sender, "dev")) {
@@ -854,7 +1229,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
             if ((sub.equals("marquer") || sub.equals("proteger") || sub.equals("voter")
                     || sub.equals("switch") || sub.equals("lier") || sub.equals("peser")
-                    || sub.equals("tisser") || sub.equals("spectate") || sub.equals("ensabler") || sub.equals("veiller")) || sub.equals("exorciser") || sub.equals("maudire") && hasAccess(sender, sub)) {
+                    || sub.equals("tisser") || sub.equals("spectate") || sub.equals("ensabler") || sub.equals("veiller")) || sub.equals("exorciser") || sub.equals("maudire") || sub.equals("percevoir") || sub.equals("usurper") && hasAccess(sender, sub)) {
                 return playersStartingWith(args[1]);
             }
             return new ArrayList<>();
@@ -874,46 +1249,54 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
     private boolean hasAccess(CommandSender sender, String sub) {
         switch (sub) {
             case "tisser":
-                return hasRole(sender, WeaverRole.class);
+                return hasRole(sender, WeaverRole.class) || hasActiveUsurpedPower(sender, UsurpedWeaver.class);
             case "baliser":
-                return hasRole(sender, CartographerRole.class);
+                return hasRole(sender, CartographerRole.class) || hasActiveUsurpedPower(sender, UsurpedCartographer.class);
             case "role":
                 return true;
             case "exorciser":
-                return hasRole(sender, ExorcistRole.class);
+                return hasRole(sender, ExorcistRole.class) || hasActiveUsurpedPower(sender, UsurpedExorcist.class);
             case "maudire":
+                return hasRole(sender, BabaYagaRole.class) || hasActiveUsurpedPower(sender, UsurpedBabaYaga.class);
             case "ressusciter":
                 return hasRole(sender, BabaYagaRole.class);
             case "exhumer":
-                return hasRole(sender, GravediggerRole.class);
+                return hasRole(sender, GravediggerRole.class) || hasActiveUsurpedPower(sender, UsurpedGravedigger.class);
             case "ensabler":
-                return hasRole(sender, SandMerchantRole.class);
+                return hasRole(sender, SandMerchantRole.class) || hasActiveUsurpedPower(sender, UsurpedSandMerchant.class);
             case "spectate":
                 return sender instanceof Player player && player.getGameMode() == GameMode.SPECTATOR;
             case "marquer":
             case "trancher":
-                return hasRole(sender, MasterRole.class);
+                return hasRole(sender, MasterRole.class) || hasActiveUsurpedPower(sender, UsurpedMaster.class);
             case "proteger":
-                return hasRole(sender, SaviorRole.class);
+                return hasRole(sender, SaviorRole.class) || hasActiveUsurpedPower(sender, UsurpedSavior.class);
             case "voter": {
                 VampireUHCPlayer vp = playerOf(sender);
-                return vp != null && vp.getRole() instanceof VampireMinion && vp.canVoteVampireMark();
+                return vp != null && (vp.getRole() instanceof VampireMinion || vp.getRole() instanceof ComteRole) && vp.canVoteVampireMark()
+                        // Le Sosie vote lui aussi s'il a copié un vampire (Sbire ou Comte).
+                        || hasActiveUsurpedPower(sender, UsurpedVampire.class);
             }
             case "switch":
             case "drain":
-                return hasRole(sender, GremlinRole.class);
+                return hasRole(sender, GremlinRole.class) || hasActiveUsurpedPower(sender, UsurpedGremlin.class);
             case "lier":
                 return hasRole(sender, CupidonRole.class);
             case "peser":
-                return hasRole(sender, SoulweigherRole.class);
+                return hasRole(sender, SoulweigherRole.class) || hasActiveUsurpedPower(sender, UsurpedSoulweigher.class);
+            case "percevoir":
+                return hasRole(sender, PriestRole.class) || hasActiveUsurpedPower(sender, UsurpedPriest.class);
+            case "usurper":
+                return hasRole(sender, DoppelgangerRole.class);
             case "veiller":
-                return hasRole(sender, WatchmanRole.class);
+                return hasRole(sender, WatchmanRole.class) || hasActiveUsurpedPower(sender, UsurpedWatchman.class);
             case "admin":
             case "dev":
             case "start":
             case "stop":
             case "reset":
             case "status":
+            case "roster":
             case "settime":
             case "setrole":
             case "who":
@@ -928,6 +1311,16 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         VampireUHCPlayer vp = playerOf(sender);
         // Un joueur mort perd l'usage des pouvoirs de son rôle.
         return vp != null && vp.isAlive() && roleClass.isInstance(vp.getRole());
+    }
+
+    // Le Sosie garde accès aux commandes du rôle copié tant que son pouvoir
+    // copié est actif (tant que la cible usurpée est vivante).
+    private boolean hasActiveUsurpedPower(CommandSender sender, Class<? extends UsurpedPower> powerClass) {
+        VampireUHCPlayer vp = playerOf(sender);
+        if (vp == null || !vp.isAlive() || !(vp.getRole() instanceof DoppelgangerRole doppelganger)) {
+            return false;
+        }
+        return doppelganger.getActivePower() != null && powerClass.isInstance(doppelganger.getActivePower());
     }
 
     private VampireUHCPlayer playerOf(CommandSender sender) {
@@ -992,6 +1385,13 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 .collect(Collectors.toList());
     }
 
+    // Même monde ?
+    private boolean sameWorld(Player a, Player b) {
+        org.bukkit.World wa = a.getLocation().getWorld();
+        org.bukkit.World wb = b.getLocation().getWorld();
+        return wa != null && wa.equals(wb);
+    }
+
     // Aide filtrée : seules les commandes accessibles à l'expéditeur sont affichées.
     private void sendHelp(CommandSender sender) {
         sender.sendMessage(MessageUtil.helpBanner());
@@ -1045,6 +1445,12 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         if (hasAccess(sender, "peser")) {
             sender.sendMessage(MessageUtil.helpEntry("/vuhc peser <j1> <j2>", "Peser l'aura de deux joueurs"));
         }
+        if (hasAccess(sender, "percevoir")) {
+            sender.sendMessage(MessageUtil.helpEntry("/vuhc percevoir <joueur>", "Percevoir l'aura d'un joueur (Prêtre)"));
+        }
+        if (hasAccess(sender, "usurper")) {
+            sender.sendMessage(MessageUtil.helpEntry("/vuhc usurper <joueur>", "Copier les pouvoirs d'un joueur (Doppelganger)"));
+        }
         if (hasAccess(sender, "tisser")) {
             sender.sendMessage(MessageUtil.helpEntry("/vuhc tisser <joueur>", "Tisser un fil sur un joueur"));
         }
@@ -1053,7 +1459,7 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
         }
         if (hasAdminPermission(sender)) {
             sender.sendMessage(MessageUtil.helpSection("Admin"));
-            sender.sendMessage(MessageUtil.helpEntry("/vuhc admin", "<start|stop|reset|status>"));
+            sender.sendMessage(MessageUtil.helpEntry("/vuhc admin", "<start|stop|reset|status|roster>"));
             sender.sendMessage(MessageUtil.helpSection("Dev"));
             sender.sendMessage(MessageUtil.helpEntry("/vuhc dev", "<setTime|setRole|who|aura>"));
         }

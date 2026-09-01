@@ -5,7 +5,12 @@ import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.roles.ComteRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
+import fr.vampireuhc.roles.Role;
 import fr.vampireuhc.roles.VampireMinion;
+import fr.vampireuhc.roles.usurped.UsurpedPower;
+import fr.vampireuhc.roles.usurped.UsurpedVampire;
 
 
 import java.util.*;
@@ -111,9 +116,14 @@ public class VampireVoteManager {
     }
 
     // Les vampires ne reçoivent que le résultat de leur vote, même si la marque a été bloquée.
+    // Le Sosie (Sbire usurpé) ne reçoit RIEN : il reste seul au camp SOLO, sans
+    // révélation des autres vampires ni du camp de la cible.
     private void sendVoteFeedback(UUID targetId) {
         String targetName = nameOf(targetId);
         for (UUID voterId : voters) {
+            if (hiddenFromVoteResult(voterId)) {
+                continue;
+            }
             Player p = Bukkit.getPlayer(voterId);
             if (p != null) {
                 p.sendMessage(MessageUtil.serialize("<dark_purple>Votre cible est <gold>" + targetName + "</gold> !</dark_purple>"));
@@ -123,11 +133,25 @@ public class VampireVoteManager {
 
     private void sendTieFeedback(VoteResult.Tie tie) {
         for (UUID voterId : voters) {
+            if (hiddenFromVoteResult(voterId)) {
+                continue;
+            }
             Player p = Bukkit.getPlayer(voterId);
             if (p != null) {
                 p.sendMessage(MessageUtil.serialize("<red>Égalité entre plusieurs joueurs ! Le Maître va trancher...</red>"));
             }
         }
+    }
+
+    // Le Sosie avec un pouvoir vampire (Sbire ou Comte, via héritage) vote mais
+    // n'apprend jamais le résultat : il doit rester isolé et surprendre.
+    private boolean hiddenFromVoteResult(UUID playerId) {
+        VampireUHCPlayer vp = plugin.getPlayerManager().get(playerId);
+        if (vp == null || !(vp.getRole() instanceof DoppelgangerRole doppelganger)) {
+            return false;
+        }
+        UsurpedPower power = doppelganger.getActivePower();
+        return power instanceof UsurpedVampire;
     }
 
     // Le Maitre tranche une égalité
@@ -233,10 +257,13 @@ public class VampireVoteManager {
 
     private void broadcastToVampires(Component message) {
         for (VampireUHCPlayer player : plugin.getPlayerManager().getAll()) {
-            if (player.getRole() instanceof VampireMinion && player.isAlive()) {
-                Player p = Bukkit.getPlayer(player.getUuid());
-                if (p != null) {
-                    p.sendMessage(message);
+            if (player.isAlive()) {
+                Role role = player.getRole();
+                if (role instanceof VampireMinion || role instanceof ComteRole) {
+                    Player p = Bukkit.getPlayer(player.getUuid());
+                    if (p != null) {
+                        p.sendMessage(message);
+                    }
                 }
             }
         }

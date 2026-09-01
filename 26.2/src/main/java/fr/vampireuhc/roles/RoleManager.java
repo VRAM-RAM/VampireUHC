@@ -17,34 +17,6 @@ public class RoleManager {
     private final VampireUHC plugin;
     private final PlayerManager playerManager;
 
-    // Les trois camps (et les rôles leur appartenant)
-    private List<RoleType> vampiresRoles = Arrays.asList(
-        RoleType.MASTER,
-        RoleType.VAMPIRE_MINION
-    );
-
-    private List<RoleType> villagerRoles = Arrays.asList(
-        RoleType.PALADIN,
-        RoleType.CUPIDON,
-        RoleType.SAVIOR,
-        RoleType.SOUL_WEIGHTER,
-        RoleType.WEAVER,
-        RoleType.CARTOGRAPHER,
-        RoleType.SAND_MERCHANT,
-        RoleType.GRAVE_DIGGER,
-        RoleType.WHITE_LADY,
-        RoleType.BABA_YAGA,
-        RoleType.WATCHMAN,
-        RoleType.BANSHEE,
-        RoleType.EXORCIST,
-        RoleType.ARCHER
-    );
-
-    private List<RoleType> soloroles = Arrays.asList(
-        RoleType.APPRENTICE_SLAYER,
-        RoleType.GREMLIN
-    );
-
     // RoleManager :
 
     public RoleManager(VampireUHC plugin, PlayerManager manager) {
@@ -53,21 +25,6 @@ public class RoleManager {
     }
 
     // Helpers publics :
-
-
-    // Retourne la liste des rôles appartenant à un camp
-    public List<RoleType> getPlayableRolesByCamp(Camp camp) {
-        switch (camp) {
-            case Camp.VILLAGEOIS:
-                return villagerRoles;
-            case Camp.VAMPIRE:
-                return vampiresRoles;
-            case Camp.SOLO:
-                return soloroles;
-            default:
-                return new ArrayList<>();
-        }
-    }
 
     // pour le debug seulement :
 
@@ -85,60 +42,7 @@ public class RoleManager {
         return player != null ? player.getRole() : null;
     }
 
-    /**
-     * Attribue un rôle précis à chaque joueur après que les camps ont été répartis.
-     */
-    public void assignRolesToPlayers() {        
-        // Séparer par camp
-        List<VampireUHCPlayer> vampires = playerManager.getByCamp(Camp.VAMPIRE);
-        List<VampireUHCPlayer> villagers = playerManager.getByCamp(Camp.VILLAGEOIS);
-        List<VampireUHCPlayer> solitaires = playerManager.getByCamp(Camp.SOLO);
-
-        // Assigner les rôles pour chaque camp
-        assignRolesToGroup(villagers, villagerRoles);
-        assignRolesToGroup(vampires, vampiresRoles);
-        assignRolesToGroup(solitaires, soloroles);
-        
-        plugin.getLogger().info("Rôles attribués : " + vampires.size() 
-            + " vampires, " + villagers.size() + " villageois, " 
-            + solitaires.size() + " solitaires");
-    }
-
     // Helpers internes :
-
-    /**
-     * Attribue des rôles aléatoires à un groupe de joueurs.
-     */
-    private void assignRolesToGroup(List<VampireUHCPlayer> players, List<RoleType> availableRoles) {
-        if (players.isEmpty()) return;
-        
-        // Créer une liste avec chaque rôle répété pour correspondre au nombre de joueurs
-        List<RoleType> rolePool = new ArrayList<>();
-        for (int i = 0; i < players.size() / availableRoles.size(); i++) {
-            rolePool.addAll(availableRoles);
-        }
-        
-        // Si le pool est trop petit, ajouter des rôles aléatoires
-        while (rolePool.size() < players.size()) {
-            rolePool.add(availableRoles.get(new Random().nextInt(availableRoles.size())));
-        }
-        
-        // Mélanger et attribuer
-        Collections.shuffle(rolePool);
-        
-        for (int i = 0; i < players.size(); i++) {
-            VampireUHCPlayer player = players.get(i);
-            RoleType roleType = rolePool.get(i);
-            
-            Role role = createRoleFromType(roleType, player);
-            player.setRole(role);
-
-            // Appel de onAssign pour initialiser le rôle (assignation fraîche, pas une restauration).
-            if (role != null) {
-                role.onAssign(player, false);
-            }
-        }
-    }
 
     // Crée une instance d'un rôle à partir d'un type de Rôle :
 
@@ -197,6 +101,18 @@ public class RoleManager {
 
             case RoleType.BANSHEE:
                 return new BansheeRole();
+
+            case RoleType.BOURREAU:
+                return new BourreauRole();
+
+            case RoleType.PRIEST:
+                return new PriestRole();
+
+            case RoleType.COMTE:
+                return new ComteRole();
+
+            case RoleType.DOPPELGANGER:
+                return new DoppelgangerRole(player);
 
             default:
                 plugin.getLogger().warning("Rôle inconnu : " + type);
@@ -510,6 +426,15 @@ public class RoleManager {
                 recorded.add(id.toString());
             }
             obj.add("cartoRecorded", recorded);
+        } else if (role instanceof PriestRole priest) {
+            obj.addProperty("priestLastEpisode", priest.getLastPerceiveEpisode());
+            if (priest.getLastPerceiveTarget() != null) {
+                obj.addProperty("priestLastTarget", priest.getLastPerceiveTarget().toString());
+            }
+        } else if (role instanceof BourreauRole bourreau) {
+            obj.addProperty("bourreauLastFirstHitEpisode", bourreau.getLastFirstHitEpisode());
+        } else if (role instanceof DoppelgangerRole doppelganger) {
+            doppelganger.saveState(obj);
         }
     }
 
@@ -578,6 +503,14 @@ public class RoleManager {
                     obj.has("cartoBeaconY") ? obj.get("cartoBeaconY").getAsDouble() : 0,
                     obj.has("cartoBeaconZ") ? obj.get("cartoBeaconZ").getAsDouble() : 0,
                     recorded);
+        } else if (role instanceof PriestRole priest) {
+            priest.restoreState(
+                    getInt(obj, "priestLastEpisode", -1),
+                    parseUuidOrNull(obj, "priestLastTarget"));
+        } else if (role instanceof BourreauRole bourreau) {
+            bourreau.restoreState(getInt(obj, "bourreauLastFirstHitEpisode", -1));
+        } else if (role instanceof DoppelgangerRole doppelganger) {
+            doppelganger.restoreState(obj, playerManager);
         }
     }
 
@@ -620,6 +553,10 @@ public class RoleManager {
             case "Banshee": return RoleType.BANSHEE;
             case "Exorciste": return RoleType.EXORCIST;
             case "Veilleur": return RoleType.WATCHMAN;
+            case "Bourreau": return RoleType.BOURREAU;
+            case "Prêtre": return RoleType.PRIEST;
+            case "Comte": return RoleType.COMTE;
+            case "Doppelganger": return RoleType.DOPPELGANGER;
             default: return null;
         }
     }

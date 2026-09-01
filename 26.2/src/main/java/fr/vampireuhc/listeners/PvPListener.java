@@ -4,7 +4,12 @@ import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.game.GameManager;
 import fr.vampireuhc.game.GamePhase;
 import fr.vampireuhc.roles.ArcherRole;
+import fr.vampireuhc.roles.BourreauRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
 import fr.vampireuhc.roles.GremlinRole;
+import fr.vampireuhc.roles.usurped.UsurpedGremlin;
+import fr.vampireuhc.roles.usurped.UsurpedArcher;
+import fr.vampireuhc.roles.usurped.UsurpedBourreau;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -65,10 +70,15 @@ public class PvPListener implements Listener {
         // Pouvoir de l'Archer.
         //Cette partie est volontairement exécutée avant la gestion du PvP. (car glow dans tous les cas)
         if (event.getDamager() instanceof Arrow arrow
-                && arrow.getShooter() instanceof Player shooter
-                && roleManager.getPlayerRole(shooter.getUniqueId()) instanceof ArcherRole archer) {
-
-            archer.setGlowOnHit(event.getEntity(), plugin);
+                && arrow.getShooter() instanceof Player shooter) {
+            var archerRole = roleManager.getPlayerRole(shooter.getUniqueId());
+            if (archerRole instanceof ArcherRole archer) {
+                archer.setGlowOnHit(event.getEntity(), plugin);
+            } else if (archerRole instanceof DoppelgangerRole doppelgangerA
+                    && doppelgangerA.getActivePower() instanceof UsurpedArcher usurpedArcher) {
+                // Archer copié par le Sosie : glow identique, sans équipement.
+                usurpedArcher.setGlowOnHit(event.getEntity(), plugin);
+            }
         }
 
         
@@ -96,10 +106,39 @@ public class PvPListener implements Listener {
 
         // Si pvp actif, gestion des pouvoirs
         if (event.getEntity() instanceof Player victim
-                && event.getDamager() instanceof Player attacker
-                && roleManager.getPlayerRole(attacker.getUniqueId()) instanceof GremlinRole gremlin) {
+                && event.getDamager() instanceof Player attacker) {
 
-            gremlin.applyDrainEffect(attacker, victim);
+            // Le premier coup du Bourreau de l'épisode inflige 50% de dégâts en plus.
+            var attackerRole = roleManager.getPlayerRole(attacker.getUniqueId());
+            if (attackerRole instanceof BourreauRole bourreau) {
+                if (bourreau.tryApplyFirstHitBonus(plugin.getGameManager().getEpisode())) {
+                    event.setDamage(event.getDamage() * 1.5);
+                }
+            } else if (attackerRole instanceof DoppelgangerRole doppelgangerB
+                    && doppelgangerB.getActivePower() instanceof UsurpedBourreau usurpedBourreau) {
+                // Bourreau copié par le Sosie : premier coup +50%, compteurs propres.
+                if (usurpedBourreau.tryApplyFirstHitBonus(plugin.getGameManager().getEpisode())) {
+                    event.setDamage(event.getDamage() * 1.5);
+                }
+            }
+
+            if (roleManager.getPlayerRole(attacker.getUniqueId()) instanceof DoppelgangerRole doppelganger) {
+                // Le Sosie inflige 50% de dégâts en plus au tueur de sa cible usurpée.
+                if (doppelganger.getDamageBonusAgainst(victim.getUniqueId())) {
+                    event.setDamage(event.getDamage() * 1.5);
+                }
+            }
+
+            if (roleManager.getPlayerRole(attacker.getUniqueId()) instanceof GremlinRole gremlin) {
+                gremlin.applyDrainEffect(attacker, victim);
+            }
+
+            // Drain du Sosie : identique à celui du Gremlin, mais activé via le
+            // pouvoir usurpé (UsurpedGremlin.activateDrain) au lieu du rôle.
+            if (roleManager.getPlayerRole(attacker.getUniqueId()) instanceof DoppelgangerRole doppelganger
+                    && doppelganger.getActivePower() instanceof UsurpedGremlin usurpedGremlin) {
+                usurpedGremlin.applyDrainEffect(attacker, victim);
+            }
         }
     }
 

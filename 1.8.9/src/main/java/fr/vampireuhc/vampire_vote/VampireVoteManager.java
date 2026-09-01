@@ -5,7 +5,12 @@ import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.roles.ComteRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
+import fr.vampireuhc.roles.Role;
 import fr.vampireuhc.roles.VampireMinion;
+import fr.vampireuhc.roles.usurped.UsurpedPower;
+import fr.vampireuhc.roles.usurped.UsurpedVampire;
 
 
 import java.util.*;
@@ -112,6 +117,9 @@ public class VampireVoteManager {
     private void sendVoteFeedback(UUID targetId) {
         String targetName = nameOf(targetId);
         for (UUID voterId : voters) {
+            if (hiddenFromVoteResult(voterId)) {
+                continue;
+            }
             Player p = Bukkit.getPlayer(voterId);
             if (p != null) {
                 p.sendMessage(MessageUtil.serialize("<dark_purple>Votre cible est <gold>" + targetName + "</gold> !</dark_purple>"));
@@ -121,11 +129,25 @@ public class VampireVoteManager {
 
     private void sendTieFeedback(VoteResult.Tie tie) {
         for (UUID voterId : voters) {
+            if (hiddenFromVoteResult(voterId)) {
+                continue;
+            }
             Player p = Bukkit.getPlayer(voterId);
             if (p != null) {
                 p.sendMessage(MessageUtil.serialize("<red>Égalité entre plusieurs joueurs ! Le Maître va trancher...</red>"));
             }
         }
+    }
+
+    // Le Sosie ayant usurpé un pouvoir vampire (Sbire ou Comte) vote sans jamais
+    // connaître le résultat : il n'est ni prévenu du vainqueur ni d'une égalité.
+    private boolean hiddenFromVoteResult(UUID playerId) {
+        VampireUHCPlayer vp = plugin.getPlayerManager().get(playerId);
+        if (vp == null || !(vp.getRole() instanceof DoppelgangerRole)) {
+            return false;
+        }
+        UsurpedPower power = ((DoppelgangerRole) vp.getRole()).getActivePower();
+        return power instanceof UsurpedVampire;
     }
 
     // Le Maitre tranche une égalité
@@ -235,10 +257,13 @@ public class VampireVoteManager {
 
     private void broadcastToVampires(String message) {
         for (VampireUHCPlayer player : plugin.getPlayerManager().getAll()) {
-            if (player.getRole() instanceof VampireMinion && player.isAlive()) {
-                Player p = Bukkit.getPlayer(player.getUuid());
-                if (p != null) {
-                    p.sendMessage(message);
+            if (player.isAlive()) {
+                Role role = player.getRole();
+                if (role instanceof VampireMinion || role instanceof ComteRole) {
+                    Player p = Bukkit.getPlayer(player.getUuid());
+                    if (p != null) {
+                        p.sendMessage(message);
+                    }
                 }
             }
         }

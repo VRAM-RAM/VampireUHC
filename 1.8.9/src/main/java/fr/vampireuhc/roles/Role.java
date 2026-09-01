@@ -40,6 +40,13 @@ public interface Role {
     default void onEpisodeStart(int episode) {
     }
 
+    /**
+     * Appelé à la mort d'un joueur de la partie. {@code victim} et {@code killer}
+     * (peut être null) sont l'état meta-jeu (VampireUHCPlayer).
+     */
+    default void onPlayerDeath(VampireUHCPlayer victim, VampireUHCPlayer killer) {
+    }
+
     // Retourne la description du role.
     public String getDescription();
 }

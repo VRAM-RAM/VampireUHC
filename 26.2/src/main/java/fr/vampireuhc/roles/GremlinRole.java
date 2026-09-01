@@ -43,6 +43,7 @@ public class GremlinRole implements Role {
             + "<bold><dark_purple>Pouvoir 1 — Échange de marques :</dark_purple></bold>\n"
             + "  <dark_purple>▸</dark_purple> <gray>Échangez <red>toutes</red> les marques de deux joueurs : <gold>/vuhc switch <j1> <j2></gold></gray>\n"
             + "  <dark_purple>▸</dark_purple> <gray>Utilisable une fois par épisode. Vous pouvez vous auto-switch.</gray>\n"
+            + "  <dark_purple>▸</dark_purple> <gray>Au moins l'une des deux cibles doit se trouver à moins de <yellow>20 blocs</yellow> de vous.</gray>\n"
             + "<bold><dark_purple>Pouvoir 2 — Vol de vie :</dark_purple></bold>\n"
             + "  <dark_purple>▸</dark_purple> <gray>Vous pouvez activer : <gold>/vuhc drain</gold> — une fois par épisode.</gray>\n"
             + "  <dark_purple>▸</dark_purple> <gray>Pendant <yellow>5 minutes</yellow>, chaque coup a <green>30% de chance</green> de voler un demi-coeur à votre adversaire.</gray>\n"

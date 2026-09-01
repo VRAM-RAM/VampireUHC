@@ -5,6 +5,7 @@ import fr.vampireuhc.commands.VUHCCommand;
 import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.game.GameManager;
 import fr.vampireuhc.game.MapManager;
+import fr.vampireuhc.game.CrossTracker;
 import fr.vampireuhc.game.RoleBuffManager;
 import fr.vampireuhc.game.SidebarManager;
 import fr.vampireuhc.game.SpectatorManager;
@@ -34,6 +35,7 @@ public class VampireUHC extends JavaPlugin {
     private RoleManager roleManager;
     private VampireVoteManager voteManager;
     private MapManager mapManager;
+    private CrossTracker crossTracker;
     private RoleBuffManager buffManager;
     private SidebarManager sidebarManager;
     private SpectatorManager spectatorManager;
@@ -56,6 +58,7 @@ public class VampireUHC extends JavaPlugin {
         this.roleManager = new RoleManager(this, playerManager);
 
         this.voteManager = new VampireVoteManager(this);
+        this.crossTracker = new CrossTracker(this);
         this.mapManager = new MapManager(this);
         this.buffManager = new RoleBuffManager(this);
         this.sidebarManager = new SidebarManager(this);
@@ -146,6 +149,10 @@ public class VampireUHC extends JavaPlugin {
 
     public VampireVoteManager getVoteManager() {
         return voteManager;
+    }
+
+    public CrossTracker getCrossTracker() {
+        return crossTracker;
     }
 
     public MapManager getMapManager() {

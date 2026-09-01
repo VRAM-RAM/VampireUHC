@@ -7,11 +7,20 @@ import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.ApprenticeSlayer;
 import fr.vampireuhc.roles.BabaYagaRole;
 import fr.vampireuhc.roles.CupidonRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
 import fr.vampireuhc.roles.GravediggerRole;
 import fr.vampireuhc.roles.PaladinRole;
 import fr.vampireuhc.roles.SandMerchantRole;
 import fr.vampireuhc.roles.WeaverRole;
 import fr.vampireuhc.roles.WhiteLadyRole;
+import fr.vampireuhc.roles.usurped.UsurpedGravedigger;
+import fr.vampireuhc.roles.usurped.UsurpedPaladin;
+import fr.vampireuhc.roles.usurped.UsurpedPower;
+import fr.vampireuhc.roles.usurped.UsurpedSlayer;
+import fr.vampireuhc.roles.usurped.UsurpedWeaver;
+import fr.vampireuhc.roles.usurped.UsurpedBabaYaga;
+import fr.vampireuhc.roles.usurped.UsurpedSandMerchant;
+import fr.vampireuhc.roles.usurped.UsurpedWhiteLady;
 
 import java.util.List;
 
@@ -49,8 +58,7 @@ public class PlayerDeathListener implements Listener {
         Player victim = (Player) event.getEntity();
 
         VampireUHCPlayer vp = plugin.getPlayerManager().get(victim.getUniqueId());
-        if (vp == null || !vp.isAlive()
-                || !(vp.getRole() instanceof WhiteLadyRole)) {
+        if (vp == null || !vp.isAlive()) {
             return;
         }
 
@@ -59,14 +67,35 @@ public class PlayerDeathListener implements Listener {
             return; // coup non létal
         }
 
-        Player killer = victim.getKiller();
-        VampireUHCPlayer killerVp = killer != null ? plugin.getPlayerManager().get(killer.getUniqueId()) : null;
+        if (vp.getRole() instanceof WhiteLadyRole) {
+            Player killer = victim.getKiller();
+            VampireUHCPlayer killerVp = killer != null ? plugin.getPlayerManager().get(killer.getUniqueId()) : null;
 
-        WhiteLadyRole whiteLady = (WhiteLadyRole) vp.getRole();
-        if (whiteLady.onDeath(killerVp)) {
-            event.setCancelled(true);
-            victim.setHealth(victim.getMaxHealth());
-            plugin.getMapManager().teleportPlayerRandomly(victim);
+            WhiteLadyRole whiteLady = (WhiteLadyRole) vp.getRole();
+            if (whiteLady.onDeath(killerVp)) {
+                event.setCancelled(true);
+                victim.setHealth(victim.getMaxHealth());
+                plugin.getMapManager().teleportPlayerRandomly(victim);
+            }
+            return;
+        }
+
+        // Sosie ayant usurpé la Dame Blanche : résurrection UNIQUE, selon le
+        // camp du tueur (villageois → faiblesse de nuit, vampire → faiblesse
+        // de jour, solitaire → aucune).
+        if (vp.getRole() instanceof DoppelgangerRole) {
+            UsurpedPower power = ((DoppelgangerRole) vp.getRole()).getActivePower();
+            if (power instanceof UsurpedWhiteLady) {
+                Player killer = victim.getKiller();
+                VampireUHCPlayer killerVp = killer != null ? plugin.getPlayerManager().get(killer.getUniqueId()) : null;
+
+                UsurpedWhiteLady usurpedWhiteLady = (UsurpedWhiteLady) power;
+                if (usurpedWhiteLady.onDeath(killerVp)) {
+                    event.setCancelled(true);
+                    victim.setHealth(victim.getMaxHealth());
+                    plugin.getMapManager().teleportPlayerRandomly(victim);
+                }
+            }
         }
     }
 
@@ -112,6 +141,14 @@ public class PlayerDeathListener implements Listener {
                 PaladinRole paladin = (PaladinRole) killerVp.getRole();
                 paladin.gainLuminousMarkerOnKill(plugin.getMarkerManager(), vp);
             }
+            // Le Sosie ayant usurpé le Paladin a 50% de chances de gagner une
+            // marque lumineuse en tuant n'importe quel joueur, quel que soit son camp.
+            if (killerVp.getRole() instanceof DoppelgangerRole) {
+                UsurpedPower power = ((DoppelgangerRole) killerVp.getRole()).getActivePower();
+                if (power instanceof UsurpedPaladin) {
+                    ((UsurpedPaladin) power).gainLuminousMarkerOnKill(plugin.getMarkerManager(), vp);
+                }
+            }
         }
 
         // Le Cupidon est notifié si l'un des amoureux meurt (penalty + identité du tueur).
@@ -144,6 +181,33 @@ public class PlayerDeathListener implements Listener {
                 graveDigger.spawnParticlesAtLocation(location, markers);
             }
 
+            // Le Sosie de Fossoyeur voit aussi les particules et indexe le cadavre
+            // (registre propre au Sosie, mais exhumation partagée avec le vrai).
+            // Le Sosie de Tisseur observe son réseau (mort d'un noeud / meurtre,
+            // effondrement à la mort du Sosie lui-même).
+            if (p.getRole() instanceof DoppelgangerRole) {
+                UsurpedPower power = ((DoppelgangerRole) p.getRole()).getActivePower();
+                if (power instanceof UsurpedGravedigger) {
+                    List<MarkerType> markers = markerManager.getMarkerTypesByPlayer(vp.getUuid());
+                    ((UsurpedGravedigger) power).spawnParticlesAtLocation(location, markers);
+                }
+                if (power instanceof UsurpedWeaver) {
+                    UsurpedWeaver weaver = (UsurpedWeaver) power;
+                    if (p.getUuid().equals(vp.getUuid())) {
+                        // Le Sosie-Tisseur meurt : sa toîle s'effondre.
+                        weaver.collapseWeb(markerManager);
+                    } else {
+                        weaver.tryInformDeathOfNodeAndDestroyWeb(markerManager, vp);
+                        weaver.tryInformMurderByNodeOfWeb(markerManager, killerVp);
+                    }
+                }
+                // La mort de la vraie Dame Blanche purge la faiblesse du Sosie
+                // qui l'aurait copiée.
+                if (power instanceof UsurpedWhiteLady && vp.getRole() instanceof WhiteLadyRole) {
+                    ((UsurpedWhiteLady) power).onRealWhiteLadyDeath();
+                }
+            }
+
             // La Baba Yaga vivante reçoit la proposition de résurrection du défunt.
             if (p.getRole() instanceof BabaYagaRole
                     && p.isAlive()
@@ -151,8 +215,25 @@ public class PlayerDeathListener implements Listener {
                 ((BabaYagaRole) p.getRole()).offerResurrection(vp);
             }
 
+            // Le Sosie de Baba Yaga est seulement informé de la mort (il ne
+            // peut pas ressusciter).
+            if (p.getRole() instanceof DoppelgangerRole
+                    && p.isAlive()
+                    && !p.getUuid().equals(vp.getUuid())) {
+                UsurpedPower power = ((DoppelgangerRole) p.getRole()).getActivePower();
+                if (power instanceof UsurpedBabaYaga) {
+                    ((UsurpedBabaYaga) power).notifyDeath(vp);
+                }
+            }
+
             if (p.getRole() instanceof WhiteLadyRole) {
                 ((WhiteLadyRole) p.getRole()).killedKiller(victim);
+            }
+
+            // Hook de mort généralisé : chaque rôle observateur (ex. Doppelganger
+            // qui suit la mort de sa cible ou de son tueur) est notifié.
+            if (p.getRole() != null) {
+                p.getRole().onPlayerDeath(vp, killerVp);
             }
         }
 
@@ -166,9 +247,25 @@ public class PlayerDeathListener implements Listener {
             ((SandMerchantRole) vp.getRole()).makePlayersSleepOnMarchantDeath(markerManager);
         }
 
+        // Idem quand le Sosie consumant le Marchand de Sable meurt (variante usurpée).
+        if (vp.getRole() instanceof DoppelgangerRole) {
+            UsurpedPower power = ((DoppelgangerRole) vp.getRole()).getActivePower();
+            if (power instanceof UsurpedSandMerchant) {
+                ((UsurpedSandMerchant) power).makePlayersSleepOnDeath(markerManager);
+            }
+        }
+
         // L'Apprentie assassin récupère les marques (sauf Maître) du tué.
         if (killerVp != null && killerVp.getRole() instanceof ApprenticeSlayer) {
             ((ApprenticeSlayer) killerVp.getRole()).CopyMarkersOnKill(plugin.getMarkerManager(), vp);
+        }
+
+        // Le Sosie d'Apprentie Assassin vole aussi les marques (sauf Maître) du tué.
+        if (killerVp != null && killerVp.getRole() instanceof DoppelgangerRole) {
+            UsurpedPower power = ((DoppelgangerRole) killerVp.getRole()).getActivePower();
+            if (power instanceof UsurpedSlayer) {
+                ((UsurpedSlayer) power).copyMarkersOnKill(plugin.getMarkerManager(), vp);
+            }
         }
 
         plugin.getGameManager().checkWinCondition();

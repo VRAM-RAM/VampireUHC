@@ -4,8 +4,14 @@ import fr.vampireuhc.VampireUHC;
 import fr.vampireuhc.game.GameManager;
 import fr.vampireuhc.game.GamePhase;
 import fr.vampireuhc.roles.ArcherRole;
+import fr.vampireuhc.roles.BourreauRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
 import fr.vampireuhc.roles.GremlinRole;
 import fr.vampireuhc.roles.RoleManager;
+import fr.vampireuhc.roles.usurped.UsurpedGremlin;
+import fr.vampireuhc.roles.usurped.UsurpedPower;
+import fr.vampireuhc.roles.usurped.UsurpedArcher;
+import fr.vampireuhc.roles.usurped.UsurpedBourreau;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -73,6 +79,13 @@ public class PvPListener implements Listener {
                 ArcherRole archer = (ArcherRole) roleManager.getPlayerRole(shooter.getUniqueId());
                 archer.setGlowOnHit(event.getEntity(), plugin);
             }
+            // Le Sosie ayant usurpé l'Archer marque aussi sa cible (pas de kit).
+            if (roleManager.getPlayerRole(shooter.getUniqueId()) instanceof DoppelgangerRole) {
+                UsurpedPower power = ((DoppelgangerRole) roleManager.getPlayerRole(shooter.getUniqueId())).getActivePower();
+                if (power instanceof UsurpedArcher) {
+                    ((UsurpedArcher) power).setGlowOnHit(event.getEntity(), plugin);
+                }
+            }
         }
 
         
@@ -100,11 +113,49 @@ public class PvPListener implements Listener {
 
         // Si pvp actif, gestion des pouvoirs
         if (event.getEntity() instanceof Player
-                && event.getDamager() instanceof Player
-                && roleManager.getPlayerRole(((Player) event.getDamager()).getUniqueId()) instanceof GremlinRole) {
+                && event.getDamager() instanceof Player) {
 
-            GremlinRole gremlin = (GremlinRole) roleManager.getPlayerRole(((Player) event.getDamager()).getUniqueId());
-            gremlin.applyDrainEffect((Player) event.getDamager(), (Player) event.getEntity());
+            Player attacker = (Player) event.getDamager();
+            Player victim = (Player) event.getEntity();
+
+            // Le premier coup du Bourreau de l'épisode inflige 50% de dégâts en plus.
+            if (roleManager.getPlayerRole(attacker.getUniqueId()) instanceof BourreauRole) {
+                BourreauRole bourreau = (BourreauRole) roleManager.getPlayerRole(attacker.getUniqueId());
+                if (bourreau.tryApplyFirstHitBonus(plugin.getGameManager().getEpisode())) {
+                    event.setDamage(event.getDamage() * 1.5);
+                }
+            }
+
+            // Premier coup du Bourreau usurpé (même passif, pas d'épée enchantée).
+            if (roleManager.getPlayerRole(attacker.getUniqueId()) instanceof DoppelgangerRole) {
+                UsurpedPower power = ((DoppelgangerRole) roleManager.getPlayerRole(attacker.getUniqueId())).getActivePower();
+                if (power instanceof UsurpedBourreau
+                        && ((UsurpedBourreau) power).tryApplyFirstHitBonus(plugin.getGameManager().getEpisode())) {
+                    event.setDamage(event.getDamage() * 1.5);
+                }
+            }
+
+            // Le Sosie inflige 50% de dégâts en plus au tueur de sa cible usurpée.
+            if (roleManager.getPlayerRole(attacker.getUniqueId()) instanceof DoppelgangerRole) {
+                DoppelgangerRole doppelganger = (DoppelgangerRole) roleManager.getPlayerRole(attacker.getUniqueId());
+                if (doppelganger.getDamageBonusAgainst(victim.getUniqueId())) {
+                    event.setDamage(event.getDamage() * 1.5);
+                }
+            }
+
+            if (roleManager.getPlayerRole(attacker.getUniqueId()) instanceof GremlinRole) {
+                GremlinRole gremlin = (GremlinRole) roleManager.getPlayerRole(attacker.getUniqueId());
+                gremlin.applyDrainEffect(attacker, victim);
+            }
+
+            // Drain du Sosie : identique à celui du Gremlin, mais activé via le
+            // pouvoir usurpé (UsurpedGremlin.activateDrain) au lieu du rôle.
+            if (roleManager.getPlayerRole(attacker.getUniqueId()) instanceof DoppelgangerRole) {
+                UsurpedPower power = ((DoppelgangerRole) roleManager.getPlayerRole(attacker.getUniqueId())).getActivePower();
+                if (power instanceof UsurpedGremlin) {
+                    ((UsurpedGremlin) power).applyDrainEffect(attacker, victim);
+                }
+            }
         }
     }
 

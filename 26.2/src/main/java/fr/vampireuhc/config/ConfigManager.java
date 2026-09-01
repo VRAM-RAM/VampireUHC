@@ -41,33 +41,30 @@ public class ConfigManager {
         return cfg().getInt("timeline.episode-length", 20);
     }
 
+    // Fenêtre d'usurpation du Doppelganger (20 à 60 minutes de jeu incluses).
+    public int getUsurpWindowStartMin() {
+        return cfg().getInt("timeline.usurp-window-start-min", 20);
+    }
+
+    public int getUsurpWindowEndMin() {
+        return cfg().getInt("timeline.usurp-window-end-min", 60);
+    }
+
     /* Utilitaires pour la compo */
 
-    public int getReferencePlayerCount() {
-        /*  On va mettre 28 joueurs par défaut. A terme, je pense diminuer ce nombre 
-        (car pour une partie de test, je n'aurai pas énormément de rôles, 
-        et surtout je pense que le mode de jeu peut être fun en plus petit commité, du style 23 personnes). */
-        return cfg().getInt("compo.reference-player-count", 28);
+    private Composition composition = null;
+
+    // Composition parsee du config.yml (avec cache), partagee par tout le plugin.
+    public Composition getComposition() {
+        if (composition == null) {
+            composition = Composition.load(cfg());
+        }
+        return composition;
     }
 
-    public int getVampireMin() {
-        // Par défaut, 6 vampires pour 28 joueurs me parait bien, surtout qu'il n'y a aucun rôle village qui peut connaitre précisement le rôle de qqn d'autre. Oublions pas aussi qu'il y a 1-2 rôles solitaires
-        return cfg().getInt("compo.vampire-min", 6);
-    }
-
-    public int getVampireMax() {
-        // Par défaut, 8 vampires max me parait bien.
-        return cfg().getInt("compo.vampire-max", 8);
-    }
-
-    public int getSoloMin() {
-        // Ducoup, un solo minimum
-        return cfg().getInt("compo.solo-min", 1);
-    }
-
-    public int getSoloMax() {
-        // Et 2 max. Je pense que ducoup, c'est assez équilibré (on a : compo minimum { 6 vampires + 1 solo + 21 villageois } , compo maximum { 8 vampires + 2 solos + 18 villageois })
-        return cfg().getInt("compo.solo-max", 2);
+    // A appeler apres un reloadConfig() pour reparser la composition.
+    public void resetCompositionCache() {
+        composition = null;
     }
 
     public int getVoteEveryMinutes() {
@@ -104,17 +101,17 @@ public class ConfigManager {
 
     public int getOreIronPerChunk() {
         // Minerais de fer supplémentaires générés dans les caves (par chunk).
-        return cfg().getInt("map.ores.iron-per-chunk", 6);
+        return cfg().getInt("map.ores.iron-per-chunk", 12);
     }
 
     public int getOreGoldPerChunk() {
         // Minerais d'or supplémentaires générés dans les caves (par chunk).
-        return cfg().getInt("map.ores.gold-per-chunk", 4);
+        return cfg().getInt("map.ores.gold-per-chunk", 8);
     }
 
     public int getOreDiamondPerChunk() {
         // Minerais de diamant supplémentaires générés dans les caves (par chunk).
-        return cfg().getInt("map.ores.diamond-per-chunk", 2);
+        return cfg().getInt("map.ores.diamond-per-chunk", 4);
     }
 
     public int getPregenChunksPerTick() {
@@ -134,11 +131,11 @@ public class ConfigManager {
     }
 
     public double getAppleDropChance() {
-        return cfg().getDouble("gameplay.apple-drop-chance", 0.05);
+        return cfg().getDouble("gameplay.apple-drop-chance", 0.5);
     }
 
     public int getLeatherBonus() {
-        return cfg().getInt("gameplay.leather-bonus", 2);
+        return cfg().getInt("gameplay.leather-bonus", 5);
     }
 
     /* Utilitaires pour le cycle de vie */
@@ -261,7 +258,5 @@ public class ConfigManager {
     public String translateRaw(String message) {
         return ChatColor.translateAlternateColorCodes('&', message);
     }
-
-
 }
 

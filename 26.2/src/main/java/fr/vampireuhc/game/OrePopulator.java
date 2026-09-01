@@ -28,8 +28,7 @@ public class OrePopulator extends BlockPopulator {
         placeOre(region, random, chunkX, chunkZ, Material.DIAMOND_ORE, Material.DEEPSLATE_DIAMOND_ORE, config.getOreDiamondPerChunk(), 0, 16);
     }
 
-    private void placeOre(LimitedRegion region, Random random, int chunkX, int chunkZ,
-                          Material ore, Material deepslateOre, int count, int minY, int maxY) {
+    private void placeOre(LimitedRegion region, Random random, int chunkX, int chunkZ, Material ore, Material deepslateOre, int count, int minY, int maxY) {
         for (int i = 0; i < count; i++) {
             int x = chunkX * 16 + random.nextInt(16);
             int y = minY + random.nextInt(maxY - minY);

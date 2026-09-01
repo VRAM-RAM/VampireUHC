@@ -5,6 +5,8 @@ import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.markers.MarkerType;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.BabaYagaRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
+import fr.vampireuhc.roles.usurped.UsurpedBabaYaga;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -124,6 +126,13 @@ public class GameplayListener implements Listener {
         if (plugin.getMarkerManager().countMarkers(vp.getUuid(), MarkerType.MARQUE_MAITRE) == 2) {
             clampAbsorption(player);
         }
+
+        // Trois marques Maître du Sosie (variante DOPPELGANGER) : le joueur ne
+        // doit jamais bénéficier d'absorption pleine (pomme gold). Le Sosie
+        // marque déjà comme le Maître : le plafond est donc le même.
+        if (plugin.getMarkerManager().countMarkers(vp.getUuid(), MarkerType.MARQUE_MAITRE_DOPPELGANGER) == 3) {
+            clampAbsorption(player);
+        }
     }
 
     // Un joueur est maudit si un Baba Yaga en partie a une malédiction active
@@ -133,6 +142,14 @@ public class GameplayListener implements Listener {
             if (p.getRole() instanceof BabaYagaRole
                     && ((BabaYagaRole) p.getRole()).isCurseActive(uuid)) {
                 return true;
+            }
+            // Le Sosie qui a copié la Baba Yaga maudit aussi (sans ressusciter).
+            if (p.getRole() instanceof DoppelgangerRole) {
+                fr.vampireuhc.roles.usurped.UsurpedPower power = ((DoppelgangerRole) p.getRole()).getActivePower();
+                if (power instanceof UsurpedBabaYaga
+                        && ((UsurpedBabaYaga) power).isCurseActive(uuid)) {
+                    return true;
+                }
             }
         }
         return false;

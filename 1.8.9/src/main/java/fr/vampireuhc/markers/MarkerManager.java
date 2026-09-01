@@ -70,6 +70,14 @@ public class MarkerManager {
             clearMarkersOfType(target, MarkerType.SALVATION);
             return false;
         }
+        // Salvation copiée par le Sosie : blocage IMPARFAIT (50%). Si le blocage
+        // échoue, la marque hostile passe et la Salvation usurpée reste en place.
+        if (hostile && hasMarker(target, MarkerType.SALVATION_DOPPELGANGER)) {
+            if (random.nextInt(100) < 50) {
+                clearMarkersOfType(target, MarkerType.SALVATION_DOPPELGANGER);
+                return false;
+            }
+        }
         addMarker(target, type, source);
         return true;
     }
@@ -173,6 +181,19 @@ public class MarkerManager {
         clearMarkersOfType(target, type);
     }
 
+    /**
+     * Retire tous les marqueurs posés par un émetteur donné (source).
+     * Utilisé par le Doppelganger : à la mort de sa cible, les marqueurs
+     * qu'il a lui-même posés (variantes DOPPELGANGER) s'estompent.
+     */
+    public void removeMarkersBySource(UUID source) {
+        markersByPlayer.forEach((target, markers) -> {
+            if (markers != null) {
+                markers.removeIf(marker -> source.equals(marker.getSource()));
+            }
+        });
+    }
+
     public void clearMarkers(UUID target) {
         markersByPlayer.remove(target);
     }
@@ -192,6 +213,11 @@ public class MarkerManager {
 
     /* Renvoie le score d'aura */
     public AuraTier computeAuraTier(UUID target) {
+        // 2 marques Maître du Sosie (neutres) → l'aura du ciblé s'obscurcit.
+        if (countMarkers(target, MarkerType.MARQUE_MAITRE_DOPPELGANGER) >= 2) {
+            return AuraTier.OBSCURE;
+        }
+
         int score = computeAuraScore(target);
         if (score <= -3) return AuraTier.TRES_OBSCURE;
         if (score < 0) return AuraTier.OBSCURE;

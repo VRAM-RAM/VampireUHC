@@ -1,18 +1,22 @@
 package fr.vampireuhc.game;
 
 import fr.vampireuhc.VampireUHC;
+import fr.vampireuhc.config.Composition;
 import fr.vampireuhc.config.ConfigManager;
 import fr.vampireuhc.config.MessageUtil;
 import fr.vampireuhc.markers.MarkerManager;
 import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.PlayerManager;
 import fr.vampireuhc.player.VampireUHCPlayer;
+import fr.vampireuhc.roles.Role;
 import fr.vampireuhc.roles.RoleType;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -38,6 +42,9 @@ public class GameManager {
     private int countdownRemaining = 0;
     private boolean gameStarted = false;
 
+    // Joueurs sélectionnés par l'admin pour la partie (uuid -> pseudo, insertion order).
+    private final Map<UUID, String> roster = new LinkedHashMap<>();
+
     public GameManager(VampireUHC plugin, PlayerManager playerManager, MarkerManager markerManager, ConfigManager configManager) {
         this.plugin = plugin;
         this.playerManager = playerManager;
@@ -52,6 +59,85 @@ public class GameManager {
 
     public int getDefaultCountdownSeconds() {
         return configManager.getDefaultCountdownSeconds();
+    }
+
+    /* --- Roster : sélection des joueurs avant le lancement --- */
+
+    // Ajoute un joueur à la sélection (uniquement avant le début de la partie).
+    public boolean addToRoster(Player player) {
+        if (isGameStarted()) {
+            return false;
+        }
+        return roster.putIfAbsent(player.getUniqueId(), player.getName()) == null;
+    }
+
+    // Retire un joueur de la sélection (uniquement avant le début de la partie).
+    public boolean removeFromRoster(Player player) {
+        return roster.remove(player.getUniqueId()) != null;
+    }
+
+    // Vide la sélection (uniquement avant le début de la partie).
+    public void clearRoster() {
+        roster.clear();
+    }
+
+    public boolean isInRoster(Player player) {
+        return roster.containsKey(player.getUniqueId());
+    }
+
+    public Map<UUID, String> getRoster() {
+        return roster;
+    }
+
+    public int getRosterSize() {
+        return roster.size();
+    }
+
+    // Auto-sélectionne des joueurs en ligne pour atteindre (au plus) le nombre
+    // requis par la composition. Retourne le nombre de joueurs ajoutés.
+    public int fillRoster() {
+        if (isGameStarted()) {
+            return 0;
+        }
+        int required = configManager.getComposition().getRequiredPlayers();
+        int added = 0;
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            if (roster.size() >= required) {
+                break;
+            }
+            if (!roster.containsKey(online.getUniqueId())) {
+                roster.put(online.getUniqueId(), online.getName());
+                added++;
+            }
+        }
+        return added;
+    }
+
+    // Message d'erreur si la partie ne peut pas démarrer, sinon null.
+    public String preStartValidation() {
+        Composition composition = configManager.getComposition();
+        if (!composition.isValid()) {
+            return "Composition invalide : " + String.join(" / ", composition.getErrors());
+        }
+        int required = composition.getRequiredPlayers();
+        if (roster.size() < required) {
+            return "Il faut sélectionner " + required + " joueurs (roster : " + roster.size()
+                    + "). /vuhc admin roster list pour voir l'état, add <pseudo> ou fill pour compléter.";
+        }
+        if (roster.size() > required) {
+            return "Trop de joueurs sélectionnés (" + roster.size() + "), la composition prévoit "
+                    + required + " joueurs. /vuhc admin roster remove <pseudo> pour retirer.";
+        }
+        List<String> offline = new ArrayList<>();
+        for (String name : roster.values()) {
+            if (Bukkit.getPlayerExact(name) == null) {
+                offline.add(name);
+            }
+        }
+        if (!offline.isEmpty()) {
+            return "Joueurs sélectionnés hors ligne : " + String.join(", ", offline) + ".";
+        }
+        return null;
     }
 
     // Temps écoulé en secondes depuis le début de la partie (0 si pas encore lancée).
@@ -77,6 +163,12 @@ public class GameManager {
     // Lance un compte à rebours puis démarre la partie.
     public boolean startCountdown(int seconds) {
         if (countdownTask != null || tickTask != null) {
+            return false;
+        }
+
+        // Garde de sécurité (le message détaillé est affiché côté commande via
+        // preStartValidation) : composition valide + roster exactement rempli.
+        if (preStartValidation() != null) {
             return false;
         }
 
@@ -130,14 +222,20 @@ public class GameManager {
         plugin.getMapManager().prepareWorld();
         plugin.getMapManager().teleportPlayersToSpawn();
 
-        for (Player online : Bukkit.getOnlinePlayers()) {
-            playerManager.register(online);
-            online.setGameMode(GameMode.SURVIVAL);
+        for (Map.Entry<UUID, String> entry : roster.entrySet()) {
+            Player online = Bukkit.getPlayer(entry.getKey());
+            if (online != null) {
+                playerManager.register(online);
+                online.setGameMode(GameMode.SURVIVAL);
+            } else {
+                plugin.getLogger().warning("Joueur sélectionné absent au démarrage : " + entry.getValue());
+            }
         }
 
         giveStartingKit();
 
         tickTask = Bukkit.getScheduler().runTaskTimer(plugin, this::onMinuteElapsed, 20 * 60L, 20 * 60L);
+        plugin.getCrossTracker().start();
         broadcast("Partie lancée. Phase de préparation. Bonne chance et bonne game !");
         if (plugin.getSidebarManager() != null) {
             plugin.getSidebarManager().start();
@@ -178,6 +276,7 @@ public class GameManager {
 
         long delay = (60 - (getElapsedSeconds() % 60)) * 20L;
         tickTask = Bukkit.getScheduler().runTaskTimer(plugin, this::onMinuteElapsed, delay, 20 * 60L);
+        plugin.getCrossTracker().start();
 
         if (plugin.getSidebarManager() != null) {
             plugin.getSidebarManager().start();
@@ -202,6 +301,7 @@ public class GameManager {
         plugin.getMapManager().cancelPregeneration();
         phase = GamePhase.ENDED;
         notifyRolesGameEnd();
+        plugin.getCrossTracker().stop();
         if (plugin.getSidebarManager() != null) {
             plugin.getSidebarManager().stop();
         }
@@ -235,8 +335,10 @@ public class GameManager {
 
         notifyRolesGameEnd();
         playerManager.reset();
+        roster.clear();
         markerManager.clearMarkersOnAll();
         plugin.getVoteManager().reset();
+        plugin.getCrossTracker().stop();
 
         if (plugin.getSidebarManager() != null) {
             plugin.getSidebarManager().stop();
@@ -344,6 +446,10 @@ public class GameManager {
                     p.getRole().onEpisodeStart(newEpisode);
                 }
             }
+
+            // Frontière d'épisode : les croisements de l'épisode écoulé
+            // deviennent éligibles pour le vote / la marque Maître.
+            plugin.getCrossTracker().advanceEpisode();
         }
 
         if (plugin.getBuffManager() != null) {
@@ -410,36 +516,41 @@ public class GameManager {
     
 
     private void assignRolesAndCamps() {
+        Composition composition = configManager.getComposition();
+        if (!composition.isValid()) {
+            plugin.getLogger().severe("Distribution impossible : composition invalide. "
+                    + String.join(" / ", composition.getErrors()));
+            broadcast(MessageUtil.error("Composition invalide, aucun rôle n'a été distribué."));
+            return;
+        }
+
         List<VampireUHCPlayer> pool = new ArrayList<>(playerManager.getAll());
+        List<RoleType> roleList = composition.buildRoleList();
+
+        // Défense : le roster devait être exactement == joueurs au lancement.
+        // Une déconnexion depuis a réduit le pool : on distribue aux présents,
+        // les rôles non attribués sont les derniers de la liste (des Sbires).
+        int assigned = Math.min(pool.size(), roleList.size());
+        if (pool.size() != roleList.size()) {
+            plugin.getLogger().warning("Joueurs présents (" + pool.size() + ") != composition ("
+                    + roleList.size() + ") : distribution partielle.");
+            broadcast(MessageUtil.warn("Joueurs présents (" + pool.size() + "/" + roleList.size()
+                    + ") : certains rôles ne sont pas attribués."));
+        }
+
         Collections.shuffle(pool);
 
-        int total = pool.size();
-        double ratio = total / (double) Math.max(1, configManager.getReferencePlayerCount());
+        for (int i = 0; i < assigned; i++) {
+            VampireUHCPlayer vp = pool.get(i);
+            RoleType roleType = roleList.get(i);
+            vp.setCamp(Composition.campOf(roleType));
 
-        int vampireMax = clamp((int)Math.round(configManager.getVampireMin() * ratio), 
-                (int)Math.round(configManager.getVampireMax() * ratio));
-        int solitaireMax = clamp((int)Math.round(configManager.getSoloMin() * ratio),
-                (int)Math.round(configManager.getSoloMax() * ratio));
+            Role role = plugin.getRoleManager().createRoleFromType(roleType, vp);
+            vp.setRole(role);
+            if (role != null) {
+                role.onAssign(vp, false);
+            }
 
-        vampireMax = Math.min(vampireMax, total);
-        solitaireMax = Math.min(solitaireMax, Math.max(0, total - vampireMax));
-
-        // Garantir au moins un vampire (le Maître) dès qu'il y a des joueurs,
-        // même dans les parties très réduites (tests solo notamment).
-        vampireMax = Math.min(total, Math.max(vampireMax, 1));
-
-        int index = 0;
-        for (int i = 0; i < vampireMax && index < total; i++, index++) {
-            pool.get(index).setCamp(Camp.VAMPIRE);
-        }
-        for (int i = 0; i < solitaireMax && index < total; i++, index++) {
-            pool.get(index).setCamp(Camp.SOLO);
-        }
-        for (; index < total; index++) {
-            pool.get(index).setCamp(Camp.VILLAGEOIS);
-        }
-
-        for (VampireUHCPlayer vp : pool) {
             // Les vampires de naissance peuvent voter pour la marque vampire (pas les infectés).
             if (vp.getCamp() == Camp.VAMPIRE) {
                 vp.setVampireVote();
@@ -450,11 +561,27 @@ public class GameManager {
             }
         }
 
-        // Deleguer a RoleManager pour attribuer les roles precis
-        plugin.getRoleManager().assignRolesToPlayers();
+        int vampires = 0;
+        int villagers = 0;
+        int solos = 0;
+        for (int i = 0; i < assigned; i++) {
+            switch (pool.get(i).getCamp()) {
+                case VAMPIRE:
+                    vampires++;
+                    break;
+                case VILLAGEOIS:
+                    villagers++;
+                    break;
+                case SOLO:
+                    solos++;
+                    break;
+                default:
+                    break;
+            }
+        }
+        plugin.getLogger().info("Rôles attribués : " + vampires + " vampires, " + villagers
+                + " villageois, " + solos + " solitaires");
     }
-
-    private int clamp(int value, int max) { return Math.min(value, max); }
 
     private void activatePvp() {
         phase = GamePhase.PVP_ACTIVE;

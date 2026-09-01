@@ -8,9 +8,15 @@ import fr.vampireuhc.player.Camp;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.ApprenticeSlayer;
 import fr.vampireuhc.roles.BabaYagaRole;
+import fr.vampireuhc.roles.DoppelgangerRole;
 import fr.vampireuhc.roles.MasterRole;
 import fr.vampireuhc.roles.PaladinRole;
 import fr.vampireuhc.roles.WhiteLadyRole;
+import fr.vampireuhc.roles.usurped.UsurpedPaladin;
+import fr.vampireuhc.roles.usurped.UsurpedPower;
+import fr.vampireuhc.roles.usurped.UsurpedSlayer;
+import fr.vampireuhc.roles.usurped.UsurpedVampire;
+import fr.vampireuhc.roles.usurped.UsurpedWhiteLady;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -90,7 +96,7 @@ public class RoleBuffManager {
         applyMaxHealth(p, vp);
     }
 
-    // Cible en cœurs : base selon rôle + bonus/malus d'aura (Paladin) − pénalités actives.
+    // Cible en coeurs : base selon rôle + bonus/malus d'aura (Paladin) − pénalités actives.
     private int targetHearts(VampireUHCPlayer vp) {
         ConfigManager config = plugin.getConfigManager();
         int base = vp.getRole() instanceof MasterRole
@@ -105,6 +111,13 @@ public class RoleBuffManager {
                 case TRES_LUMINEUSE -> 2;
                 default -> 0;
             };
+        } else if (vp.getRole() instanceof DoppelgangerRole doppelganger
+                && doppelganger.getActivePower() instanceof UsurpedPaladin) {
+            // Paladin usurpé : très lumineuse → +1 cœur (vs +2 du vrai Paladin).
+            AuraTier tier = plugin.getMarkerManager().computeAuraTier(vp.getUuid());
+            if (tier == AuraTier.TRES_LUMINEUSE) {
+                delta = 1;
+            }
         }
 
         int penalty = heartPenalties.getOrDefault(vp.getUuid(), 0);
@@ -137,6 +150,30 @@ public class RoleBuffManager {
             whiteLady.applyEffects(p, night);
         } else if (vp.getRole() instanceof BabaYagaRole babaYaga) {
             babaYaga.applyEffects(p);
+        } else if (vp.getRole() instanceof DoppelgangerRole doppelganger) {
+            // Pouvoir copié : on ré-applique les effets passifs du rôle usurpé.
+            UsurpedPower power = doppelganger.getActivePower();
+            if (power instanceof UsurpedPaladin usurpedPaladin) {
+                AuraTier tier = markers.computeAuraTier(vp.getUuid());
+                usurpedPaladin.applyAuraEffects(p, tier);
+            } else if (power instanceof UsurpedSlayer usurpedSlayer) {
+                boolean night = !p.getWorld().isDayTime();
+                usurpedSlayer.applyMarkerEffects(p, night,
+                        usurpedSlayer.countDarkMarkers(markers),
+                        usurpedSlayer.countLightMarkers(markers));
+            } else if (power instanceof UsurpedVampire usurpedVampire) {
+                usurpedVampire.applyBuffs(p);
+            } else if (power instanceof UsurpedWhiteLady usurpedWhiteLady) {
+                boolean night = !p.getWorld().isDayTime();
+                usurpedWhiteLady.applyEffects(p, night);
+            }
+
+            // Le Sosie qui a tué le tueur de sa cible usurpée gagne une
+            // force + speed permanentes (réappliquées à chaque cycle).
+            if (doppelganger.hasKilledKiller()) {
+                p.addPotionEffect(effect(PotionEffectType.STRENGTH, 0));
+                p.addPotionEffect(effect(PotionEffectType.SPEED, 0));
+            }
         }
     }
 
@@ -149,18 +186,17 @@ public class RoleBuffManager {
         int markedCount = plugin.getVoteManager().getMarkedPlayerCount();
 
         boolean day = p.getWorld().isDayTime();
-        boolean weakness = config.isDayWeaknessEnabled() && day
-                && markedCount < config.getMarksToRemoveWeakness();
+        boolean weakness = config.isDayWeaknessEnabled() && day&& markedCount < config.getMarksToRemoveWeakness();
         boolean strength = !day && markedCount >= config.getMarksForNightStrength();
 
         if (weakness) {
-            p.addPotionEffect(effect(PotionEffectType.WEAKNESS, 0));
+            p.addPotionEffect(effect_icon(PotionEffectType.WEAKNESS, 0));
         } else {
             p.removePotionEffect(PotionEffectType.WEAKNESS);
         }
 
         if (strength) {
-            p.addPotionEffect(effect(PotionEffectType.STRENGTH, 0));
+            p.addPotionEffect(effect_icon(PotionEffectType.STRENGTH, 0));
         } else {
             p.removePotionEffect(PotionEffectType.STRENGTH);
         }
@@ -168,5 +204,9 @@ public class RoleBuffManager {
 
     private PotionEffect effect(PotionEffectType type, int amplifier) {
         return new PotionEffect(type, 20 * 95, amplifier, true, false, false);
+    }
+
+    private PotionEffect effect_icon(PotionEffectType type, int amplifier) {
+        return new PotionEffect(type, 20 * 95, amplifier, true, false, true);
     }
 }
