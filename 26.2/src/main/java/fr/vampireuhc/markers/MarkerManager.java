@@ -31,8 +31,7 @@ public class MarkerManager {
         if (markerTypes.size() == 0) {
             return null;
         }
-        var rand_num = random.nextInt(101);
-        var index = rand_num % markerTypes.size();
+        var index = random.nextInt(markerTypes.size());
         return markerTypes.get(index);
     }
 

@@ -53,7 +53,7 @@ public class UsurpedWatchman implements UsurpedPower {
             return;
         }
 
-        if (target.getUuid() == last_watched) {
+        if (target.getUuid().equals(last_watched)) {
             bukkitWatchman.sendMessage(MessageUtil.error("Vous ne pouvez pas veiller sur le même joueur deux épisodes de suite !"));
             return;
         }
@@ -75,6 +75,7 @@ public class UsurpedWatchman implements UsurpedPower {
 
         if (marker == null) {
             bukkitWatchman.sendMessage(MessageUtil.success("Vous avez veillé sur le joueur et n'avez trouvé aucun marqueur !"));
+            this.lastWatchEpisode = current_episode;
             return;
         }
 

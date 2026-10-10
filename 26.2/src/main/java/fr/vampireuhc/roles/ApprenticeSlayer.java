@@ -107,6 +107,11 @@ public class ApprenticeSlayer implements Role {
         boolean darkRegen = darkCount >= config.getSlayerDarkHighThreshold();
         boolean lightRegen = lightCount >= config.getSlayerLightHighThreshold();
 
+        // Purge des effets précédents : les seuils ou le moment du jour/nuit ont
+        // pu changer, sinon force/régénération "restent" ~95 s de trop.
+        player.removePotionEffect(PotionEffectType.STRENGTH);
+        player.removePotionEffect(PotionEffectType.REGENERATION);
+
         if (night) {
             if (darkRegen) {
                 player.addPotionEffect(effect(PotionEffectType.STRENGTH, 1));

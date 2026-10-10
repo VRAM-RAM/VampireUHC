@@ -168,7 +168,13 @@ public class CartographerRole implements Role {
             int currentEp = plugin.getGameManager().getEpisode();
             // La balise vit l'épisode posé + le suivant : reveal à la FIN de N+1.
             if (currentEp > episode + 1) {
-                tryReveal();
+                // Fin de vie : l'enregistrement est définitivement figé (on
+                // n'appelle plus recordPassingPlayers). Si le Cartographe est
+                // absent, on arrête le scan et la liste gelée lui sera livrée
+                // à sa reconnexion.
+                if (!tryReveal()) {
+                    cancelScan();
+                }
                 return;
             }
             recordPassingPlayers();
@@ -208,12 +214,13 @@ public class CartographerRole implements Role {
     }
 
     // Fin de vie de la balise : communique la liste au Cartographe puis la
-    // supprime. Si le cartographe est hors ligne, on ne perd RIEN : les données
-    // sont conservées et une nouvelle tentative a lieu à la prochaine seconde.
-    private void tryReveal() {
+    // supprime. Si le cartographe est hors ligne, on ne perd RIEN : la liste
+    // reste gelée et sera livrée à sa reconnexion (deliverPendingReveal).
+    // Retourne false si le Cartographe est absent (la livraison est en attente).
+    private boolean tryReveal() {
         Player bukkitCartographer = Bukkit.getPlayer(cartographer.getUuid());
         if (bukkitCartographer == null || !bukkitCartographer.isOnline()) {
-            return;
+            return false;
         }
         if (recordedPlayers.isEmpty()) {
             bukkitCartographer.sendMessage(MessageUtil.info("Personne n'est passé à proximité de votre balise pendant l'épisode."));
@@ -226,6 +233,19 @@ public class CartographerRole implements Role {
             bukkitCartographer.sendMessage(MessageUtil.success("Passages enregistrés par votre balise : <gold>" + String.join(", ", names)));
         }
         suppressBeacon();
+        return true;
+    }
+
+    // Livraison différée de la liste au retour du Cartographe : la balise est
+    // arrivée en fin de vie pendant sa déconnexion (scan arrêté à ce moment).
+    public void deliverPendingReveal() {
+        if (cartographer == null || !applied_this_episode) {
+            return;
+        }
+        fr.vampireuhc.VampireUHC plugin = fr.vampireuhc.VampireUHC.getInstance();
+        if (plugin.getGameManager().getEpisode() > episode + 1) {
+            tryReveal();
+        }
     }
 
     private void cancelScan() {

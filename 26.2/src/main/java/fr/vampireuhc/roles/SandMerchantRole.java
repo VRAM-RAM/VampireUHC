@@ -67,6 +67,15 @@ public class SandMerchantRole implements Role {
         return sandMerchant;
     }
 
+    // État persisté (game-state.json) pour la gate "une fois par épisode".
+    public int getLastSandEpisode() {
+        return lastSandEpisode;
+    }
+
+    public void restoreState(int lastEpisode) {
+        this.lastSandEpisode = lastEpisode;
+    }
+
 
     public SandMerchantRole(VampireUHCPlayer player) {
         this.sandMerchant = player;

@@ -6,8 +6,10 @@ import fr.vampireuhc.game.GameManager;
 import fr.vampireuhc.game.GamePhase;
 import fr.vampireuhc.player.VampireUHCPlayer;
 import fr.vampireuhc.roles.SandMerchantRole;
+import fr.vampireuhc.roles.CartographerRole;
 import fr.vampireuhc.roles.DoppelgangerRole;
 import fr.vampireuhc.roles.usurped.UsurpedSandMerchant;
+import fr.vampireuhc.roles.usurped.UsurpedCartographer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -79,6 +81,19 @@ public class PlayerConnectionListener implements Listener {
                     ((UsurpedSandMerchant) power).deliverPendingEffects(plugin.getMarkerManager(), player.getUniqueId());
                     break;
                 }
+            }
+        }
+
+        // Révélation différée de la balise du Cartographe : la balise est
+        // arrivée en fin de vie pendant sa déconnexion (scan alors arrêté).
+        if (vp.getRole() instanceof CartographerRole) {
+            ((CartographerRole) vp.getRole()).deliverPendingReveal();
+        }
+        // Cartographe copié par le Sosie : même révélation différée.
+        if (vp.getRole() instanceof DoppelgangerRole) {
+            fr.vampireuhc.roles.usurped.UsurpedPower power = ((DoppelgangerRole) vp.getRole()).getActivePower();
+            if (power instanceof UsurpedCartographer) {
+                ((UsurpedCartographer) power).deliverPendingReveal();
             }
         }
 

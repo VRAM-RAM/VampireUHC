@@ -398,6 +398,20 @@ public class RoleManager {
             obj.addProperty("gremlinDrainEpisode", gremlin.getLastDrainEpisode());
         } else if (role instanceof SoulweigherRole soulweigher) {
             obj.addProperty("soulweigherLastEpisode", soulweigher.getLastWeightEpisode());
+        } else if (role instanceof WatchmanRole watchman) {
+            obj.addProperty("watchmanLastEpisode", watchman.getLastWatchEpisode());
+            if (watchman.getLastWatched() != null) {
+                obj.addProperty("watchmanLastTarget", watchman.getLastWatched().toString());
+            }
+        } else if (role instanceof ExorcistRole exorcist) {
+            obj.addProperty("exorcistLastEpisode", exorcist.getLastExorcisedEpisode());
+            JsonArray already = new JsonArray();
+            for (UUID id : exorcist.getAlreadyExorcised()) {
+                already.add(id.toString());
+            }
+            obj.add("exorcistAlready", already);
+        } else if (role instanceof SandMerchantRole merchant) {
+            obj.addProperty("merchantLastEpisode", merchant.getLastSandEpisode());
         } else if (role instanceof WhiteLadyRole whiteLady) {
             obj.addProperty("wlIsSolo", whiteLady.isSoloState());
             obj.addProperty("wlKilledByVampire", whiteLady.wasKilledByVampire());
@@ -467,6 +481,23 @@ public class RoleManager {
                     getInt(obj, "gremlinDrainEpisode", -1));
         } else if (role instanceof SoulweigherRole soulweigher) {
             soulweigher.restoreState(getInt(obj, "soulweigherLastEpisode", -1));
+        } else if (role instanceof WatchmanRole watchman) {
+            watchman.restoreState(getInt(obj, "watchmanLastEpisode", -1),
+                    parseUuidOrNull(obj, "watchmanLastTarget"));
+        } else if (role instanceof ExorcistRole exorcist) {
+            List<UUID> already = new ArrayList<>();
+            if (obj.has("exorcistAlready") && obj.get("exorcistAlready").isJsonArray()) {
+                for (JsonElement idEl : obj.getAsJsonArray("exorcistAlready")) {
+                    try {
+                        already.add(UUID.fromString(idEl.getAsString()));
+                    } catch (IllegalArgumentException ignored) {
+                        // Entrée invalide : on saute ce joueur.
+                    }
+                }
+            }
+            exorcist.restoreState(getInt(obj, "exorcistLastEpisode", -1), already);
+        } else if (role instanceof SandMerchantRole merchant) {
+            merchant.restoreState(getInt(obj, "merchantLastEpisode", -1));
         } else if (role instanceof WhiteLadyRole whiteLady) {
             UUID killer = null;
             if (obj.has("wlKillerUuid") && !obj.get("wlKillerUuid").isJsonNull()) {

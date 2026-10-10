@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -65,7 +66,7 @@ public class GameplayListener implements Listener {
         ConfigManager config = plugin.getConfigManager();
         Block block = event.getBlock();
 
-        if (config.isAutoSmeltEnabled()) {
+        if (config.isAutoSmeltEnabled() && !hasFortuneOrSilkTouch(event.getPlayer())) {
             ItemStack smelted = AUTO_SMELT.get(block.getType());
             if (smelted != null) {
                 event.setDropItems(false);
@@ -79,6 +80,18 @@ public class GameplayListener implements Listener {
                 && random.nextDouble() < config.getAppleDropChance()) {
             block.getWorld().dropItemNaturally(block.getLocation(), new ItemStack(Material.APPLE, 1));
         }
+    }
+
+    // La fonte auto ne s'applique qu'aux outils non enchantés : une pioche
+    // Fortune (multi-drops) ou Silk Touch (minerai récupéré tel quel) garde
+    // son comportement vanille.
+    private boolean hasFortuneOrSilkTouch(Player player) {
+        for (Enchantment ench : player.getInventory().getItemInMainHand().getEnchantments().keySet()) {
+            if (ench == Enchantment.FORTUNE || ench == Enchantment.SILK_TOUCH) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Plus d'or, de cuir et de pommes dans les coffres générés.

@@ -90,4 +90,21 @@ public class ExorcistRole implements Role {
         bukkitExorcist.sendMessage(MessageUtil.serialize(message));
     }
 
+    // État persisté (game-state.json) pour la gate "une seule fois par joueur".
+    public int getLastExorcisedEpisode() {
+        return lastExorcisedEpisode;
+    }
+
+    public List<UUID> getAlreadyExorcised() {
+        return alreadyExorcised;
+    }
+
+    public void restoreState(int lastEpisode, List<UUID> already) {
+        this.lastExorcisedEpisode = lastEpisode;
+        this.alreadyExorcised.clear();
+        if (already != null) {
+            this.alreadyExorcised.addAll(already);
+        }
+    }
+
 }

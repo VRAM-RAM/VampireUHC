@@ -67,6 +67,10 @@ public class PaladinRole implements Role {
     // Le max health est géré centralement par RoleBuffManager (delta selon le tier) :
     // ne jamais écrire setMaxHealth ici, sinon les pénalités Cupidon seraient écrasées.
     public void applyAuraEffects(Player player, AuraTier tier) {
+        // Purge des effets précédents : sans cela, un changement d'aura laisse
+        // traîner weakness/strength jusqu'à ~95 s (durée de l'effet posé).
+        player.removePotionEffect(PotionEffectType.WEAKNESS);
+        player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
         switch (tier) {
             case TRES_OBSCURE:
                 player.addPotionEffect(effect(PotionEffectType.WEAKNESS, 1));

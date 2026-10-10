@@ -66,7 +66,7 @@ public class WatchmanRole implements Role {
             return;
         }
 
-        if (target.getUuid() == last_watched) {
+        if (target.getUuid().equals(last_watched)) {
             bukkitWatchman.sendMessage(MessageUtil.error("Vous ne pouvez pas veiller sur le même joueur deux épisodes de suite !"));
             return;
         }
@@ -92,6 +92,7 @@ public class WatchmanRole implements Role {
 
         if (marker == null) {
             bukkitWatchman.sendMessage(MessageUtil.success("Vous avez veillé sur le joueur et n'avez trouvé aucun marqueur !"));
+            this.lastWatchEpisode = current_episode;
             return;
         }
 
@@ -106,4 +107,17 @@ public class WatchmanRole implements Role {
         return player1.getLocation().distanceSquared(player2.getLocation()) <= radius * radius;
     }
 
+    // État persisté (game-state.json) pour la gate "pas deux fois de suite".
+    public int getLastWatchEpisode() {
+        return lastWatchEpisode;
+    }
+
+    public UUID getLastWatched() {
+        return last_watched;
+    }
+
+    public void restoreState(int lastEpisode, UUID lastWatched) {
+        this.lastWatchEpisode = lastEpisode;
+        this.last_watched = lastWatched;
+    }
 }

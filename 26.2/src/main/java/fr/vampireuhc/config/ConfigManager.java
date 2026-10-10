@@ -131,11 +131,11 @@ public class ConfigManager {
     }
 
     public double getAppleDropChance() {
-        return cfg().getDouble("gameplay.apple-drop-chance", 0.5);
+        return cfg().getDouble("gameplay.apple-drop-chance", 0.05);
     }
 
     public int getLeatherBonus() {
-        return cfg().getInt("gameplay.leather-bonus", 5);
+        return cfg().getInt("gameplay.leather-bonus", 2);
     }
 
     /* Utilitaires pour le cycle de vie */

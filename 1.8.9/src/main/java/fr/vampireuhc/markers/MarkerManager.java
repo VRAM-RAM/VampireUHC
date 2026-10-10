@@ -36,8 +36,7 @@ public class MarkerManager {
         if (markerTypes.size() == 0) {
             return null;
         }
-        int rand_num = random.nextInt(101);
-        int index = rand_num % markerTypes.size();
+        int index = random.nextInt(markerTypes.size());
         return markerTypes.get(index);
     }
 

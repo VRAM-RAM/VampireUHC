@@ -1,10 +1,10 @@
-# Roles (incomplet)
+# Roles
 
 Les rôles ne doivent pas simplement révéler des informations directes.
 
 Le but est l'interprétation.
 
-Progression : 100 % (16 rôles villageois, 3 rôles vampire soit 6 joueurs vampires, 3 rôles solitaires, et un rôle hybride => 26 joueurs).
+Progression : 100 % (16 rôles villageois au choix, 3 rôles vampire au choix (seuls les sbires peuvent être plusieurs) soit 6 joueurs vampires, 3 rôles solitaires, et un rôle hybride => 26 joueurs).
 
 À terme, on ajoutera des rôles pour pouvoir faire des compos diversifiées (variante de l'Exorciste, du Paladin...) mais pour l'instant, on a suffisament de rôles pour jouer une vrai game.
 
@@ -136,6 +136,7 @@ Le Salvateur crée donc de fausses informations, tout en protégeant ceux qu'il 
 ### CUPIDON
 
 Cupidon place au début de la partie un marqueur Amour sur deux joueurs.
+Si le joueur ne choisit rien, les amoureux sont choisis automatiquement après 1 minute.
 
 Les joueurs ne le savent pas.
 
@@ -158,7 +159,7 @@ Effets :
 
 Aura très obscure :
 - perte d'un coeur.
-- faiblesse légère.
+- faiblesse.
 
 Aura obscure :
 - faiblesse légère (pas d'effet apparent, mais elle se ressent en combat : il suffit de masquer l'effet au joueur).
@@ -266,7 +267,7 @@ Chaque épisode, il peut, à l'aide de la commande `/vuhc ensabler <joueur>`, d�
 ### Archer
 
 L'archer est un rôle villageois pur pvp.
-À l'annonce des rôles, il reçoit un arc *infinity* et *unbreaking III*. 
+À l'annonce des rôles, il reçoit un arc *infinity* et *power II* ainsi qu'une flèche. 
 Il possède également un pouvoir passif : lorsqu'il tire et atteint quelqu'un, cette personne obtient un effet de glowing (visible seulement par l'archer) durant **15** secondes.
 
 ### Baba Yaga 
@@ -384,7 +385,7 @@ Ce pouvoir est activable pendant 5 minutes à chaque épisode, à l'aide de la c
 /vuhc drain
 ```
 
-À la fin des 5 minutes, il subit un malus temporaire léger (poison léger et court).
+À la fin des 5 minutes, il subit un malus temporaire léger (poison court).
 
 ### Doppelganger
 
@@ -449,6 +450,6 @@ En revanche, les conditions de sa mort determinent le reste de sa partie :
 
 Elle ne peut ressusciter qu'une seule fois.
 
-Si elle devient solitaire, elle obtient un effet **résistance** de nuit et **force** de jour, ainsi qu'un effet de **speed** permanente si elle tue son meurtrier.
+Si elle devient solitaire, elle obtient un effet **force** de nuit et **résistance** de jour, ainsi qu'un effet de **speed** permanente si elle tue son meurtrier.
 \
 Si elle est tuée par un vampire, elle obtient l'effet **faiblesse** de jour.

@@ -52,6 +52,6 @@ public class UsurpedComte extends UsurpedVampire {
         }
 
         bukkitComte.sendMessage(MessageUtil.info(
-                "<gold>Il y a <white>" + luminous + "</white>aura lumineuses autour de vous.</gold>"));
+                "<gold>Il y a <white>" + luminous + "</white>auras lumineuses autour de vous.</gold>"));
     }
 }

@@ -483,6 +483,15 @@ public class GameManager {
             }
         }
 
+        // Cas particulier : plus aucune faction vivante (tous les joueurs sont
+        // morts sur le même tick, ex : lave/void). Aucun vainqueur possible :
+        // on clôt la partie au lieu de la laisser bloquée en PVP actif.
+        if (factions.isEmpty()) {
+            broadcast("<dark_purple>Personne ne remporte la partie : tous les joueurs sont morts en même temps.</dark_purple>");
+            stop();
+            return;
+        }
+
         if (factions.size() == 1 && !factions.isEmpty()) {
             String winner;
             if (soloWinner != null) {
@@ -636,6 +645,10 @@ public class GameManager {
             return;
         }
         for (Player player : Bukkit.getOnlinePlayers()) {
+            // Seuls les joueurs du roster reçoivent le kit de départ.
+            if (!isInRoster(player)) {
+                continue;
+            }
             player.getInventory().clear();
             player.setHealth(player.getMaxHealth());
             player.setFoodLevel(20);

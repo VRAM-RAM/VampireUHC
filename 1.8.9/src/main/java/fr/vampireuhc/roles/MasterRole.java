@@ -35,8 +35,9 @@ public class MasterRole implements Role {
         ConfigManager config = VampireUHC.getInstance().getConfigManager();
         int episodeLength = config.getEpisodeLength();
         int toInfect = config.getMarksToInfect();
+        int startingHearts = config.getMasterStartingHearts();
         return (
-            "<gray>Vous êtes le chef des vampires. Vous avez <yellow>" + (8) + " coeurs</yellow> au lieu de 10.</gray>\n\n"
+            "<gray>Vous êtes le chef des vampires. Vous avez <yellow>" + startingHearts + " coeurs</yellow> au lieu de 10.</gray>\n\n"
             + "<dark_purple>▸</dark_purple> <gray>Toutes les <yellow>" + episodeLength + " minutes</yellow>, vous pouvez poser une marque Maître sur un joueur non-vampire.</gray>\n"
             + "<dark_purple>▸</dark_purple> <gray>Vous ne votez pas pour les marques vampires, mais tranchez en cas d'égalité.</gray>\n\n"
             + "<bold><dark_purple>Effets des marques Maître :</dark_purple></bold>\n"

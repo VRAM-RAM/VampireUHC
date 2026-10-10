@@ -91,7 +91,11 @@ public class UsurpedCartographer implements UsurpedPower {
             }
             int currentEp = plugin.getGameManager().getEpisode();
             if (currentEp > episode + 1) {
-                tryReveal();
+                // Fin de vie : enregistrement figé. Si le Sosie est absent, on
+                // arrête le scan et la liste gelée sera livrée à sa reconnexion.
+                if (!tryReveal()) {
+                    cancelScan();
+                }
                 return;
             }
             recordPassingPlayers();
@@ -128,10 +132,11 @@ public class UsurpedCartographer implements UsurpedPower {
         }
     }
 
-    private void tryReveal() {
+    // Retourne false si le Sosie est absent (livraison en attente).
+    private boolean tryReveal() {
         Player bukkitCartographer = Bukkit.getPlayer(sosie.getUuid());
         if (bukkitCartographer == null || !bukkitCartographer.isOnline()) {
-            return;
+            return false;
         }
         if (recordedPlayers.isEmpty()) {
             bukkitCartographer.sendMessage(MessageUtil.info("Personne n'est passé à proximité de votre balise pendant l'épisode."));
@@ -149,6 +154,18 @@ public class UsurpedCartographer implements UsurpedPower {
             bukkitCartographer.sendMessage(MessageUtil.success("Passages enregistrés par votre balise : <gold>" + names));
         }
         suppressBeacon();
+        return true;
+    }
+
+    // Livraison différée de la liste au retour du Sosie : la balise est arrivée
+    // en fin de vie pendant sa déconnexion (scan arrêté à ce moment).
+    public void deliverPendingReveal() {
+        if (sosie == null || !applied_this_episode) {
+            return;
+        }
+        if (VampireUHC.getInstance().getGameManager().getEpisode() > episode + 1) {
+            tryReveal();
+        }
     }
 
     private Location currentBeaconLocation() {

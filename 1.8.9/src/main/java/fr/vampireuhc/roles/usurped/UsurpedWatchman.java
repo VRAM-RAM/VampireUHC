@@ -76,6 +76,7 @@ public class UsurpedWatchman implements UsurpedPower {
 
         if (marker == null) {
             bukkitWatchman.sendMessage(MessageUtil.success("Vous avez veillé sur le joueur et n'avez trouvé aucun marqueur !"));
+            this.lastWatchEpisode = current_episode;
             return;
         }
 

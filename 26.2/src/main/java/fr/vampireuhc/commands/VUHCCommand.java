@@ -1137,6 +1137,10 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                     return;
                 }
                 Player toRemove = Bukkit.getPlayerExact(args[1]);
+                if (toRemove == null) {
+                    sender.sendMessage(MessageUtil.error("Joueur introuvable ou hors ligne : " + args[1]));
+                    return;
+                }
                 if (gameManager.removeFromRoster(toRemove)) {
                     sender.sendMessage(MessageUtil.success(toRemove.getName() + " retiré de la sélection. Roster : " + gameManager.getRosterSize() + "/" + plugin.getConfigManager().getComposition().getRequiredPlayers()));
                 } else {
@@ -1180,6 +1184,10 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
                 if (args.length >= 2) {
                     try {
                         int time = Integer.parseInt(args[1]);
+                        if (time < 0) {
+                            sender.sendMessage(MessageUtil.error("Temps invalide, le temps ne peut pas être négatif : " + args[1]));
+                            return;
+                        }
                         gameManager.setElapsedMinutes(time);
                         sender.sendMessage(MessageUtil.success("Vous avez changé le temps à " + time + " minutes."));
                     } catch (NumberFormatException e) {
@@ -1270,7 +1278,10 @@ public class VUHCCommand implements CommandExecutor, TabCompleter {
             }
             if ((sub.equals("marquer") || sub.equals("proteger") || sub.equals("voter")
                     || sub.equals("switch") || sub.equals("lier") || sub.equals("peser")
-                    || sub.equals("tisser") || sub.equals("spectate") || sub.equals("ensabler") || sub.equals("veiller") || sub.equals("traquer")) || sub.equals("exorciser") || sub.equals("maudire") || sub.equals("percevoir") || sub.equals("usurper") && hasAccess(sender, sub)) {
+                    || sub.equals("tisser") || sub.equals("spectate") || sub.equals("ensabler")
+                    || sub.equals("veiller") || sub.equals("traquer") || sub.equals("exorciser")
+                    || sub.equals("maudire") || sub.equals("percevoir") || sub.equals("usurper"))
+                    && hasAccess(sender, sub)) {
                 return playersStartingWith(args[1]);
             }
             return new ArrayList<>();

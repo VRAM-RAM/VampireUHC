@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.block.Block;
@@ -63,7 +64,7 @@ public class GameplayListener implements Listener {
         ConfigManager config = plugin.getConfigManager();
         Block block = event.getBlock();
 
-        if (config.isAutoSmeltEnabled()) {
+        if (config.isAutoSmeltEnabled() && !hasFortuneOrSilkTouch(event.getPlayer())) {
             ItemStack smelted = AUTO_SMELT.get(block.getType());
             if (smelted != null) {
                 // Pas de setDropItems en 1.8 : on annule, retire le bloc et
@@ -84,6 +85,18 @@ public class GameplayListener implements Listener {
 
     // TODO(1.8.9) : LootGenerateEvent n'existe qu'à partir de 1.16 — l'enrichissement
     // des coffres naturels (or/cuir/pommes) est absent de cette version.
+
+    // La fonte auto ne s'applique qu'aux outils non enchantés : une pioche
+    // Fortune (multi-drops) ou Silk Touch (minerai récupéré tel quel) garde
+    // son comportement vanille.
+    private boolean hasFortuneOrSilkTouch(Player player) {
+        for (Enchantment ench : player.getItemInHand().getEnchantments().keySet()) {
+            if (ench == Enchantment.LOOT_BONUS_BLOCKS || ench == Enchantment.SILK_TOUCH) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     // Plus de cuir par vache tuée par un joueur.
     @EventHandler

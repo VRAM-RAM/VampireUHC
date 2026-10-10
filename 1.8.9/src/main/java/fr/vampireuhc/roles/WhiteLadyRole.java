@@ -192,6 +192,13 @@ public class WhiteLadyRole implements Role {
     //   speed permanent si elle a tué son assassin ;
     // - ressuscitée après un kill vampire : faiblesse de jour.
     public void applyEffects(Player player, boolean night) {
+        // Purge des effets du contexte précédent (jour/nuit) : sinon l'effet de
+        // la phase opposée "resterait" encore ~95 s.
+        player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
+        player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+        player.removePotionEffect(PotionEffectType.SPEED);
+        player.removePotionEffect(PotionEffectType.WEAKNESS);
+
         if (!isSolo && !killedByVampire) {
             return;
         }

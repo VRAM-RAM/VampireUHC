@@ -149,8 +149,15 @@ public class MapManager implements Listener {
             // et une course avec la création du prochain monde).
             File folder = world.getWorldFolder();
             File trash = new File(folder.getParentFile(), folder.getName() + "_trash_" + System.currentTimeMillis());
-            File toDelete = folder.renameTo(trash) ? trash : folder;
-            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> deleteRecursively(toDelete));
+            if (folder.renameTo(trash)) {
+                Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> deleteRecursively(trash));
+            } else {
+                // Rename en échec : on supprime en synchrone. La suppression
+                // async du dossier d'origine entrerait en course avec la
+                // création du prochain monde (même nom vuhc_world).
+                plugin.getLogger().warning("Échec du rename de la map, suppression synchrone du dossier.");
+                deleteRecursively(folder);
+            }
 
             world = null;
         } finally {
@@ -184,6 +191,11 @@ public class MapManager implements Listener {
         Random random = new Random();
         List<Location> taken = new ArrayList<>();
         for (Player player : Bukkit.getOnlinePlayers()) {
+            // Seuls les joueurs sélectionnés (roster) participent à la partie :
+            // les connectés hors-partie (admins, spectateurs) restent en place.
+            if (!plugin.getGameManager().isInRoster(player)) {
+                continue;
+            }
             Location loc = randomSpawn(radius, minDist, taken, random);
             player.teleport(loc);
             taken.add(loc);

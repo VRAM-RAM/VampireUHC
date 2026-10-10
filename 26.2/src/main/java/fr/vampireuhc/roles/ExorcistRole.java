@@ -17,7 +17,8 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import fr.vampireuhc.player.Camp;
 
 public class ExorcistRole implements Role {
-    private int lastExorcisedEpisode;
+    // Gates "une fois par épisode" : l'épisode de dernière utilisation (-1 = jamais).
+    private int lastExorcisedEpisode = -1;
     private VampireUHCPlayer exorcist;
     private final List<UUID> alreadyExorcised = new ArrayList<>();
 
@@ -90,6 +91,23 @@ public class ExorcistRole implements Role {
 
         this.lastExorcisedEpisode = current_episode;
         bukkitExorcist.sendMessage(message);
+    }
+
+    // État persisté (game-state.json) pour la gate "une seule fois par joueur".
+    public int getLastExorcisedEpisode() {
+        return lastExorcisedEpisode;
+    }
+
+    public List<UUID> getAlreadyExorcised() {
+        return alreadyExorcised;
+    }
+
+    public void restoreState(int lastEpisode, List<UUID> already) {
+        this.lastExorcisedEpisode = lastEpisode;
+        this.alreadyExorcised.clear();
+        if (already != null) {
+            this.alreadyExorcised.addAll(already);
+        }
     }
 
 }
